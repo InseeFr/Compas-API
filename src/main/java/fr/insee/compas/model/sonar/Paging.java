@@ -1,0 +1,11 @@
+package fr.insee.compas.model.sonar;
+
+import lombok.Data;
+
+@Data
+public class Paging {
+
+    private int pageIndex;
+    private int pageSize;
+    private int total;
+}
