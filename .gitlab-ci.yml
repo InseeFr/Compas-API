@@ -25,7 +25,15 @@ variables:
   no_proxy: ".insee.fr,.insee.eu,.insee.intra,localhost,insee.test"
   GITLEAKS_IMAGE: zricethezav/gitleaks:latest
   GITLEAKS_ARGS: '--verbose --redact'
-  
+
+.template:release-docker-dev:
+  stage: release ⭐
+  tags:
+    - docker
+  extends: .template:docker_push_internal
+  needs: ["build-docker-dev"]
+  when: manual
+
 job_code_formatting:
   stage: formatting
   script:
@@ -52,6 +60,15 @@ build-docker:
   only:
   - tags
 
+build-docker-dev:
+  stage: docker 👾
+  tags:
+    - docker
+  extends: .template:docker_build
+  variables:
+    PATH_TO_DOCKERFILE: Dockerfile
+  when: on_success
+
 test-docker:
   stage: test 🙈
   tags:
@@ -73,7 +90,27 @@ release-docker:
     IMAGE_TAG: ${CI_COMMIT_REF_NAME}
   only:
   - tags
-  
+
+release-docker-dev1:
+  extends: .template:release-docker-dev
+  variables:
+    IMAGE_TAG: dev1
+
+release-docker-dev2:
+  extends: .template:release-docker-dev
+  variables:
+    IMAGE_TAG: dev2
+
+release-docker-dev3:
+  extends: .template:release-docker-dev
+  variables:
+    IMAGE_TAG: dev3
+
+release-docker-dev4:
+  extends: .template:release-docker-dev
+  variables:
+    IMAGE_TAG: dev4
+
 sonarqube:
   stage: analyse
   script:
