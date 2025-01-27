@@ -1,6 +1,6 @@
-vmName,diskAllocated,diskUsed,diskDecimalUsed,cpu,ram
-pds4gswsilg001,169,128,73,2,4
-pdw4tilesln071,30,11,03,1,1
-pds4dewselg071,229,55,17,4,4
-pdsirene4lg001,169,128,73,2,4
-pdsir4replm001,169,128,73,2,4
+vmName, diskAllocated, diskUsed, vCpu, cpuAllocated, cpuMaxi, ramAllocated, ramMaxi, conso
+"pds4gswsilg001","154,83","49,46","2","4 788,75","6 390,57","4","3,9","1,13"
+"pdw4tilesln071","12,84","4,74","1","2 394,38","498,73","1","1","0,07"
+"pds4dewselg071","213,65","25,67","4","9 577,5","11 933,93","4","-","1,88"
+"pdsirene4lg001","1 913,55","462,34","16","38 310","50 761,64","32","31,87","8,76"
+"pdsir4replm001","12,84","5,1","8","19 155","19 494,47","6","5,51","3,37"

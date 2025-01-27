@@ -1,5 +1,7 @@
 package fr.insee.compas.controller;
 
+import java.util.Optional;
+
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -43,9 +45,9 @@ public class GreenItController {
             @PathVariable("applicationId") Integer applicationId) {
         final IndicateurApplicationGreenIT kpiGreen =
                 greenItService.getIndicateursApplicationGreenIT(applicationId);
-        final IndicateurApplicationGreenITView view =
+        final Optional<IndicateurApplicationGreenITView> view =
                 indicateurApplicationGreenITViewMapper.toView(kpiGreen);
-        return ResponseEntity.ok(view);
+        return view.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @GetMapping("/modules/{moduleId}")
@@ -53,8 +55,9 @@ public class GreenItController {
             @PathVariable("moduleId") Integer moduleId) {
         final IndicateurModuleGreenIT kpiGreen =
                 greenItService.getIndicateursModuleGreenIT(moduleId);
-        final IndicateurModuleGreenITView view = indicateurModuleGreenITViewMapper.toView(kpiGreen);
-        return ResponseEntity.ok(view);
+        final Optional<IndicateurModuleGreenITView> view =
+                indicateurModuleGreenITViewMapper.toView(kpiGreen);
+        return view.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping(value = "/modules/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

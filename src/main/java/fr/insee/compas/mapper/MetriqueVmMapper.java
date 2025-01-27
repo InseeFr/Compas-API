@@ -1,0 +1,35 @@
+package fr.insee.compas.mapper;
+
+import java.util.Optional;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
+import fr.insee.compas.model.greenit.MetriqueVm;
+import fr.insee.compas.model.greenit.MetriqueVmCsvRead;
+import fr.insee.compas.model.greenit.util.LectureCsvUtil;
+
+@Component
+public class MetriqueVmMapper {
+
+    private static final Logger logger = LoggerFactory.getLogger(MetriqueVmMapper.class);
+
+    public Optional<MetriqueVm> toMetriqueVm(MetriqueVmCsvRead csvRead) {
+        logger.debug("construction du Pojo métrique");
+        return Optional.ofNullable(csvRead).map(this::csvToPojo);
+    }
+
+    private MetriqueVm csvToPojo(MetriqueVmCsvRead ligne) {
+        return MetriqueVm.builder()
+                .vm(ligne.getVm())
+                .ramAllocated(LectureCsvUtil.process(ligne.getRamAllocated()))
+                .ramMaxi(LectureCsvUtil.process(ligne.getRamMaxi()))
+                .diskAllocated(LectureCsvUtil.process(ligne.getDiskAllocated()))
+                .diskUsed(LectureCsvUtil.process(ligne.getDiskUsed()))
+                .cpuAllocated(LectureCsvUtil.process(ligne.getCpuAllocated()))
+                .cpuMaxi(LectureCsvUtil.process(ligne.getCpuMaxi()))
+                .conso(LectureCsvUtil.process(ligne.getConso()))
+                .build();
+    }
+}

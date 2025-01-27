@@ -1,5 +1,6 @@
 package fr.insee.compas.repository;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -44,11 +45,11 @@ public interface TableFaitsRepository extends JpaRepository<TableFaits, Long> {
     @Query(
             value =
                     """
-                        SELECT first_value(tf.valeur) over (order by date desc) as valeur
+                        SELECT sum(tf.valeur) over (partition by date order by date desc) as valeur
                         FROM TableFaits tf WHERE tf.idApplication = :idApplication
                             AND tf.idIndicateur = :idIndicateur
                     """)
-    List<Integer> findLatestValueByIndicateurAndApplication(
+    List<BigDecimal> findLatestValueByIndicateurAndApplication(
             @Param("idIndicateur") Integer idIndicateur,
             @Param("idApplication") Integer idApplication);
 

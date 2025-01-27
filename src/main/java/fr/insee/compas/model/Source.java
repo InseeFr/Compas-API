@@ -6,7 +6,8 @@ import lombok.Getter;
 public enum Source {
     SONAR(0),
     OSCAR(1),
-    SAISIE_MANUELLE(2);
+    SAISIE_MANUELLE(2),
+    FICHIER_VM(101);
 
     private final int value;
 

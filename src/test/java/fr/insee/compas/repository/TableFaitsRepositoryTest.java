@@ -27,7 +27,7 @@ class TableFaitsRepositoryTest {
     @Test
     void testFindIdsByEtatCourant() {
         final List<TableFaits> tdfs =
-                tableFaitsRepository.findLatestValueByIndicateurAndModule(101, 244);
+                tableFaitsRepository.findLatestValueByIndicateurAndModule(201, 244);
         assertThat(tdfs).isNotNull().hasSize(1);
         assertThat(tdfs.get(0).getValeur()).isNotNull().isGreaterThan(BigDecimal.valueOf(1));
     }
@@ -36,15 +36,15 @@ class TableFaitsRepositoryTest {
     void testDontFindIdsByEtatCourant() {
         final List<TableFaits> tdfs =
                 tableFaitsRepository.findLatestValueByIndicateurAndModule(242, 6);
-        assertThat(tdfs).isNotNull().hasSize(0);
+        assertThat(tdfs).isNotNull().isEmpty();
     }
 
     @Test
     void testFindLatestValueByIndicateurAndApplication() {
-        final List<Integer> value =
-                tableFaitsRepository.findLatestValueByIndicateurAndApplication(101, 130);
+        final List<BigDecimal> value =
+                tableFaitsRepository.findLatestValueByIndicateurAndApplication(201, 130);
         assertNotNull(value);
         assertEquals(1, value.size());
-        assertEquals(8, value.get(0));
+        assertEquals(new BigDecimal("8.00"), value.get(0));
     }
 }
