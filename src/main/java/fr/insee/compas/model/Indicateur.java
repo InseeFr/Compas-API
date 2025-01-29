@@ -6,6 +6,10 @@ import lombok.Getter;
 public enum Indicateur {
     NBR_LIGNE(1),
     NBR_LIGNE_TEST(2),
+    CVE_CRITICAL(3),
+    CVE_HIGH(4),
+    CVE_MEDIUM(5),
+    CVE_LOW(6),
     RAM_ALLOUEE(201),
     RAM_MAXI(202),
     DISQUE_ALLOUE(203),

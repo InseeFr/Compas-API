@@ -31,7 +31,9 @@ public class OscarService {
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED_VALUE);
         HttpEntity<String> request = new HttpEntity<>(headers);
+
         String urlModules = urlOscar + "modules";
+
         ResponseEntity<String> response =
                 restTemplate.exchange(urlModules, HttpMethod.GET, request, String.class);
 
@@ -58,7 +60,9 @@ public class OscarService {
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED_VALUE);
         HttpEntity<String> request = new HttpEntity<>(headers);
+
         String urlApplication = urlOscar + "applications";
+
         ResponseEntity<String> response =
                 restTemplate.exchange(urlApplication, HttpMethod.GET, request, String.class);
         ObjectMapper mapper = new ObjectMapper();

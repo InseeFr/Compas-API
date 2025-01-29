@@ -14,7 +14,7 @@ public interface ModuleOscarRepository extends JpaRepository<ModuleOscar, Intege
     @Modifying
     @Query(
             value =
-                    "INSERT INTO compas.module_oscar (id_module) VALUES (:id) "
+                    "INSERT INTO module_oscar (id_module) VALUES (:id) "
                             + "ON CONFLICT (id_module) DO UPDATE SET id_module = :id, actif = true",
             nativeQuery = true)
     void upsertProduct(@Param("id") Integer id);

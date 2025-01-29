@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import fr.insee.compas.model.compas.ModuleGrade;
 import fr.insee.compas.service.QualiteService;
+import fr.insee.compas.service.qualite.TestUnitService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.extern.slf4j.Slf4j;
@@ -21,8 +22,11 @@ public class QualiteController {
 
     private final QualiteService qualiteService;
 
-    public QualiteController(QualiteService qualiteService) {
+    private final TestUnitService tuService;
+
+    public QualiteController(QualiteService qualiteService, TestUnitService tuService) {
         this.qualiteService = qualiteService;
+        this.tuService = tuService;
     }
 
     @PutMapping("/MiseAjourIndicateurCouvertureTest")
@@ -39,7 +43,7 @@ public class QualiteController {
     @GetMapping("/PourcentageTest")
     public Map<Integer, ModuleGrade> getTestPercentagesByModule() throws IOException {
         log.info("****** Début du endpoint  PourcentageTest ********");
-        Map<Integer, ModuleGrade> result = qualiteService.calculateTestGradesNiveauModule();
+        Map<Integer, ModuleGrade> result = tuService.calculateTestGradesNiveauModule();
         log.info("****** fin du endpoint    PourcentageTest ********");
         return result;
     }
@@ -47,7 +51,7 @@ public class QualiteController {
     @GetMapping("/PourcentageTestApplication")
     public Map<Integer, ModuleGrade> getTestPercentagesByApplication() throws IOException {
         log.info("****** Début du endpoint  PourcentageTestApplication ********");
-        Map<Integer, ModuleGrade> result = qualiteService.calculateTestGradesNiveauApplication();
+        Map<Integer, ModuleGrade> result = tuService.calculateTestGradesNiveauApplication();
         log.info("****** fin du endpoint    PourcentageTestApplication ********");
         return result;
     }

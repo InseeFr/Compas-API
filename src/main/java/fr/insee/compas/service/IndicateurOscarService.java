@@ -157,6 +157,7 @@ public class IndicateurOscarService {
         // Mise à jour des module present dans oscar (Ajout si non présent dans compas, reactivation
         // si déjà présent dans oscar)
         for (Module module : modules) {
+            System.out.println(module.getId());
             moduleOscarRepo.upsertProduct(module.getId());
         }
     }

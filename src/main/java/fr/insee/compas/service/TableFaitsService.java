@@ -18,7 +18,7 @@ public class TableFaitsService {
         this.tableFaitsRepository = tableFaitsRepository;
     }
 
-    Map<Integer, TableFaits> getMapMetricByModule(int indicateur) {
+    public Map<Integer, TableFaits> getMapMetricByModule(int indicateur) {
         List<TableFaits> metrics = tableFaitsRepository.findLatestValueByIndicateur(indicateur);
         return metrics.stream()
                 .collect(
