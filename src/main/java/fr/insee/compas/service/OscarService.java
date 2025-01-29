@@ -3,6 +3,7 @@ package fr.insee.compas.service;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -20,6 +21,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 public class OscarService {
+    @Value("${spring.cloud.openfeign.client.config.oscar-service.url}")
+    private String urlOscar;
 
     public List<Module> getModules() {
 
@@ -28,9 +31,9 @@ public class OscarService {
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED_VALUE);
         HttpEntity<String> request = new HttpEntity<>(headers);
-        String urlOscar = "https://api-oscar-gestion.insee.fr/modules";
+        String urlModules = urlOscar + "modules";
         ResponseEntity<String> response =
-                restTemplate.exchange(urlOscar, HttpMethod.GET, request, String.class);
+                restTemplate.exchange(urlModules, HttpMethod.GET, request, String.class);
 
         ObjectMapper mapper = new ObjectMapper();
 
@@ -55,9 +58,9 @@ public class OscarService {
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED_VALUE);
         HttpEntity<String> request = new HttpEntity<>(headers);
-        String urlOscar = "https://api-oscar-gestion.insee.fr/applications";
+        String urlApplication = urlOscar + "applications";
         ResponseEntity<String> response =
-                restTemplate.exchange(urlOscar, HttpMethod.GET, request, String.class);
+                restTemplate.exchange(urlApplication, HttpMethod.GET, request, String.class);
         ObjectMapper mapper = new ObjectMapper();
 
         try {
