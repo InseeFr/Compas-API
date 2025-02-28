@@ -69,6 +69,11 @@
 		</dependency>
 		<dependency>
 			<groupId>io.github.openfeign</groupId>
+			<artifactId>feign-httpclient</artifactId>
+			<version>13.5</version>
+		</dependency>
+		<dependency>
+			<groupId>io.github.openfeign</groupId>
 			<artifactId>feign-slf4j</artifactId>
 			<version>13.5</version>
 		</dependency>
@@ -93,11 +98,18 @@
 			<version>3.12.0</version>
 			<scope>test</scope>
 		</dependency>
-
 		<dependency>
 			<groupId>com.opencsv</groupId>
 			<artifactId>opencsv</artifactId>
 			<version>5.9</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-oauth2-client</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
 	</dependencies>
 

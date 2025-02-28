@@ -14,10 +14,10 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import fr.insee.compas.model.Grade;
-import fr.insee.compas.model.Indicateur;
-import fr.insee.compas.model.Source;
+import fr.insee.compas.model.compas.Grade;
+import fr.insee.compas.model.compas.IndicateurType;
 import fr.insee.compas.model.compas.ModuleGradeDistance;
+import fr.insee.compas.model.compas.SourceType;
 import fr.insee.compas.model.compas.TableFaits;
 import fr.insee.compas.model.oscar.Module;
 import fr.insee.compas.repository.ModuleOscarRepository;
@@ -49,7 +49,7 @@ public class IndicateurOscarService {
 
         List<TableFaits> latestValues =
                 tableFaitsRepository.findLatestValueByIndicateur(
-                        Indicateur.NBR_JOUR_MEP.getValue());
+                        IndicateurType.NBR_JOUR_MEP.getValue());
         List<Module> modules = oscarService.getModules();
         Map<Integer, List<TableFaits>> groupedByModule =
                 latestValues.stream().collect(Collectors.groupingBy(TableFaits::getIdModule));
@@ -102,13 +102,13 @@ public class IndicateurOscarService {
                         TableFaits.builder()
                                 .idModule(module.getId())
                                 .idApplication(module.getIdApplication())
-                                .idIndicateur(Indicateur.NBR_JOUR_MEP.getValue())
+                                .idIndicateur(IndicateurType.NBR_JOUR_MEP.getValue())
                                 .date(now)
                                 .valeur(
                                         BigDecimal.valueOf(
                                                 ChronoUnit.DAYS.between(
                                                         module.getDateDerniereLivraison(), now)))
-                                .idSource(Source.OSCAR.getValue())
+                                .idSource(SourceType.OSCAR.getValue())
                                 .build());
             } else {
                 log.warn(
@@ -117,10 +117,10 @@ public class IndicateurOscarService {
                         TableFaits.builder()
                                 .idModule(module.getId())
                                 .idApplication(module.getIdApplication())
-                                .idIndicateur(Indicateur.NBR_JOUR_MEP.getValue())
+                                .idIndicateur(IndicateurType.NBR_JOUR_MEP.getValue())
                                 .date(now)
                                 .valeur(BigDecimal.valueOf(-1))
-                                .idSource(Source.OSCAR.getValue())
+                                .idSource(SourceType.OSCAR.getValue())
                                 .build());
             }
         }

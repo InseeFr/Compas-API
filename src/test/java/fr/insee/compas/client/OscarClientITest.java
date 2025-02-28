@@ -22,7 +22,7 @@ import fr.insee.compas.CompasApplication;
 @EnableConfigurationProperties
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {WireMockConfig.class})
-public class OscarClientITest {
+class OscarClientITest {
 
     @Autowired private WireMockServer mockOscarService;
 
@@ -35,7 +35,7 @@ public class OscarClientITest {
     }
 
     @Test
-    public void testApplicationSirene4() {
-        assertEquals("sirene4", oscarClientIT.getApplicationOscar(123).getBody().getNom());
+    void testApplicationSirene4() {
+        assertEquals("sirene4", oscarClientIT.getApplicationOscar(130).getBody().getNom());
     }
 }

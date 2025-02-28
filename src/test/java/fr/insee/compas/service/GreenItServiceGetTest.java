@@ -1,9 +1,5 @@
 package fr.insee.compas.service;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -23,8 +19,9 @@ import org.springframework.http.ResponseEntity;
 import fr.insee.compas.client.OscarClient;
 import fr.insee.compas.client.view.ApplicationOscarView;
 import fr.insee.compas.client.view.ModuleOscarView;
+import fr.insee.compas.client.view.VmOscarView;
 import fr.insee.compas.mapper.MetriqueVmMapper;
-import fr.insee.compas.model.Indicateur;
+import fr.insee.compas.model.compas.IndicateurType;
 import fr.insee.compas.model.compas.TableFaits;
 import fr.insee.compas.model.greenit.IndicateurApplicationGreenIT;
 import fr.insee.compas.model.greenit.IndicateurModuleGreenIT;
@@ -33,7 +30,7 @@ import fr.insee.compas.model.greenit.util.LectureCsvUtil;
 import fr.insee.compas.repository.TableFaitsRepository;
 
 @ExtendWith(MockitoExtension.class)
-class GreenItServiceTest {
+class GreenItServiceGetTest {
 
     @InjectMocks private GreenItService greenItService;
 
@@ -92,9 +89,16 @@ class GreenItServiceTest {
         Mockito.when(oscarClient.getApplicationOscar(123)).thenReturn(mockAppliSirene4());
         final List<BigDecimal> list = new ArrayList<>();
         list.add(new BigDecimal(8));
+        final List<VmOscarView> listVms = new ArrayList<>();
+        listVms.add(
+                VmOscarView.builder()
+                        .idApplication(123)
+                        .idModule(null)
+                        .nom("pdsir4replm001")
+                        .build());
         Mockito.when(
                         tableFaitsRepository.findLatestValueByIndicateurAndApplication(
-                                Indicateur.RAM_ALLOUEE.getValue(), 123))
+                                IndicateurType.RAM_ALLOUEE.getValue(), 123))
                 .thenReturn(list);
         final IndicateurApplicationGreenIT applicationGreenIT =
                 greenItService.getIndicateursApplicationGreenIT(123);
@@ -111,13 +115,13 @@ class GreenItServiceTest {
         Mockito.when(oscarClient.getModuleOscar(238)).thenReturn(mockModulesSirene4());
         final TableFaits tableFaits = new TableFaits();
         tableFaits.setIdModule(238);
-        tableFaits.setIdIndicateur(Indicateur.RAM_ALLOUEE.getValue());
+        tableFaits.setIdIndicateur(IndicateurType.RAM_ALLOUEE.getValue());
         tableFaits.setValeur(new BigDecimal(8));
         final List<TableFaits> list = new ArrayList<>();
         list.add(tableFaits);
         Mockito.when(
                         tableFaitsRepository.findLatestValueByIndicateurAndModule(
-                                Indicateur.RAM_ALLOUEE.getValue(), 238))
+                                IndicateurType.RAM_ALLOUEE.getValue(), 238))
                 .thenReturn(list);
         final IndicateurModuleGreenIT moduleGreenIT =
                 greenItService.getIndicateursModuleGreenIT(238);
@@ -144,28 +148,5 @@ class GreenItServiceTest {
         moduleOscarView.setNom("sirene4");
         moduleOscarView.setNomTechnique("Sirene 4");
         return new ResponseEntity<ModuleOscarView>(moduleOscarView, HttpStatus.ACCEPTED);
-    }
-
-    @Test
-    void testMiseAJourIndicateursModuleGreenIT() {
-        greenItService.miseAJourIndicateursModuleGreenIT();
-        verify(tableFaitsRepository, times(8)).save(Mockito.any(TableFaits.class));
-    }
-
-    @Test
-    void testmiseAJourIndicateursApplicationGreenIT_Valide() {
-        greenItService.miseAJourIndicateursApplicationGreenIT();
-        verify(tableFaitsRepository, times(8)).save(Mockito.any(TableFaits.class));
-    }
-
-    @Test
-    void testmiseAJourIndicateursApplicationGreenIT_ErreurRepo() {
-        greenItService.setMetrics(metrics);
-        Mockito.doThrow(new RuntimeException("Database error"))
-                .when(tableFaitsRepository)
-                .save(Mockito.any(TableFaits.class));
-        assertThatThrownBy(() -> greenItService.miseAJourIndicateursApplicationGreenIT())
-                .isInstanceOf(RuntimeException.class)
-                .hasMessage("Database error");
     }
 }

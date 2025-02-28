@@ -1,4 +1,4 @@
-package fr.insee.compas.model;
+package fr.insee.compas.model.compas;
 
 public enum Grade {
     A("A"),

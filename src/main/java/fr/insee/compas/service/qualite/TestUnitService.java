@@ -7,7 +7,7 @@ import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
-import fr.insee.compas.model.Indicateur;
+import fr.insee.compas.model.compas.IndicateurType;
 import fr.insee.compas.model.compas.ModuleGrade;
 import fr.insee.compas.model.compas.TableFaits;
 import fr.insee.compas.model.oscar.Application;
@@ -42,20 +42,20 @@ public class TestUnitService {
     public Map<Integer, ModuleGrade> calculateTestGradesNiveauModule() throws IOException {
 
         // Récupérer les informations des modules depuis l'API
-        List<Module> modules = oscarService.getModules();
+        final List<Module> modules = oscarService.getModules();
 
         // Matrics au niveau module
-        Map<Integer, TableFaits> mapByIdModuleLigneCode =
-                tableFaitsService.getMapMetricByModule(Indicateur.NBR_LIGNE.getValue());
-        Map<Integer, TableFaits> mapByIdModuleLigneNonTeste =
-                tableFaitsService.getMapMetricByModule(Indicateur.NBR_LIGNE_TEST.getValue());
+        final Map<Integer, TableFaits> mapByIdModuleLigneCode =
+                tableFaitsService.getMapMetricByModule(IndicateurType.NBR_LIGNE.getValue());
+        final Map<Integer, TableFaits> mapByIdModuleLigneNonTeste =
+                tableFaitsService.getMapMetricByModule(IndicateurType.NBR_LIGNE_TEST.getValue());
 
         // Construire une map enrichie pour tous les modules
-        Map<Integer, ModuleGrade> result = new HashMap<>();
+        final Map<Integer, ModuleGrade> result = new HashMap<>();
 
         // Traiter chaque module
-        for (Module module : modules) {
-            ModuleGrade moduleGrade =
+        for (final Module module : modules) {
+            final ModuleGrade moduleGrade =
                     new ModuleGrade(
                             module.getModName(),
                             module.getAppName(),
@@ -63,21 +63,21 @@ public class TestUnitService {
                             module.getDomaineSndi(),
                             null,
                             null);
-            Integer moduleId = module.getId();
-            TableFaits moduleLigneCode = mapByIdModuleLigneCode.get(moduleId);
-            TableFaits moduleLigneCodeNonTeste = mapByIdModuleLigneNonTeste.get(moduleId);
+            final Integer moduleId = module.getId();
+            final TableFaits moduleLigneCode = mapByIdModuleLigneCode.get(moduleId);
+            final TableFaits moduleLigneCodeNonTeste = mapByIdModuleLigneNonTeste.get(moduleId);
 
             if (moduleLigneCode != null && moduleLigneCode.getValeur() != null) {
                 // Calculer le pourcentage
-                double percentage =
+                final double percentage =
                         utilsService.calculPourcentageCouvertureTest(
                                 moduleLigneCode.getValeur().intValue(),
                                 moduleLigneCodeNonTeste.getValeur().intValue());
 
-                String pourcentage = (int) percentage + " %";
+                final String pourcentage = (int) percentage + " %";
 
                 // Obtenir la note
-                String grade = utilsService.convertPourcentageEnNote(percentage);
+                final String grade = utilsService.convertPourcentageEnNote(percentage);
 
                 // Ajouter le module avec le grade calculé
                 moduleGrade.setGrade(grade);
@@ -103,29 +103,31 @@ public class TestUnitService {
 
     public Map<Integer, ModuleGrade> calculateTestGradesNiveauApplication() throws IOException {
         // Metrics au niveau module
-        Map<Integer, TableFaits> mapByIdModuleLigneCode =
-                tableFaitsService.getMapMetricByModule(Indicateur.NBR_LIGNE.getValue());
-        Map<Integer, TableFaits> mapByIdModuleLigneNonTeste =
-                tableFaitsService.getMapMetricByModule(Indicateur.NBR_LIGNE_TEST.getValue());
+        final Map<Integer, TableFaits> mapByIdModuleLigneCode =
+                tableFaitsService.getMapMetricByModule(IndicateurType.NBR_LIGNE.getValue());
+        final Map<Integer, TableFaits> mapByIdModuleLigneNonTeste =
+                tableFaitsService.getMapMetricByModule(IndicateurType.NBR_LIGNE_TEST.getValue());
         // Récupérer les informations des applications depuis l'API
-        List<Application> applications = oscarService.getApplications();
+        final List<Application> applications = oscarService.getApplications();
 
         // Récupérer les informations des modules depuis l'API
-        List<Module> modules = oscarService.getModules();
+        final List<Module> modules = oscarService.getModules();
 
-        Map<Integer, TableFaits> metricsLigneCode =
+        final Map<Integer, TableFaits> metricsLigneCode =
                 agregationService.calculAgregationSum(
-                        Indicateur.NBR_LIGNE.getValue(), mapByIdModuleLigneCode, modules);
-        Map<Integer, TableFaits> metricsLigneCodeNonTeste =
+                        IndicateurType.NBR_LIGNE.getValue(), mapByIdModuleLigneCode, modules);
+        final Map<Integer, TableFaits> metricsLigneCodeNonTeste =
                 agregationService.calculAgregationSum(
-                        Indicateur.NBR_LIGNE_TEST.getValue(), mapByIdModuleLigneNonTeste, modules);
+                        IndicateurType.NBR_LIGNE_TEST.getValue(),
+                        mapByIdModuleLigneNonTeste,
+                        modules);
 
         // Construire une map enrichie pour tous les modules,
-        Map<Integer, ModuleGrade> result = new HashMap<>();
+        final Map<Integer, ModuleGrade> result = new HashMap<>();
 
         // Traiter chaque application
-        for (Application application : applications) {
-            ModuleGrade moduleGrade =
+        for (final Application application : applications) {
+            final ModuleGrade moduleGrade =
                     new ModuleGrade(
                             null,
                             application.getAppName(),
@@ -133,21 +135,21 @@ public class TestUnitService {
                             application.getDomaineSndi(),
                             null,
                             null);
-            Integer applicationId = application.getIdApplication();
-            TableFaits ligneCode = metricsLigneCode.get(applicationId);
-            TableFaits ligneCodeNonTeste = metricsLigneCodeNonTeste.get(applicationId);
+            final Integer applicationId = application.getIdApplication();
+            final TableFaits ligneCode = metricsLigneCode.get(applicationId);
+            final TableFaits ligneCodeNonTeste = metricsLigneCodeNonTeste.get(applicationId);
 
             if (ligneCode != null && ligneCode.getValeur() != null) {
                 // Calculer le pourcentage
-                double percentage =
+                final double percentage =
                         utilsService.calculPourcentageCouvertureTest(
                                 ligneCode.getValeur().intValue(),
                                 ligneCodeNonTeste.getValeur().intValue());
 
-                String pourcentage = (int) percentage + " %";
+                final String pourcentage = (int) percentage + " %";
 
                 // Obtenir la note
-                String grade = utilsService.convertPourcentageEnNote(percentage);
+                final String grade = utilsService.convertPourcentageEnNote(percentage);
 
                 // Ajouter le module avec le grade calculé
                 moduleGrade.setGrade(grade);

@@ -1,5 +1,6 @@
 package fr.insee.compas.mapper;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 
 import org.springframework.stereotype.Component;
@@ -18,13 +19,17 @@ public class IndicateurModuleGreenITViewMapper {
                 .moduleId(ind.getModuleId())
                 .moduleName(ind.getModuleName())
                 .cpuAllocated(ind.getCpuAllocated() + " Mhz")
-                .cpuMaxi(ind.getCpuMaxi() + " %")
+                .cpuMaxi(gestionPourcentageOuSansObjet(ind.getCpuMaxi()))
                 .diskAllocated(ind.getDiskAllocated() + " Go")
-                .diskUsed(ind.getDiskUsed() + " %")
+                .diskUsed(gestionPourcentageOuSansObjet(ind.getDiskUsed()))
                 .ramAllocated(ind.getRamAllocated() + "Go")
-                .ramMaxi(ind.getRamMaxi() + " %")
-                .conso(ind.getConso() + " Kwh ?")
+                .ramMaxi(gestionPourcentageOuSansObjet(ind.getRamMaxi()))
+                .conso(ind.getConso() + " Wh")
                 .nbVm(ind.getNbVm() + " vm")
                 .build();
+    }
+
+    private String gestionPourcentageOuSansObjet(BigDecimal b) {
+        return b != null ? b + " %" : "SO";
     }
 }

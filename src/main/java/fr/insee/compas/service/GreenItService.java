@@ -8,9 +8,11 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,11 +25,13 @@ import com.opencsv.bean.CsvToBeanBuilder;
 
 import fr.insee.compas.client.OscarClient;
 import fr.insee.compas.client.view.ApplicationOscarView;
-import fr.insee.compas.client.view.ApplicationTechnique;
 import fr.insee.compas.client.view.ModuleOscarView;
+import fr.insee.compas.client.view.VmOscarView;
+import fr.insee.compas.exception.CompasClientException;
+import fr.insee.compas.exception.ErrorVM;
 import fr.insee.compas.mapper.MetriqueVmMapper;
-import fr.insee.compas.model.Indicateur;
-import fr.insee.compas.model.Source;
+import fr.insee.compas.model.compas.IndicateurType;
+import fr.insee.compas.model.compas.SourceType;
 import fr.insee.compas.model.compas.TableFaits;
 import fr.insee.compas.model.greenit.IndicateurApplicationGreenIT;
 import fr.insee.compas.model.greenit.IndicateurModuleGreenIT;
@@ -74,63 +78,49 @@ public class GreenItService {
         greenIt.setModuleName(moduleOscarView != null ? moduleOscarView.getNom() : "anonyme");
         final List<TableFaits> ramAlloueeLatestValues =
                 tableFaitsRepository.findLatestValueByIndicateurAndModule(
-                        Indicateur.RAM_ALLOUEE.getValue(), moduleId);
+                        IndicateurType.RAM_ALLOUEE.getValue(), moduleId);
         final Optional<TableFaits> indRamAllouee = ramAlloueeLatestValues.stream().findFirst();
-        indRamAllouee.ifPresent(i -> greenIt.setRamAllocated(i.getValeur().intValue()));
-        final List<TableFaits> ramMaxiLatestValues =
-                tableFaitsRepository.findLatestValueByIndicateurAndModule(
-                        Indicateur.RAM_MAXI.getValue(), moduleId);
-        final Optional<TableFaits> indRamMaxi = ramMaxiLatestValues.stream().findFirst();
-        indRamMaxi.ifPresent(
-                i ->
-                        greenIt.setRamMaxi(
-                                i.getValeur()
-                                        .divide(
-                                                new BigDecimal(greenIt.getRamAllocated()),
-                                                RoundingMode.UP)
-                                        .multiply(new BigDecimal(100))));
+        if (indRamAllouee.isPresent()) {
+            greenIt.setRamAllocated(indRamAllouee.get().getValeur().intValue());
+            greenIt.setRamMaxi(
+                    calculateMetricPercentModule(
+                            IndicateurType.RAM_MAXI.getValue(),
+                            greenIt.getRamAllocated(),
+                            moduleId));
+        }
         final List<TableFaits> disqueAlloueLatestValues =
                 tableFaitsRepository.findLatestValueByIndicateurAndModule(
-                        Indicateur.DISQUE_ALLOUE.getValue(), moduleId);
+                        IndicateurType.DISQUE_ALLOUE.getValue(), moduleId);
         final Optional<TableFaits> indDisqueAlloue = disqueAlloueLatestValues.stream().findFirst();
-        indDisqueAlloue.ifPresent(i -> greenIt.setDiskAllocated(i.getValeur().intValue()));
-        final List<TableFaits> disqueUsedLatestValues =
-                tableFaitsRepository.findLatestValueByIndicateurAndModule(
-                        Indicateur.DISQUE_CONSOMME.getValue(), moduleId);
-        final Optional<TableFaits> indDisqueUsed = disqueUsedLatestValues.stream().findFirst();
-        indDisqueUsed.ifPresent(
-                i ->
-                        greenIt.setDiskUsed(
-                                i.getValeur()
-                                        .divide(
-                                                new BigDecimal(greenIt.getDiskAllocated()),
-                                                RoundingMode.UP)
-                                        .multiply(new BigDecimal(100))));
+        if (indDisqueAlloue.isPresent()) {
+            greenIt.setDiskAllocated(indDisqueAlloue.get().getValeur().intValue());
+            greenIt.setDiskUsed(
+                    calculateMetricPercentModule(
+                            IndicateurType.DISQUE_CONSOMME.getValue(),
+                            greenIt.getDiskAllocated(),
+                            moduleId));
+        }
         final List<TableFaits> cpuAlloueeLatestValues =
                 tableFaitsRepository.findLatestValueByIndicateurAndModule(
-                        Indicateur.CPU_ALLOUEE.getValue(), moduleId);
+                        IndicateurType.CPU_ALLOUEE.getValue(), moduleId);
         final Optional<TableFaits> indCpuAllouee = cpuAlloueeLatestValues.stream().findFirst();
-        indCpuAllouee.ifPresent(i -> greenIt.setCpuAllocated(i.getValeur().intValue()));
-        final List<TableFaits> cpuMaxiLatestValues =
-                tableFaitsRepository.findLatestValueByIndicateurAndModule(
-                        Indicateur.CPU_MAXI.getValue(), moduleId);
-        final Optional<TableFaits> indCpuMaxi = cpuMaxiLatestValues.stream().findFirst();
-        indCpuMaxi.ifPresent(
-                i ->
-                        greenIt.setCpuMaxi(
-                                i.getValeur()
-                                        .divide(
-                                                new BigDecimal(greenIt.getCpuAllocated()),
-                                                RoundingMode.UP)
-                                        .multiply(new BigDecimal(100))));
+        if (indCpuAllouee.isPresent()) {
+            greenIt.setCpuAllocated(indCpuAllouee.get().getValeur().intValue());
+            greenIt.setCpuMaxi(
+                    calculateMetricPercentModule(
+                            IndicateurType.CPU_MAXI.getValue(),
+                            greenIt.getCpuAllocated(),
+                            moduleId));
+        }
+
         final List<TableFaits> consoLatestValues =
                 tableFaitsRepository.findLatestValueByIndicateurAndModule(
-                        Indicateur.CONSO_ELEC.getValue(), moduleId);
+                        IndicateurType.CONSO_ELEC.getValue(), moduleId);
         final Optional<TableFaits> indConso = consoLatestValues.stream().findFirst();
         indConso.ifPresent(i -> greenIt.setConso(i.getValeur().intValue()));
         final List<TableFaits> nbVmLatestValues =
                 tableFaitsRepository.findLatestValueByIndicateurAndModule(
-                        Indicateur.NBR_VM.getValue(), moduleId);
+                        IndicateurType.NBR_VM.getValue(), moduleId);
         final Optional<TableFaits> indNbVm = nbVmLatestValues.stream().findFirst();
         indNbVm.ifPresent(i -> greenIt.setNbVm(i.getValeur().intValue()));
         return greenIt;
@@ -146,101 +136,144 @@ public class GreenItService {
                 applicationOscarView != null ? applicationOscarView.getNom() : "anonyme");
         final List<BigDecimal> ramAlloueeLatestValues =
                 tableFaitsRepository.findLatestValueByIndicateurAndApplication(
-                        Indicateur.RAM_ALLOUEE.getValue(), applicationId);
+                        IndicateurType.RAM_ALLOUEE.getValue(), applicationId);
         final Optional<BigDecimal> indRamAllouee =
                 ramAlloueeLatestValues.stream().filter(Objects::nonNull).findFirst();
-        indRamAllouee.ifPresent(i -> greenIt.setRamAllocated(i.intValue()));
-        final List<BigDecimal> ramMaxiLatestValues =
-                tableFaitsRepository.findLatestValueByIndicateurAndApplication(
-                        Indicateur.RAM_MAXI.getValue(), applicationId);
-        final Optional<BigDecimal> indRamMaxi =
-                ramMaxiLatestValues.stream().filter(Objects::nonNull).findFirst();
-        indRamMaxi.ifPresent(
-                i ->
-                        greenIt.setRamMaxi(
-                                i.divide(new BigDecimal(greenIt.getRamAllocated()), RoundingMode.UP)
-                                        .multiply(new BigDecimal(100))));
+        if (indRamAllouee.isPresent()) {
+            greenIt.setRamAllocated(indRamAllouee.get().intValue());
+            greenIt.setRamMaxi(
+                    calculateMetricPercentApplication(
+                            IndicateurType.RAM_MAXI.getValue(),
+                            greenIt.getRamAllocated(),
+                            applicationId));
+        }
         final List<BigDecimal> disqueAlloueLatestValues =
                 tableFaitsRepository.findLatestValueByIndicateurAndApplication(
-                        Indicateur.DISQUE_ALLOUE.getValue(), applicationId);
+                        IndicateurType.DISQUE_ALLOUE.getValue(), applicationId);
         final Optional<BigDecimal> indDisqueAlloue =
                 disqueAlloueLatestValues.stream().filter(Objects::nonNull).findFirst();
-        indDisqueAlloue.ifPresent(i -> greenIt.setDiskAllocated(i.intValue()));
-        final List<BigDecimal> disqueUsedLatestValues =
-                tableFaitsRepository.findLatestValueByIndicateurAndApplication(
-                        Indicateur.DISQUE_CONSOMME.getValue(), applicationId);
-        final Optional<BigDecimal> indDisqueUsed =
-                disqueUsedLatestValues.stream().filter(Objects::nonNull).findFirst();
-        indDisqueUsed.ifPresent(
-                i ->
-                        greenIt.setDiskUsed(
-                                i.divide(
-                                                new BigDecimal(greenIt.getDiskAllocated()),
-                                                RoundingMode.UP)
-                                        .multiply(new BigDecimal(100))));
+        if (indDisqueAlloue.isPresent()) {
+            greenIt.setDiskAllocated(indDisqueAlloue.get().intValue());
+            greenIt.setDiskUsed(
+                    calculateMetricPercentApplication(
+                            IndicateurType.DISQUE_CONSOMME.getValue(),
+                            greenIt.getDiskAllocated(),
+                            applicationId));
+        }
         final List<BigDecimal> cpuAlloueeLatestValues =
                 tableFaitsRepository.findLatestValueByIndicateurAndApplication(
-                        Indicateur.CPU_ALLOUEE.getValue(), applicationId);
+                        IndicateurType.CPU_ALLOUEE.getValue(), applicationId);
         final Optional<BigDecimal> indCpuAllouee =
                 cpuAlloueeLatestValues.stream().filter(Objects::nonNull).findFirst();
-        indCpuAllouee.ifPresent(i -> greenIt.setCpuAllocated(i.intValue()));
-        final List<BigDecimal> cpuMaxiLatestValues =
-                tableFaitsRepository.findLatestValueByIndicateurAndApplication(
-                        Indicateur.CPU_MAXI.getValue(), applicationId);
-        final Optional<BigDecimal> indCpuMaxi =
-                cpuMaxiLatestValues.stream().filter(Objects::nonNull).findFirst();
-        indCpuMaxi.ifPresent(
-                i ->
-                        greenIt.setCpuMaxi(
-                                i.divide(new BigDecimal(greenIt.getCpuAllocated()), RoundingMode.UP)
-                                        .multiply(new BigDecimal(100))));
+        if (indCpuAllouee.isPresent()) {
+            greenIt.setCpuAllocated(indCpuAllouee.get().intValue());
+            greenIt.setCpuMaxi(
+                    calculateMetricPercentApplication(
+                            IndicateurType.CPU_MAXI.getValue(),
+                            greenIt.getCpuAllocated(),
+                            applicationId));
+        }
         final List<BigDecimal> consoLatestValues =
                 tableFaitsRepository.findLatestValueByIndicateurAndApplication(
-                        Indicateur.CONSO_ELEC.getValue(), applicationId);
+                        IndicateurType.CONSO_ELEC.getValue(), applicationId);
         final Optional<BigDecimal> indConso =
                 consoLatestValues.stream().filter(Objects::nonNull).findFirst();
         indConso.ifPresent(i -> greenIt.setConso(i.intValue()));
         final List<BigDecimal> nbVmlatestValues =
                 tableFaitsRepository.findLatestValueByIndicateurAndApplication(
-                        Indicateur.NBR_VM.getValue(), applicationId);
+                        IndicateurType.NBR_VM.getValue(), applicationId);
         final Optional<BigDecimal> indNbVm =
                 nbVmlatestValues.stream().filter(Objects::nonNull).findFirst();
         indNbVm.ifPresent(i -> greenIt.setNbVm(i.intValue()));
         return greenIt;
     }
 
-    public void miseAJourIndicateursApplicationGreenIT() {
-        final List<ApplicationOscarView> applicationsOscarView = new ArrayList<>();
-        final ApplicationOscarView applicationOscarView = new ApplicationOscarView();
-        applicationOscarView.setId(130);
-        applicationOscarView.setNom("sirene4");
-        final List<String> vms = new ArrayList<>();
-        vms.add("pdsir4esli001");
-        vms.add("pdsir4esli002");
-        vms.add("pdsir4esli003");
-        vms.add("pdsirene4lg001");
-        applicationsOscarView.add(applicationOscarView);
-        applicationsOscarView.forEach(app -> peuplerIndicateurs(null, app.getId(), vms));
+    private BigDecimal calculateMetricPercentModule(
+            int indicateurType, Integer metricAllocated, Integer moduleId) {
+        if (metricAllocated == 0) {
+            return null;
+        }
+        final List<TableFaits> metricLatestValues =
+                tableFaitsRepository.findLatestValueByIndicateurAndModule(indicateurType, moduleId);
+        final Optional<TableFaits> indicateur = metricLatestValues.stream().findFirst();
+        if (!indicateur.isPresent()) {
+            return null;
+        }
+        return calculatePercent(indicateur.get().getValeur(), new BigDecimal(metricAllocated));
     }
 
-    public void miseAJourIndicateursModuleGreenIT() {
-        // final ResponseEntity<ApplicationOscarView> application =
-        // oscarClient.getApplicationOscar(applicationId);
-        // final ApplicationOscarView applicationOscarView = application.getBody();
-        final List<ModuleOscarView> modulesOscarView = new ArrayList<>();
-        final ModuleOscarView moduleOscarView = new ModuleOscarView();
-        moduleOscarView.setId(238);
-        final ApplicationTechnique applicationTechnique = new ApplicationTechnique();
-        applicationTechnique.setId(130);
-        moduleOscarView.setApplicationTechnique(applicationTechnique);
-        moduleOscarView.setNom("sirene4 - repertoire");
-        final List<String> vms = new ArrayList<>();
-        vms.add("pdsir4replm001");
-        vms.add("pdsir4replm002");
-        vms.add("pdsir4replm003");
-        modulesOscarView.add(moduleOscarView);
-        modulesOscarView.forEach(
-                mod -> peuplerIndicateurs(mod.getId(), mod.getApplicationTechnique().getId(), vms));
+    private BigDecimal calculateMetricPercentApplication(
+            int indicateurType, Integer metricAllocated, Integer applicationId) {
+        if (metricAllocated == 0) {
+            return null;
+        }
+        final List<BigDecimal> metricLatestValues =
+                tableFaitsRepository.findLatestValueByIndicateurAndApplication(
+                        indicateurType, applicationId);
+        final Optional<BigDecimal> indicateur =
+                metricLatestValues.stream().filter(Objects::nonNull).findFirst();
+        if (!indicateur.isPresent()) {
+            return null;
+        }
+        return calculatePercent(indicateur.get(), new BigDecimal(metricAllocated));
+    }
+
+    private BigDecimal calculatePercent(BigDecimal numerateur, BigDecimal denominateur) {
+        if (denominateur == null || BigDecimal.ZERO.equals(denominateur)) {
+            return null;
+        }
+        return numerateur.divide(denominateur, RoundingMode.UP).multiply(new BigDecimal(100));
+    }
+
+    public void miseAJourIndicateursGreenIT() {
+        final ResponseEntity<List<VmOscarView>> vmOscars = oscarClient.getAllVmOscar();
+        if (vmOscars.getBody() == null) {
+            final ErrorVM errorVM = new ErrorVM();
+            errorVM.setMessage("Erreur retour body Oscar");
+            throw new CompasClientException(500, errorVM);
+        } else {
+            miseAJourIndicateursApplicationGreenIT(vmOscars.getBody());
+            miseAJourIndicateursModuleGreenIT(vmOscars.getBody());
+        }
+    }
+
+    void miseAJourIndicateursApplicationGreenIT(List<VmOscarView> vmOscars) {
+        final Map<Integer, List<VmOscarView>> vmApplis =
+                vmOscars.stream()
+                        .filter(p -> p.getIdModule() == null)
+                        .collect(Collectors.groupingBy(VmOscarView::getIdApplication));
+        vmApplis.entrySet()
+                .forEach(
+                        e -> {
+                            final List<String> vms =
+                                    e.getValue().stream().map(m -> m.getNom()).toList();
+                            logger.info(
+                                    String.format(
+                                            "taille de la vm applis %d et id %d ",
+                                            vms.size(), e.getKey()));
+                            peuplerIndicateurs(null, e.getKey(), vms);
+                        });
+    }
+
+    void miseAJourIndicateursModuleGreenIT(List<VmOscarView> vmOscars) {
+        final Map<Integer, List<VmOscarView>> vmModules =
+                vmOscars.stream()
+                        .filter(p -> p.getIdModule() != null)
+                        .collect(Collectors.groupingBy(VmOscarView::getIdModule));
+        vmModules
+                .entrySet()
+                .forEach(
+                        e -> {
+                            final Optional<VmOscarView> vmFirst =
+                                    e.getValue().stream().filter(Objects::nonNull).findFirst();
+                            final List<String> vms =
+                                    e.getValue().stream().map(m -> m.getNom()).toList();
+                            logger.info(
+                                    String.format(
+                                            "taille de la vm modules %d et moduleId %d ",
+                                            +vms.size(), e.getKey()));
+                            peuplerIndicateurs(e.getKey(), vmFirst.get().getIdApplication(), vms);
+                        });
     }
 
     public void miseAJourIndicateursGreenItFromFile(MultipartFile file) {
@@ -253,8 +286,7 @@ public class GreenItService {
                             .map(metriqueVmMapper::toMetriqueVm)
                             .flatMap(Optional::stream)
                             .toList();
-            miseAJourIndicateursModuleGreenIT();
-            miseAJourIndicateursApplicationGreenIT();
+            miseAJourIndicateursGreenIT();
         }
     }
 
@@ -269,42 +301,45 @@ public class GreenItService {
             metriqueVmCsvReads = csvToBean.parse();
             logger.debug("ça passe pour le parsing csv en String");
         } catch (final Exception e) {
-            throw new RuntimeException("Erreur lors de la lecture : " + e.getMessage());
+            final ErrorVM errorVM = new ErrorVM();
+            logger.info("Erreur lors de la lecture du csv");
+            errorVM.setMessage("Erreur lors de la lecture : " + e.getMessage());
+            throw new CompasClientException(500, errorVM);
         }
         return metriqueVmCsvReads;
     }
 
     private void peuplerIndicateurs(Integer modId, Integer appId, List<String> vms) {
         final TableFaits indRamAllocated = buildGreen(modId, appId);
-        indRamAllocated.setIdIndicateur(Indicateur.RAM_ALLOUEE.getValue());
+        indRamAllocated.setIdIndicateur(IndicateurType.RAM_ALLOUEE.getValue());
         indRamAllocated.setValeur(calculAgregatValeur(vms, MetriqueVm::getRamAllocated));
         tableFaitsRepository.save(indRamAllocated);
         final TableFaits indRamMaxi = buildGreen(modId, appId);
-        indRamMaxi.setIdIndicateur(Indicateur.RAM_MAXI.getValue());
+        indRamMaxi.setIdIndicateur(IndicateurType.RAM_MAXI.getValue());
         indRamMaxi.setValeur(calculAgregatValeur(vms, MetriqueVm::getRamMaxi));
         tableFaitsRepository.save(indRamMaxi);
         final TableFaits indDiskAllocated = buildGreen(modId, appId);
-        indDiskAllocated.setIdIndicateur(Indicateur.DISQUE_ALLOUE.getValue());
+        indDiskAllocated.setIdIndicateur(IndicateurType.DISQUE_ALLOUE.getValue());
         indDiskAllocated.setValeur(calculAgregatValeur(vms, MetriqueVm::getDiskAllocated));
         tableFaitsRepository.save(indDiskAllocated);
         final TableFaits indDiskUsed = buildGreen(modId, appId);
-        indDiskUsed.setIdIndicateur(Indicateur.DISQUE_CONSOMME.getValue());
+        indDiskUsed.setIdIndicateur(IndicateurType.DISQUE_CONSOMME.getValue());
         indDiskUsed.setValeur(calculAgregatValeur(vms, MetriqueVm::getDiskUsed));
         tableFaitsRepository.save(indDiskUsed);
         final TableFaits indCpuAllocated = buildGreen(modId, appId);
-        indCpuAllocated.setIdIndicateur(Indicateur.CPU_ALLOUEE.getValue());
+        indCpuAllocated.setIdIndicateur(IndicateurType.CPU_ALLOUEE.getValue());
         indCpuAllocated.setValeur(calculAgregatValeur(vms, MetriqueVm::getRamAllocated));
         tableFaitsRepository.save(indCpuAllocated);
         final TableFaits indCpuMaxi = buildGreen(modId, appId);
-        indCpuMaxi.setIdIndicateur(Indicateur.CPU_MAXI.getValue());
+        indCpuMaxi.setIdIndicateur(IndicateurType.CPU_MAXI.getValue());
         indCpuMaxi.setValeur(calculAgregatValeur(vms, MetriqueVm::getRamMaxi));
         tableFaitsRepository.save(indCpuMaxi);
         final TableFaits indConso = buildGreen(modId, appId);
-        indConso.setIdIndicateur(Indicateur.CONSO_ELEC.getValue());
-        indConso.setValeur(calculAgregatValeur(vms, MetriqueVm::getConso));
+        indConso.setIdIndicateur(IndicateurType.CONSO_ELEC.getValue());
+        indConso.setValeur(calculAgregatValeur(vms, m -> calculConsoElectrique(m.getConso())));
         tableFaitsRepository.save(indConso);
         final TableFaits indNbVm = buildGreen(modId, appId);
-        indNbVm.setIdIndicateur(Indicateur.NBR_VM.getValue());
+        indNbVm.setIdIndicateur(IndicateurType.NBR_VM.getValue());
         indNbVm.setValeur(
                 BigDecimal.valueOf(metrics.stream().filter(m -> vms.contains(m.getVm())).count()));
         tableFaitsRepository.save(indNbVm);
@@ -314,7 +349,7 @@ public class GreenItService {
         return TableFaits.builder()
                 .idModule(modId)
                 .idApplication(appId)
-                .idSource(Source.FICHIER_VM.getValue())
+                .idSource(SourceType.FICHIER_VM.getValue())
                 .date(LocalDate.now())
                 .build();
     }
@@ -325,6 +360,13 @@ public class GreenItService {
                 .filter(m -> vms.contains(m.getVm()))
                 .map(valueExtractor)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private BigDecimal calculConsoElectrique(BigDecimal consoIn) {
+        if (consoIn == null) {
+            return new BigDecimal(0);
+        }
+        return consoIn.multiply(new BigDecimal(30));
     }
 
     public List<MetriqueVm> getMetrics() {

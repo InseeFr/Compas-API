@@ -1,9 +1,9 @@
-package fr.insee.compas.model;
+package fr.insee.compas.model.compas;
 
 import lombok.Getter;
 
 @Getter
-public enum Indicateur {
+public enum IndicateurType {
     NBR_LIGNE(1),
     NBR_LIGNE_TEST(2),
     CVE_CRITICAL(3),
@@ -22,7 +22,7 @@ public enum Indicateur {
 
     private final int value;
 
-    Indicateur(int value) {
+    IndicateurType(int value) {
         this.value = value;
     }
 }

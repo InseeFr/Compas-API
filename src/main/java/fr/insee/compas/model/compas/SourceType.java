@@ -1,9 +1,9 @@
-package fr.insee.compas.model;
+package fr.insee.compas.model.compas;
 
 import lombok.Getter;
 
 @Getter
-public enum Source {
+public enum SourceType {
     SONAR(0),
     OSCAR(1),
     SAISIE_MANUELLE(2),
@@ -12,7 +12,7 @@ public enum Source {
 
     private final int value;
 
-    Source(int value) {
+    SourceType(int value) {
         this.value = value;
     }
 }

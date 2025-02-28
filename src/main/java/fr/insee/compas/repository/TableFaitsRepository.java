@@ -47,7 +47,7 @@ public interface TableFaitsRepository extends JpaRepository<TableFaits, Long> {
                     """
                         SELECT sum(tf.valeur) over (partition by date order by date desc) as valeur
                         FROM TableFaits tf WHERE tf.idApplication = :idApplication
-                            AND tf.idIndicateur = :idIndicateur
+                            AND tf.idIndicateur = :idIndicateur order by date desc
                     """)
     List<BigDecimal> findLatestValueByIndicateurAndApplication(
             @Param("idIndicateur") Integer idIndicateur,

@@ -9,7 +9,12 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -18,8 +23,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import fr.insee.compas.model.Indicateur;
-import fr.insee.compas.model.Source;
+import fr.insee.compas.model.compas.IndicateurType;
+import fr.insee.compas.model.compas.SourceType;
 import fr.insee.compas.model.compas.TableFaits;
 import fr.insee.compas.model.oscar.Module;
 import fr.insee.compas.repository.TableFaitsRepository;
@@ -47,28 +52,28 @@ public class RecupCveService {
     private static final String DIRECTORY_PATH = "rapports";
 
     public void getCveInBdd() {
-        HttpClient client = HttpClient.newHttpClient();
-        List<Module> modules = oscarService.getModules();
+        final HttpClient client = HttpClient.newHttpClient();
+        final List<Module> modules = oscarService.getModules();
         try {
-            for (Module module : modules) {
-                String encodedFilePath =
+            for (final Module module : modules) {
+                final String encodedFilePath =
                         URLEncoder.encode(
                                 "rapports/" + module.getId() + ".json", StandardCharsets.UTF_8);
-                String fetchFileUrl =
+                final String fetchFileUrl =
                         String.format(
                                 "%s/projects/%s/repository/files/%s/raw",
                                 BASE_URL, PROJECT_ID, encodedFilePath);
-                HttpRequest fetchFileRequest =
+                final HttpRequest fetchFileRequest =
                         HttpRequest.newBuilder()
                                 .uri(URI.create(fetchFileUrl))
                                 .header("Private-Token", ACCESS_TOKEN)
                                 .GET()
                                 .build();
-                HttpResponse<String> fetchFileResponse =
+                final HttpResponse<String> fetchFileResponse =
                         client.send(fetchFileRequest, HttpResponse.BodyHandlers.ofString());
                 if (fetchFileResponse.statusCode() == 200) {
                     // Extraction des Cve du fichier json
-                    Map<String, Integer> cveData = getCveFromJson(fetchFileResponse.body());
+                    final Map<String, Integer> cveData = getCveFromJson(fetchFileResponse.body());
                     putCveInBdd(module, cveData);
                     log.debug("Processed {}: {}", module.getId(), cveData);
                 } else {
@@ -84,22 +89,22 @@ public class RecupCveService {
     }
 
     private void putCveInBdd(Module module, Map<String, Integer> cveData) {
-        for (Map.Entry<String, Integer> entry : cveData.entrySet()) {
-            TableFaits fait = new TableFaits();
+        for (final Map.Entry<String, Integer> entry : cveData.entrySet()) {
+            final TableFaits fait = new TableFaits();
             fait.setIdModule(module.getId());
             fait.setIdApplication(module.getIdApplication());
             fait.setIdIndicateur(
                     switch (entry.getKey()) {
-                        case "CRITICAL" -> Indicateur.CVE_CRITICAL.getValue();
-                        case "HIGH" -> Indicateur.CVE_HIGH.getValue();
-                        case "MEDIUM" -> Indicateur.CVE_MEDIUM.getValue();
-                        case "LOW" -> Indicateur.CVE_LOW.getValue();
+                        case "CRITICAL" -> IndicateurType.CVE_CRITICAL.getValue();
+                        case "HIGH" -> IndicateurType.CVE_HIGH.getValue();
+                        case "MEDIUM" -> IndicateurType.CVE_MEDIUM.getValue();
+                        case "LOW" -> IndicateurType.CVE_LOW.getValue();
                         default ->
                                 throw new IllegalStateException(
                                         "Unexpected value: " + entry.getKey());
                     });
             fait.setValeur(BigDecimal.valueOf(entry.getValue()));
-            fait.setIdSource(Source.GITLAB.getValue());
+            fait.setIdSource(SourceType.GITLAB.getValue());
             fait.setCommentaire("");
             fait.setDate(LocalDate.now());
             tableFaitsRepository.save(fait);
@@ -107,29 +112,29 @@ public class RecupCveService {
     }
 
     /*
-       Récupération des CVE à partir du json
-    */
+     * Récupération des CVE à partir du json
+     */
     public Map<String, Integer> getCveFromJson(String jsonFile) {
 
-        Map<String, Integer> severityCounts = new HashMap<>();
+        final Map<String, Integer> severityCounts = new HashMap<>();
         try {
             // Charger le fichier JSON
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode rootNode = objectMapper.readTree(jsonFile);
+            final ObjectMapper objectMapper = new ObjectMapper();
+            final JsonNode rootNode = objectMapper.readTree(jsonFile);
 
             // Parcourir les résultats
-            JsonNode resultsNode = rootNode.get("Results");
+            final JsonNode resultsNode = rootNode.get("Results");
             if (resultsNode != null && resultsNode.isArray()) {
-                Set<String> highs = new HashSet<>();
-                Set<String> criticals = new HashSet<>();
-                Set<String> mediums = new HashSet<>();
-                Set<String> lows = new HashSet<>();
-                for (JsonNode result : resultsNode) {
-                    JsonNode vulnerabilitiesNode = result.get("Vulnerabilities");
+                final Set<String> highs = new HashSet<>();
+                final Set<String> criticals = new HashSet<>();
+                final Set<String> mediums = new HashSet<>();
+                final Set<String> lows = new HashSet<>();
+                for (final JsonNode result : resultsNode) {
+                    final JsonNode vulnerabilitiesNode = result.get("Vulnerabilities");
                     if (vulnerabilitiesNode != null && vulnerabilitiesNode.isArray()) {
-                        for (JsonNode vulnerability : vulnerabilitiesNode) {
+                        for (final JsonNode vulnerability : vulnerabilitiesNode) {
                             // Extraire la criticité
-                            String severity = vulnerability.get("Severity").asText();
+                            final String severity = vulnerability.get("Severity").asText();
                             // Incrémenter la bonne liste suivant la severite compteur pour cette
                             // criticité
                             switch (severity) {
@@ -157,46 +162,46 @@ public class RecupCveService {
                 severityCounts.put("LOW", lows.size());
             }
 
-        } catch (IOException e) {
+        } catch (final IOException e) {
             log.error("Erreur lors de la lecture du fichier JSON : {}", e.getMessage());
         }
         return severityCounts;
     }
 
     /*
-       Récupération des noms des fichiers json contenus dans le répertoire.
-       On retire les fichier html qui sont dans le même répertoire.
-    */
+     * Récupération des noms des fichiers json contenus dans le répertoire.
+     * On retire les fichier html qui sont dans le même répertoire.
+     */
     private List<String> fetchAllJsonFiles(HttpClient client, ObjectMapper objectMapper)
             throws IOException, InterruptedException {
-        List<String> jsonFiles = new ArrayList<>();
+        final List<String> jsonFiles = new ArrayList<>();
         int page = 1;
         boolean hasMoreFiles = true;
 
         while (hasMoreFiles) {
-            String encodedPath = URLEncoder.encode(DIRECTORY_PATH, StandardCharsets.UTF_8);
-            String listFilesUrl =
+            final String encodedPath = URLEncoder.encode(DIRECTORY_PATH, StandardCharsets.UTF_8);
+            final String listFilesUrl =
                     String.format(
                             "%s/projects/%s/repository/tree?path=%s&recursive=true&per_page=100&page=%d",
                             BASE_URL, PROJECT_ID, encodedPath, page);
 
-            HttpRequest listFilesRequest =
+            final HttpRequest listFilesRequest =
                     HttpRequest.newBuilder()
                             .uri(URI.create(listFilesUrl))
                             .header("Private-Token", ACCESS_TOKEN)
                             .GET()
                             .build();
 
-            HttpResponse<String> listFilesResponse =
+            final HttpResponse<String> listFilesResponse =
                     client.send(listFilesRequest, HttpResponse.BodyHandlers.ofString());
 
             if (listFilesResponse.statusCode() == 200) {
-                List<JsonNode> files =
+                final List<JsonNode> files =
                         objectMapper.readValue(
                                 listFilesResponse.body(), new TypeReference<List<JsonNode>>() {});
 
                 // Filtre les JSONS
-                List<String> jsonFilesOnPage =
+                final List<String> jsonFilesOnPage =
                         files.stream()
                                 .filter(
                                         file ->

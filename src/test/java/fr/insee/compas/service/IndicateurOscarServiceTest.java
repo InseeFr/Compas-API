@@ -16,7 +16,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import fr.insee.compas.model.Indicateur;
+import fr.insee.compas.model.compas.IndicateurType;
 import fr.insee.compas.model.compas.ModuleGradeDistance;
 import fr.insee.compas.model.compas.TableFaits;
 import fr.insee.compas.model.oscar.Module;
@@ -48,7 +48,7 @@ class IndicateurOscarServiceTest {
         Mockito.when(oscarService.getModules()).thenReturn(modules);
         Mockito.when(
                         tableFaitsRepository.findLatestValueByIndicateur(
-                                Indicateur.NBR_JOUR_MEP.getValue()))
+                                IndicateurType.NBR_JOUR_MEP.getValue()))
                 .thenReturn(latestValues);
 
         Map<Integer, ModuleGradeDistance> result = indicateurOscarService.calculateDistanceGrades();

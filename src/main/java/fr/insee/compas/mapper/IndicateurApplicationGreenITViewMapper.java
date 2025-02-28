@@ -23,7 +23,7 @@ public class IndicateurApplicationGreenITViewMapper {
                 .diskUsed(indicateur.getDiskUsed() + " %")
                 .cpuAllocated(indicateur.getCpuAllocated() + " Mhz")
                 .cpuMaxi(indicateur.getCpuMaxi() + " %")
-                .conso(indicateur.getConso() + " Kwh ?")
+                .conso(indicateur.getConso() + " Wh")
                 .nbVm(indicateur.getNbVm() + " vm")
                 .build();
     }

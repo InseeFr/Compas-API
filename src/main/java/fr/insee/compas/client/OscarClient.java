@@ -8,13 +8,15 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import fr.insee.compas.client.configuration.CustomErrorDecoder;
+import fr.insee.compas.client.configuration.oauth.CustomFeignAuthentification;
 import fr.insee.compas.client.view.ApplicationOscarView;
 import fr.insee.compas.client.view.ModuleOscarView;
+import fr.insee.compas.client.view.VmOscarView;
 
 @FeignClient(
-        name = "oscar-service",
-        url = "${spring.cloud.openfeign.client.config.oscar-service.url}",
-        configuration = {CustomErrorDecoder.class})
+        name = "oscarClient",
+        url = "${oscar.url}",
+        configuration = {CustomErrorDecoder.class, CustomFeignAuthentification.class})
 public interface OscarClient {
 
     @GetMapping("/modules/{idModule}")
@@ -26,4 +28,7 @@ public interface OscarClient {
 
     @GetMapping("/modules")
     ResponseEntity<List<ModuleOscarView>> getAllModuleOscar();
+
+    @GetMapping("/virtual-machines")
+    ResponseEntity<List<VmOscarView>> getAllVmOscar();
 }
