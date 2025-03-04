@@ -24,3 +24,9 @@ INSERT INTO table_faits (id_module,id_indicateur, id_application,date,valeur,id_
 INSERT INTO table_faits (id_module,id_indicateur, id_application,date,valeur,id_source) VALUES (266,1,137,'2024-12-02',572751,0);
 INSERT INTO table_faits (id_module,id_indicateur, id_application,date,valeur,id_source) VALUES (483,1,196,'2024-12-02',2242,0);
 INSERT INTO table_faits (id_module,id_indicateur, id_application,date,valeur,id_source) VALUES (102,1,22,'2024-12-02',19761,0);
+
+INSERT INTO table_faits (id_module,id_indicateur, id_application,date,valeur,id_source) VALUES (1,2,1,'2024-12-02',102,0);
+INSERT INTO table_faits (id_module,id_indicateur, id_application,date,valeur,id_source) VALUES (2,2,1,'2024-12-02',197,0);
+INSERT INTO table_faits (id_module,id_indicateur, id_application,date,valeur,id_source) VALUES (2,2,1,'2024-12-02',198,0);
+
+

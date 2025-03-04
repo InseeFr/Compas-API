@@ -1,11 +1,13 @@
 package fr.insee.compas.service;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -16,83 +18,171 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import fr.insee.compas.dto.AggregatedSumResultDto;
 import fr.insee.compas.model.compas.IndicateurType;
-import fr.insee.compas.model.compas.ModuleGradeDistance;
+import fr.insee.compas.model.compas.Notation;
 import fr.insee.compas.model.compas.TableFaits;
+import fr.insee.compas.model.oscar.Application;
 import fr.insee.compas.model.oscar.Module;
-import fr.insee.compas.repository.ModuleOscarRepository;
 import fr.insee.compas.repository.TableFaitsRepository;
+import fr.insee.compas.view.IndicateurApplicationDeveloppementLogicielView;
+import fr.insee.compas.view.IndicateurModuleDeveloppementLogicielView;
 
 @ExtendWith(MockitoExtension.class)
 class IndicateurOscarServiceTest {
+
+    @Mock private TableFaitsService tableFaitsService;
 
     @Mock private OscarService oscarService;
 
     @Mock private TableFaitsRepository tableFaitsRepository;
 
-    @Mock private ModuleOscarRepository moduleOscarRepo;
-
     @InjectMocks private IndicateurOscarService indicateurOscarService;
 
     @Test
-    void testCalculateDistanceGrades_WithValues() throws IOException {
-        List<TableFaits> latestValues =
-                List.of(
-                        new TableFaits(1, 3, LocalDate.now(), BigDecimal.valueOf(20), 0),
-                        new TableFaits(2, 3, LocalDate.now(), BigDecimal.valueOf(50), 0));
-        List<Module> modules =
-                List.of(
-                        new Module(1, "name1", "domaine1", "keySonar1", "sndi1"),
-                        new Module(2, "name2", "domaine2", "keySonar2", "sndi2"));
+    void testCalculateDistanceGrades_WithValues() {
+        TableFaits faits1 =
+                TableFaits.builder()
+                        .idModule(1)
+                        .idIndicateur(3)
+                        .date(LocalDate.now())
+                        .valeur(BigDecimal.valueOf(20))
+                        .idSource(0)
+                        .build();
+        TableFaits faits2 =
+                TableFaits.builder()
+                        .idModule(2)
+                        .idIndicateur(3)
+                        .date(LocalDate.now())
+                        .valeur(BigDecimal.valueOf(50))
+                        .idSource(0)
+                        .build();
+        List<TableFaits> latestValues = List.of(faits1, faits2);
+        Module module1 =
+                Module.builder()
+                        .id(1)
+                        .modName("name1")
+                        .sndi("sndi1")
+                        .domaineSndi("domaine1")
+                        .keySonar("keySonar1")
+                        .build();
+        Module module2 =
+                Module.builder()
+                        .id(2)
+                        .modName("name2")
+                        .sndi("sndi2")
+                        .domaineSndi("domaine2")
+                        .keySonar("keySonar2")
+                        .build();
+        List<Module> modules = List.of(module1, module2);
 
-        Mockito.when(oscarService.getModules()).thenReturn(modules);
-        Mockito.when(
-                        tableFaitsRepository.findLatestValueByIndicateur(
-                                IndicateurType.NBR_JOUR_MEP.getValue()))
+        when(oscarService.getModules()).thenReturn(modules);
+        when(tableFaitsRepository.findLatestValueByIndicateurByModule(
+                        IndicateurType.NBR_JOUR_MEP.getValue()))
                 .thenReturn(latestValues);
 
-        Map<Integer, ModuleGradeDistance> result = indicateurOscarService.calculateDistanceGrades();
+        List<IndicateurModuleDeveloppementLogicielView> result =
+                indicateurOscarService.calculateDistanceGradesModule();
 
         assertEquals(2, result.size());
-        assertEquals("A", result.get(1).getGrade());
-        assertEquals("B", result.get(2).getGrade());
-        assertEquals("name1", result.get(1).getName());
-        assertEquals("sndi1", result.get(1).getSndi());
-        assertEquals("domaine1", result.get(1).getDomaine());
-        assertEquals("name2", result.get(2).getName());
-        assertEquals("sndi2", result.get(2).getSndi());
-        assertEquals("domaine2", result.get(2).getDomaine());
+        assertEquals("A", result.get(0).getNoteDistance());
+        assertEquals("B", result.get(1).getNoteDistance());
     }
 
     @Test
-    void testMiseAJourLinesTableFaitsEnBaseDeDonnees_WithDate() throws IOException {
+    void testMiseAJourLinesTableFaitsEnBaseDeDonnees_WithDate() {
         LocalDate now = LocalDate.now(); // Date actuelle pour le test
-        List<Module> modules =
-                List.of(
-                        new Module(1, "name1", null, null, null, LocalDate.now().minusDays(2)),
-                        new Module(2, "name2", null, null, null, null));
+        Module module1 =
+                Module.builder()
+                        .id(1)
+                        .modName("name1")
+                        .domaineSndi("sndi1")
+                        .keySonar("keySonar1")
+                        .dateDerniereLivraison(LocalDate.now().minusDays(2))
+                        .build();
+        Module module2 =
+                Module.builder()
+                        .id(2)
+                        .modName("name2")
+                        .domaineSndi("sndi2")
+                        .keySonar("keySonar2")
+                        .build();
 
-        Mockito.when(oscarService.getModules()).thenReturn(modules);
+        List<Module> modules = List.of(module1, module2);
+
+        when(oscarService.getModules()).thenReturn(modules);
         indicateurOscarService.miseAJourLinesTableFaitsEnBaseDeDonnees();
 
         verify(tableFaitsRepository)
                 .save(
                         Mockito.argThat(
-                                tableFaits -> {
-                                    return tableFaits.getIdModule().equals(1)
-                                            && tableFaits.getIdIndicateur().equals(301)
-                                            && tableFaits.getValeur().equals(BigDecimal.valueOf(2))
-                                            && tableFaits.getDate().equals(now);
-                                }));
+                                tableFaits ->
+                                        tableFaits.getIdModule().equals(1)
+                                                && tableFaits.getIdIndicateur().equals(301)
+                                                && tableFaits
+                                                        .getValeur()
+                                                        .equals(BigDecimal.valueOf(2))
+                                                && tableFaits.getDate().equals(now)));
 
         verify(tableFaitsRepository)
                 .save(
                         Mockito.argThat(
-                                tableFaits -> {
-                                    return tableFaits.getIdModule().equals(2)
-                                            && tableFaits.getIdIndicateur().equals(301)
-                                            && tableFaits.getValeur().equals(BigDecimal.valueOf(-1))
-                                            && tableFaits.getDate().equals(now);
-                                }));
+                                tableFaits ->
+                                        tableFaits.getIdModule().equals(2)
+                                                && tableFaits.getIdIndicateur().equals(301)
+                                                && tableFaits
+                                                        .getValeur()
+                                                        .equals(BigDecimal.valueOf(-1))
+                                                && tableFaits.getDate().equals(now)));
+    }
+
+    @Test
+    void testCalculateDistanceGradesApplication_WithValues() {
+        // Mock des valeurs agrégées
+        Map<Integer, AggregatedSumResultDto> latestValues = new HashMap<>();
+        latestValues.put(
+                1,
+                new AggregatedSumResultDto(BigDecimal.valueOf(10.0), 1)); // Simulation de données
+
+        // Mock des applications
+        List<Application> applications =
+                List.of(Application.builder().idApplication(1).appName("App1").build());
+
+        when(tableFaitsService.findAgregationAvgByIndicateurAndApplication(anyInt()))
+                .thenReturn(latestValues);
+        when(oscarService.getApplications()).thenReturn(applications);
+
+        // Appel de la méthode testée
+        List<IndicateurApplicationDeveloppementLogicielView> result =
+                indicateurOscarService.calculateDistanceGradesApplication();
+
+        // Vérifications
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(1, result.getFirst().getApplicationId());
+        assertEquals(10, result.getFirst().getValueDistance());
+    }
+
+    @Test
+    void testCalculateDistanceGradesApplication_NoValues() {
+        // Aucun latestValues trouvé
+        when(tableFaitsService.findAgregationAvgByIndicateurAndApplication(anyInt()))
+                .thenReturn(new HashMap<>());
+
+        // Mock des applications
+        List<Application> applications =
+                List.of(Application.builder().idApplication(1).appName("App1").build());
+
+        when(oscarService.getApplications()).thenReturn(applications);
+
+        // Appel de la méthode testée
+        List<IndicateurApplicationDeveloppementLogicielView> result =
+                indicateurOscarService.calculateDistanceGradesApplication();
+
+        // Vérifications
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(1, result.getFirst().getApplicationId());
+        assertEquals(Notation.NR.getGrade(), result.getFirst().getNoteDistance());
     }
 }

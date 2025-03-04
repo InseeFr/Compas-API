@@ -1,72 +1,65 @@
 package fr.insee.compas.service;
 
 import java.io.IOException;
-import java.util.Objects;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
+import fr.insee.compas.model.IndicateurSonar;
 import fr.insee.compas.model.sonar.*;
 
-import okhttp3.Call;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
+@Slf4j
 @Service
 public class SonarService {
 
-    public static RecuperationMeasures getDataFromSonarAPIMeasures(
-            String projetSonar, String metrics) throws IOException {
-        final String urlParam = "measures/component";
-        final String component = "?component=" + projetSonar;
-        final String paramMetrics = "&metricKeys=" + metrics;
-        String url = "http://sonar.insee.fr/api/" + urlParam + component + paramMetrics;
-        // appel à l'API
-        OkHttpClient client = new OkHttpClient();
-        Request request = new Request.Builder().url(url).build();
-        Call monAppel = client.newCall(request);
-        Response response = monAppel.execute();
-        String jsonString = Objects.requireNonNull(response.body()).string();
-        response.close();
+    @Value("${fr.insee.compas.sonar.token:}")
+    private String token;
 
-        // construction de la classe à partir du fichier json renvoyer par l'API.
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.configure(
-                DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false); // Cela indique à Jackson
-        // d’ignorer silencieusement
-        // les champs qu’il ne
-        // reconnaît pas au lieu de
-        // lever une exception.
-        objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
+    private OkHttpClient client;
+    private ObjectMapper objectMapper;
 
-        return objectMapper.readValue(jsonString, RecuperationMeasures.class);
+    public SonarService() {
+        this.client = new OkHttpClient();
+        this.objectMapper = new ObjectMapper();
+        this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        this.objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
     }
 
-    public static CouvertureTest getIndicateurSonar(String projet, String metric)
-            throws IOException {
-        CouvertureTest ce = new CouvertureTest();
-        if (projet != null && !"Sans objet".equals(projet)) {
-            RecuperationMeasures couverture =
-                    SonarService.getDataFromSonarAPIMeasures(projet, metric);
-            if (couverture.getComponent() != null
-                    && !couverture.getComponent().getMeasures().isEmpty()) {
-                couverture
-                        .getComponent()
-                        .getMeasures()
-                        .forEach(
-                                measure -> {
-                                    ce.setProjet(projet);
-                                    ce.setCouverture(measure.getValue());
-                                });
-            } else {
-                ce.setProjet(projet);
-                ce.setCouverture("Aucune couverture disponible");
+    public RecuperationMeasures getDataFromSonarAPIMeasures(String projetSonar) throws IOException {
+
+        String metrics =
+                Arrays.stream(IndicateurSonar.values())
+                        .map(IndicateurSonar::getKey)
+                        .collect(Collectors.joining(","));
+
+        String url =
+                String.format(
+                        "http://sonar.insee.fr/api/measures/component?component=%s&metricKeys=%s",
+                        projetSonar, metrics);
+
+        Request request =
+                new Request.Builder()
+                        .url(url)
+                        .addHeader("Authorization", "Bearer " + token)
+                        .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            if (response.body() == null || !response.isSuccessful()) {
+                return null;
             }
+            String jsonString = response.body().string();
+            return objectMapper.readValue(jsonString, RecuperationMeasures.class);
         }
-        return ce;
     }
 }

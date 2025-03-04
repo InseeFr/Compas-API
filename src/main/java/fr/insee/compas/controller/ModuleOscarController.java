@@ -1,6 +1,5 @@
 package fr.insee.compas.controller;
 
-import java.io.IOException;
 import java.util.List;
 
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,21 +27,21 @@ public class ModuleOscarController {
         this.moduleService = moduleService;
     }
 
-    @GetMapping("/findAll")
+    @GetMapping("/find-all")
     @Operation(summary = "Obtenir tous les modules ")
     public List<ModuleOscar> getAllUsers() {
         return moduleRepository.findAll();
     }
 
-    @GetMapping("/findModuleActif")
+    @GetMapping("/find-module-actif")
     @Operation(summary = "Obtenir tous les modules actifs ")
     public List<ModuleOscar> getModuleActif() {
         return moduleRepository.findByActif(true);
     }
 
-    @PutMapping("/MiseAjour")
+    @PutMapping("/mise-a-jour")
     @Operation(summary = "Mettre à jour les modules de Compas à partir d'Oscar")
-    public void miseAjourModule() throws IOException {
+    public void miseAjourModule() {
         moduleService.miseAjourModuleOscarEnBaseDeDonnees();
     }
 }

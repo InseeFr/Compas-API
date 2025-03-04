@@ -10,6 +10,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
 import fr.insee.compas.model.compas.TableFaits;
 
@@ -23,6 +24,8 @@ import fr.insee.compas.model.compas.TableFaits;
 class TableFaitsRepositoryTest {
 
     @Autowired private TableFaitsRepository tableFaitsRepository;
+
+    @Autowired private TestEntityManager entityManager;
 
     @Test
     void testFindIdsByEtatCourant() {
@@ -46,5 +49,27 @@ class TableFaitsRepositoryTest {
         assertNotNull(value);
         assertEquals(1, value.size());
         assertEquals(new BigDecimal("8.00"), value.get(0));
+    }
+
+    @Test
+    void testFindAggregatedSumResults() {
+
+        Integer idIndicateur = 2;
+        List<Object[]> results = tableFaitsRepository.findAggregatedSumResults(idIndicateur);
+
+        assertEquals(1, results.size());
+        assertEquals(1, ((Number) results.getFirst()[0]).intValue()); // id_application attendu
+        assertEquals(300, ((Number) results.getFirst()[1]).intValue()); // Somme attendue
+    }
+
+    @Test
+    void testFindAggregatedAvgResults() {
+
+        Integer idIndicateur = 2;
+        List<Object[]> results = tableFaitsRepository.findAggregatedAvgResults(idIndicateur);
+
+        assertEquals(1, results.size());
+        assertEquals(1, ((Number) results.getFirst()[0]).intValue()); // id_application attendu
+        assertEquals(150, ((Number) results.getFirst()[1]).intValue()); // Somme attendue
     }
 }

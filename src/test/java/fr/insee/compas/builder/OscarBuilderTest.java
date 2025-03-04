@@ -1,4 +1,4 @@
-package fr.insee.compas.mapper;
+package fr.insee.compas.builder;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -37,6 +37,7 @@ class OscarBuilderTest {
                         "applicationTechnique": {
                             "application": {
                                 "id": 2,
+                                "nom" : "AppTest",
                                 "sndi": {"nom": "TestSndi"},
                                 "domaineSndi": {"nom": "TestDomaineSndi"},
                                 "domaineFonctionnel": {"nom": "TestDomaineFonctionnel"}
@@ -53,7 +54,7 @@ class OscarBuilderTest {
         assertNotNull(module);
         assertEquals(1, module.getId());
         assertEquals("TestModule", module.getModName());
-        assertEquals("TestModule", module.getAppName());
+        assertEquals("AppTest", module.getAppName());
         assertEquals(LocalDate.of(2023, 1, 1), module.getDateDerniereLivraison());
         assertEquals("key-sonar", module.getKeySonar());
         assertEquals(2, module.getIdApplication());

@@ -1,10 +1,9 @@
 package fr.insee.compas.service;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -14,14 +13,17 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import fr.insee.compas.model.compas.Grade;
+import fr.insee.compas.dto.AggregatedSumResultDto;
 import fr.insee.compas.model.compas.IndicateurType;
-import fr.insee.compas.model.compas.ModuleGradeDistance;
+import fr.insee.compas.model.compas.Notation;
 import fr.insee.compas.model.compas.SourceType;
 import fr.insee.compas.model.compas.TableFaits;
+import fr.insee.compas.model.oscar.Application;
 import fr.insee.compas.model.oscar.Module;
 import fr.insee.compas.repository.ModuleOscarRepository;
 import fr.insee.compas.repository.TableFaitsRepository;
+import fr.insee.compas.view.IndicateurApplicationDeveloppementLogicielView;
+import fr.insee.compas.view.IndicateurModuleDeveloppementLogicielView;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,28 +35,32 @@ public class IndicateurOscarService {
 
     private final TableFaitsRepository tableFaitsRepository;
 
+    private final TableFaitsService tableFaitsService;
+
     private final ModuleOscarRepository moduleOscarRepo;
 
     @Autowired
     public IndicateurOscarService(
             TableFaitsRepository tableFaitsRepository,
             OscarService oscarService,
+            TableFaitsService tableFaitsService,
             ModuleOscarRepository moduleOscarRepo) {
         this.tableFaitsRepository = tableFaitsRepository;
         this.oscarService = oscarService;
+        this.tableFaitsService = tableFaitsService;
         this.moduleOscarRepo = moduleOscarRepo;
     }
 
-    public Map<Integer, ModuleGradeDistance> calculateDistanceGrades() {
+    public List<IndicateurModuleDeveloppementLogicielView> calculateDistanceGradesModule() {
 
         List<TableFaits> latestValues =
-                tableFaitsRepository.findLatestValueByIndicateur(
+                tableFaitsRepository.findLatestValueByIndicateurByModule(
                         IndicateurType.NBR_JOUR_MEP.getValue());
         List<Module> modules = oscarService.getModules();
         Map<Integer, List<TableFaits>> groupedByModule =
                 latestValues.stream().collect(Collectors.groupingBy(TableFaits::getIdModule));
 
-        Map<Integer, ModuleGradeDistance> result = new HashMap<>();
+        List<IndicateurModuleDeveloppementLogicielView> result = new ArrayList<>();
 
         for (Module module : modules) {
             Integer moduleId = module.getId();
@@ -68,31 +74,61 @@ public class IndicateurOscarService {
                                 .orElse(0);
 
                 String grade = getGradeFromDistance(distance);
+                result.add(
+                        IndicateurModuleDeveloppementLogicielView.builder()
+                                .moduleId(module.getId())
+                                .noteDistance(grade)
+                                .valueDistance(distance)
+                                .build());
 
-                result.put(
-                        moduleId,
-                        new ModuleGradeDistance(
-                                module.getModName(),
-                                module.getAppName(),
-                                module.getSndi(),
-                                module.getDomaineFonctionnel(),
-                                grade));
             } else {
-                result.put(
-                        moduleId,
-                        new ModuleGradeDistance(
-                                module.getModName(),
-                                module.getAppName(),
-                                module.getSndi(),
-                                module.getDomaineFonctionnel(),
-                                "Non renseigné"));
+                result.add(
+                        IndicateurModuleDeveloppementLogicielView.builder()
+                                .moduleId(module.getId())
+                                .noteDistance(Notation.NR.getGrade())
+                                .build());
             }
         }
 
         return result;
     }
 
-    public void miseAJourLinesTableFaitsEnBaseDeDonnees() throws IOException {
+    public List<IndicateurApplicationDeveloppementLogicielView>
+            calculateDistanceGradesApplication() {
+
+        Map<Integer, AggregatedSumResultDto> latestValues =
+                tableFaitsService.findAgregationAvgByIndicateurAndApplication(
+                        IndicateurType.NBR_JOUR_MEP.getValue());
+        List<Application> applications = oscarService.getApplications();
+
+        List<IndicateurApplicationDeveloppementLogicielView> result = new ArrayList<>();
+
+        for (Application application : applications) {
+            Integer applicationId = application.getIdApplication();
+
+            if (latestValues.get(applicationId) != null) {
+                Integer distance = latestValues.get(applicationId).getSumValeur().intValue();
+                String grade = getGradeFromDistance(distance);
+                result.add(
+                        IndicateurApplicationDeveloppementLogicielView.builder()
+                                .applicationId(application.getIdApplication())
+                                .noteDistance(grade)
+                                .valueDistance(distance)
+                                .build());
+
+            } else {
+                result.add(
+                        IndicateurApplicationDeveloppementLogicielView.builder()
+                                .applicationId(application.getIdApplication())
+                                .noteDistance(Notation.NR.getGrade())
+                                .build());
+            }
+        }
+
+        return result;
+    }
+
+    public void miseAJourLinesTableFaitsEnBaseDeDonnees() {
         LocalDate now = LocalDate.now();
         List<Module> modules = oscarService.getModules();
         log.debug("la date est {}", now);
@@ -132,32 +168,33 @@ public class IndicateurOscarService {
         }
 
         if (distance == -1) {
-            return Grade.X.getGrade();
+            return Notation.X.getGrade();
         }
 
         return switch (distance / 30) {
             case 0 -> // 0 <= distance <= 30
-                    Grade.A.getGrade();
+                    Notation.A.getGrade();
             case 1 -> // 31 <= distance <= 90
-                    Grade.B.getGrade();
+                    Notation.B.getGrade();
             case 2 -> // 91 <= distance <= 180
-                    Grade.C.getGrade();
+                    Notation.C.getGrade();
             case 3 -> // 181 <= distance <= 360
-                    Grade.D.getGrade();
+                    Notation.D.getGrade();
             default -> // distance > 360
-                    Grade.E.getGrade();
+                    Notation.E.getGrade();
         };
     }
 
     @Transactional
-    public void miseAjourModuleOscarEnBaseDeDonnees() throws IOException {
+    public void miseAjourModuleOscarEnBaseDeDonnees() {
         List<Module> modules = oscarService.getModules();
         // Mise à false les module de compas déjà récupéré d'oscar
         moduleOscarRepo.desactivateAllModules();
-        // Mise à jour des module present dans oscar (Ajout si non présent dans compas, reactivation
+        // Mise à jour des modules present dans oscar (Ajout si non présent dans compas,
+        // reactivation
         // si déjà présent dans oscar)
         for (Module module : modules) {
-            System.out.println(module.getId());
+            log.debug("Mise à jour du module :{}", module.getId());
             moduleOscarRepo.upsertProduct(module.getId());
         }
     }

@@ -38,7 +38,8 @@ class TableFaitsServiceTest {
 
         List<TableFaits> mockMetrics = Arrays.asList(tableFait1, tableFait2);
 
-        when(tableFaitsRepository.findLatestValueByIndicateur(indicateur)).thenReturn(mockMetrics);
+        when(tableFaitsRepository.findLatestValueByIndicateurByModule(indicateur))
+                .thenReturn(mockMetrics);
 
         // Act
         Map<Integer, TableFaits> result = tableFaitsService.getMapMetricByModule(indicateur);
@@ -47,6 +48,6 @@ class TableFaitsServiceTest {
         assertEquals(2, result.size());
         assertEquals(tableFait1, result.get(101));
         assertEquals(tableFait2, result.get(102));
-        verify(tableFaitsRepository, times(1)).findLatestValueByIndicateur(indicateur);
+        verify(tableFaitsRepository, times(1)).findLatestValueByIndicateurByModule(indicateur);
     }
 }

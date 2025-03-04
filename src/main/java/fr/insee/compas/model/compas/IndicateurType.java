@@ -10,6 +10,10 @@ public enum IndicateurType {
     CVE_HIGH(4),
     CVE_MEDIUM(5),
     CVE_LOW(6),
+    CVE_CRITICAL_APPLI(7),
+    CVE_HIGH_APPLI(8),
+    CVE_MEDIUM_APPLI(9),
+    CVE_LOW_APPLI(10),
     RAM_ALLOUEE(201),
     RAM_MAXI(202),
     DISQUE_ALLOUE(203),
@@ -18,7 +22,8 @@ public enum IndicateurType {
     CPU_MAXI(206),
     CONSO_ELEC(207),
     NBR_VM(208),
-    NBR_JOUR_MEP(301);
+    NBR_JOUR_MEP(301),
+    DETTE_TECH(11);
 
     private final int value;
 

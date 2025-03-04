@@ -3,8 +3,8 @@ package fr.insee.compas.model.sonar;
 import lombok.Data;
 
 @Data
-public class CouvertureTest {
+public class MetricSonar {
 
     private String projet;
-    private String couverture;
+    private String valeur;
 }

@@ -1,13 +1,16 @@
-package fr.insee.compas.mapper;
+package fr.insee.compas.builder;
 
 import java.time.Instant;
 import java.time.ZoneId;
+
+import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
 import fr.insee.compas.model.oscar.Application;
 import fr.insee.compas.model.oscar.Module;
 
+@Component
 public class OscarBuilder {
 
     public Module buildModule(JsonNode moduleNode) {
@@ -15,10 +18,10 @@ public class OscarBuilder {
         module.setId(moduleNode.path("id").asInt());
 
         module.setModName(moduleNode.path("nom").asText());
-        module.setModName(
-                moduleNode.path("nom").asText()); // Assuming modName and appName are the same
         module.setAppName(
-                moduleNode.path("nom").asText()); // Assuming modName and appName are the same
+                getPathApplication(moduleNode)
+                        .path("nom")
+                        .asText()); // Assuming modName and appName are the same
         JsonNode dateDerniereLivraisonNode = moduleNode.path("dateDerniereLivraison");
 
         if (!dateDerniereLivraisonNode.isMissingNode() && !dateDerniereLivraisonNode.isNull()) {

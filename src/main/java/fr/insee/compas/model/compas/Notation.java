@@ -1,6 +1,9 @@
 package fr.insee.compas.model.compas;
 
-public enum Grade {
+import lombok.Getter;
+
+@Getter
+public enum Notation {
     A("A"),
     B("B"),
     C("C"),
@@ -12,11 +15,7 @@ public enum Grade {
 
     private final String grade;
 
-    Grade(String grade) {
+    Notation(String grade) {
         this.grade = grade;
-    }
-
-    public String getGrade() {
-        return grade;
     }
 }

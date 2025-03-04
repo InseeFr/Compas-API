@@ -2,32 +2,23 @@ package fr.insee.compas.service.qualite;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.net.URI;
-import java.net.URLEncoder;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import fr.insee.compas.model.compas.IndicateurType;
 import fr.insee.compas.model.compas.SourceType;
 import fr.insee.compas.model.compas.TableFaits;
+import fr.insee.compas.model.oscar.Application;
 import fr.insee.compas.model.oscar.Module;
 import fr.insee.compas.repository.TableFaitsRepository;
+import fr.insee.compas.service.GitlabService;
 import fr.insee.compas.service.OscarService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -36,205 +27,135 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class RecupCveService {
 
-    public RecupCveService(TableFaitsRepository tableFaitsRepository, OscarService oscarService) {
+    public RecupCveService(
+            TableFaitsRepository tableFaitsRepository,
+            OscarService oscarService,
+            UtilsCveService utilCveService,
+            GitlabService gitlabService) {
         this.tableFaitsRepository = tableFaitsRepository;
         this.oscarService = oscarService;
+        this.utilService = utilCveService;
+        this.gitlabService = gitlabService;
     }
 
     private final TableFaitsRepository tableFaitsRepository;
     private final OscarService oscarService;
+    private final UtilsCveService utilService;
+    private final GitlabService gitlabService;
 
-    @Value("${fr.insee.compas.gitlab.token:}")
-    private String ACCESS_TOKEN;
+    public void recupereCve() {
 
-    private static final String BASE_URL = "https://gitlab.insee.fr/api/v4";
-    private static final String PROJECT_ID = "13644";
-    private static final String DIRECTORY_PATH = "rapports";
+        List<Module> modules = oscarService.getModules();
+        List<Application> applications = oscarService.getApplications();
 
-    public void getCveInBdd() {
-        final HttpClient client = HttpClient.newHttpClient();
-        final List<Module> modules = oscarService.getModules();
-        try {
-            for (final Module module : modules) {
-                final String encodedFilePath =
-                        URLEncoder.encode(
-                                "rapports/" + module.getId() + ".json", StandardCharsets.UTF_8);
-                final String fetchFileUrl =
-                        String.format(
-                                "%s/projects/%s/repository/files/%s/raw",
-                                BASE_URL, PROJECT_ID, encodedFilePath);
-                final HttpRequest fetchFileRequest =
-                        HttpRequest.newBuilder()
-                                .uri(URI.create(fetchFileUrl))
-                                .header("Private-Token", ACCESS_TOKEN)
-                                .GET()
-                                .build();
-                final HttpResponse<String> fetchFileResponse =
-                        client.send(fetchFileRequest, HttpResponse.BodyHandlers.ofString());
-                if (fetchFileResponse.statusCode() == 200) {
-                    // Extraction des Cve du fichier json
-                    final Map<String, Integer> cveData = getCveFromJson(fetchFileResponse.body());
-                    putCveInBdd(module, cveData);
-                    log.debug("Processed {}: {}", module.getId(), cveData);
+        Map<Integer, Map<String, Set<String>>> inventaireByModule =
+                recupereInventaireCveAllModule();
+        Map<Integer, Map<String, Set<String>>> inventaireByApplication = new HashMap<>();
+        // On met à jour les cve pour les modules et on calcule au niveau application
+        for (Module module : modules) {
+            Map<String, Set<String>> inventaireModule = inventaireByModule.get(module.getId());
+            if (inventaireModule != null && !inventaireModule.isEmpty()) {
+
+                putCveModuleInBdd(module, inventaireByModule.get(module.getId()));
+
+                // Récupérer ou initialiser l'inventaire au niveau application
+                if (inventaireByApplication.get(module.getIdApplication()) == null) {
+                    inventaireByApplication.put(module.getIdApplication(), inventaireModule);
                 } else {
-                    log.error(
-                            "Failed to fetch {}: {}",
-                            module.getId(),
-                            fetchFileResponse.statusCode());
+                    // Fusionner les données module -> application
+                    Map<String, Set<String>> inventaireApplication =
+                            inventaireByApplication.get(module.getIdApplication());
+                    Map<String, Set<String>> inventaireConcatene =
+                            utilService.concatInventaireCve(
+                                    inventaireApplication, inventaireModule);
+                    inventaireByApplication.put(module.getIdApplication(), inventaireConcatene);
                 }
             }
-        } catch (IOException | InterruptedException e) {
-            log.error("An error occurred: {}", e.getMessage());
+        }
+
+        // On met à jour les cve aux niveaux application
+        for (Application application : applications) {
+            if (inventaireByApplication.get(application.getIdApplication()) != null) {
+                putCveApplicationInBdd(
+                        application, inventaireByApplication.get(application.getIdApplication()));
+            }
         }
     }
 
-    private void putCveInBdd(Module module, Map<String, Integer> cveData) {
-        for (final Map.Entry<String, Integer> entry : cveData.entrySet()) {
-            final TableFaits fait = new TableFaits();
-            fait.setIdModule(module.getId());
-            fait.setIdApplication(module.getIdApplication());
-            fait.setIdIndicateur(
-                    switch (entry.getKey()) {
-                        case "CRITICAL" -> IndicateurType.CVE_CRITICAL.getValue();
-                        case "HIGH" -> IndicateurType.CVE_HIGH.getValue();
-                        case "MEDIUM" -> IndicateurType.CVE_MEDIUM.getValue();
-                        case "LOW" -> IndicateurType.CVE_LOW.getValue();
-                        default ->
-                                throw new IllegalStateException(
-                                        "Unexpected value: " + entry.getKey());
-                    });
-            fait.setValeur(BigDecimal.valueOf(entry.getValue()));
-            fait.setIdSource(SourceType.GITLAB.getValue());
-            fait.setCommentaire("");
-            fait.setDate(LocalDate.now());
+    public Map<Integer, Map<String, Set<String>>> recupereInventaireCveAllModule() {
+
+        List<Module> modules = oscarService.getModules();
+        Map<Integer, Map<String, Set<String>>> inventaires = new HashMap<>();
+        try {
+            for (Module module : modules) {
+                String fileJson = gitlabService.getJson(module);
+                if (!fileJson.isEmpty()) {
+                    // Extraction des Cve du fichier json
+                    Map<String, Set<String>> inventaireModule = getCveFromJson(fileJson);
+                    if (inventaireModule != null && !inventaireModule.isEmpty()) {
+                        inventaires.put(module.getId(), inventaireModule);
+                    }
+                } else {
+                    log.error(
+                            "Echec de la récupération du fichier pour le module  {}",
+                            module.getModName());
+                }
+            }
+        } catch (IOException | InterruptedException e) {
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt(); // Réinterrompt le thread
+            }
+            log.error("An error occurred: {}", e.getMessage());
+        }
+
+        return inventaires;
+    }
+
+    private void putCveModuleInBdd(Module module, Map<String, Set<String>> cveData) {
+        for (Map.Entry<String, Set<String>> entry : cveData.entrySet()) {
+            TableFaits fait =
+                    TableFaits.builder()
+                            .idModule(module.getId())
+                            .idApplication(module.getIdApplication())
+                            .idIndicateur(utilService.getIndicateurModule(entry.getKey()))
+                            .valeur(BigDecimal.valueOf(entry.getValue().size()))
+                            .idSource(SourceType.GITLAB.getValue())
+                            .commentaire("")
+                            .date(LocalDate.now())
+                            .build();
             tableFaitsRepository.save(fait);
         }
     }
 
-    /*
-     * Récupération des CVE à partir du json
-     */
-    public Map<String, Integer> getCveFromJson(String jsonFile) {
-
-        final Map<String, Integer> severityCounts = new HashMap<>();
-        try {
-            // Charger le fichier JSON
-            final ObjectMapper objectMapper = new ObjectMapper();
-            final JsonNode rootNode = objectMapper.readTree(jsonFile);
-
-            // Parcourir les résultats
-            final JsonNode resultsNode = rootNode.get("Results");
-            if (resultsNode != null && resultsNode.isArray()) {
-                final Set<String> highs = new HashSet<>();
-                final Set<String> criticals = new HashSet<>();
-                final Set<String> mediums = new HashSet<>();
-                final Set<String> lows = new HashSet<>();
-                for (final JsonNode result : resultsNode) {
-                    final JsonNode vulnerabilitiesNode = result.get("Vulnerabilities");
-                    if (vulnerabilitiesNode != null && vulnerabilitiesNode.isArray()) {
-                        for (final JsonNode vulnerability : vulnerabilitiesNode) {
-                            // Extraire la criticité
-                            final String severity = vulnerability.get("Severity").asText();
-                            // Incrémenter la bonne liste suivant la severite compteur pour cette
-                            // criticité
-                            switch (severity) {
-                                case "HIGH":
-                                    highs.add(vulnerability.get("VulnerabilityID").asText());
-                                    break;
-                                case "CRITICAL":
-                                    criticals.add(vulnerability.get("VulnerabilityID").asText());
-                                    break;
-                                case "MEDIUM":
-                                    mediums.add(vulnerability.get("VulnerabilityID").asText());
-                                    break;
-                                case "LOW":
-                                    lows.add(vulnerability.get("VulnerabilityID").asText());
-                                    break;
-                                default:
-                                    break;
-                            }
-                        }
-                    }
-                }
-                severityCounts.put("CRITICAL", criticals.size());
-                severityCounts.put("HIGH", highs.size());
-                severityCounts.put("MEDIUM", mediums.size());
-                severityCounts.put("LOW", lows.size());
-            }
-
-        } catch (final IOException e) {
-            log.error("Erreur lors de la lecture du fichier JSON : {}", e.getMessage());
+    private void putCveApplicationInBdd(Application application, Map<String, Set<String>> cveData) {
+        for (Map.Entry<String, Set<String>> entry : cveData.entrySet()) {
+            TableFaits fait =
+                    TableFaits.builder()
+                            .idModule(null)
+                            .idApplication(application.getIdApplication())
+                            .idIndicateur(utilService.getIndicateurApplication(entry.getKey()))
+                            .valeur(BigDecimal.valueOf(entry.getValue().size()))
+                            .idSource(SourceType.GITLAB.getValue())
+                            .commentaire("")
+                            .date(LocalDate.now())
+                            .build();
+            tableFaitsRepository.save(fait);
         }
-        return severityCounts;
     }
 
-    /*
-     * Récupération des noms des fichiers json contenus dans le répertoire.
-     * On retire les fichier html qui sont dans le même répertoire.
-     */
-    private List<String> fetchAllJsonFiles(HttpClient client, ObjectMapper objectMapper)
-            throws IOException, InterruptedException {
-        final List<String> jsonFiles = new ArrayList<>();
-        int page = 1;
-        boolean hasMoreFiles = true;
+    public Map<String, Set<String>> getCveFromJson(String jsonFile) {
+        try {
+            JsonNode rootNode = new ObjectMapper().readTree(jsonFile);
+            JsonNode resultsNode = rootNode.get("Results");
 
-        while (hasMoreFiles) {
-            final String encodedPath = URLEncoder.encode(DIRECTORY_PATH, StandardCharsets.UTF_8);
-            final String listFilesUrl =
-                    String.format(
-                            "%s/projects/%s/repository/tree?path=%s&recursive=true&per_page=100&page=%d",
-                            BASE_URL, PROJECT_ID, encodedPath, page);
-
-            final HttpRequest listFilesRequest =
-                    HttpRequest.newBuilder()
-                            .uri(URI.create(listFilesUrl))
-                            .header("Private-Token", ACCESS_TOKEN)
-                            .GET()
-                            .build();
-
-            final HttpResponse<String> listFilesResponse =
-                    client.send(listFilesRequest, HttpResponse.BodyHandlers.ofString());
-
-            if (listFilesResponse.statusCode() == 200) {
-                final List<JsonNode> files =
-                        objectMapper.readValue(
-                                listFilesResponse.body(), new TypeReference<List<JsonNode>>() {});
-
-                // Filtre les JSONS
-                final List<String> jsonFilesOnPage =
-                        files.stream()
-                                .filter(
-                                        file ->
-                                                file.get("type")
-                                                        .asText()
-                                                        .equals("blob")) // Only files (not
-                                // directories)
-                                .filter(
-                                        file ->
-                                                file.get("path")
-                                                        .asText()
-                                                        .endsWith(".json")) // Only JSON files
-                                .map(file -> file.get("path").asText())
-                                .toList();
-
-                jsonFiles.addAll(jsonFilesOnPage);
-
-                // Stop si il n'y a plus de fichier
-                if (jsonFilesOnPage.isEmpty()) {
-                    hasMoreFiles = false;
-                } else {
-                    page++;
-                }
-            } else {
-                System.out.println(
-                        "Failed to list files on page "
-                                + page
-                                + ": "
-                                + listFilesResponse.statusCode());
-                hasMoreFiles = false;
+            if (resultsNode == null || !resultsNode.isArray()) {
+                return new HashMap<>();
             }
-        }
 
-        return jsonFiles;
+            return utilService.parseResults(resultsNode);
+        } catch (IOException e) {
+            log.error("Erreur lors de la lecture du fichier JSON : {}", e.getMessage());
+            return new HashMap<>();
+        }
     }
 }

@@ -25,19 +25,19 @@ public class OscarController {
         this.oscarService = oscarService;
     }
 
-    @GetMapping("/getAllModule")
+    @GetMapping("/get-all-modules")
     @Operation(summary = "liste des modules d'oscar ")
     public List<ModuleOscarView> getAllModules() {
         return oscarClient.getAllModuleOscar().getBody();
     }
 
-    @GetMapping("/getModules")
+    @GetMapping("/get-modules")
     @Operation(summary = "liste des modules d'oscar sans feign ")
     public List<Module> getModules() {
         return oscarService.getModules();
     }
 
-    @GetMapping("/getApplications")
+    @GetMapping("/get-applications")
     @Operation(summary = "liste des applications d'oscar sans feign ")
     public List<Application> getApplications() {
         return oscarService.getApplications();
