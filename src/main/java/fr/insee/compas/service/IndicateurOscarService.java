@@ -133,7 +133,7 @@ public class IndicateurOscarService {
         List<Module> modules = oscarService.getModules();
         log.debug("la date est {}", now);
         for (Module module : modules) {
-            if (module.getDateDerniereLivraison() != null) {
+            if (module.getDateDerniereLivraisonEnProduction() != null) {
                 tableFaitsRepository.save(
                         TableFaits.builder()
                                 .idModule(module.getId())
@@ -143,12 +143,15 @@ public class IndicateurOscarService {
                                 .valeur(
                                         BigDecimal.valueOf(
                                                 ChronoUnit.DAYS.between(
-                                                        module.getDateDerniereLivraison(), now)))
+                                                        module
+                                                                .getDateDerniereLivraisonEnProduction(),
+                                                        now)))
                                 .idSource(SourceType.OSCAR.getValue())
                                 .build());
             } else {
                 log.warn(
-                        "Le champ dateDerniereLivraison du module {} n'existe pas", module.getId());
+                        "Le champ dateDerniereLivraisonEnProduction du module {} n'existe pas",
+                        module.getId());
                 tableFaitsRepository.save(
                         TableFaits.builder()
                                 .idModule(module.getId())

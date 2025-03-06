@@ -32,7 +32,7 @@ class OscarBuilderTest {
                     {
                         "id": 1,
                         "nom": "TestModule",
-                        "dateDerniereLivraison": 1672531200000,
+                        "dateDerniereLivraisonEnProduction": 1672531200000,
                         "projectKeySonar": "key-sonar",
                         "applicationTechnique": {
                             "application": {
@@ -55,7 +55,7 @@ class OscarBuilderTest {
         assertEquals(1, module.getId());
         assertEquals("TestModule", module.getModName());
         assertEquals("AppTest", module.getAppName());
-        assertEquals(LocalDate.of(2023, 1, 1), module.getDateDerniereLivraison());
+        assertEquals(LocalDate.of(2023, 1, 1), module.getDateDerniereLivraisonEnProduction());
         assertEquals("key-sonar", module.getKeySonar());
         assertEquals(2, module.getIdApplication());
         assertEquals("TestSndi", module.getSndi());
@@ -64,7 +64,7 @@ class OscarBuilderTest {
     }
 
     @Test
-    void testBuildModule_missingDateDerniereLivraison() throws Exception {
+    void testBuildModule_missingDateDerniereLivraisonEnProduction() throws Exception {
         // Arrange
         String json =
                 """
@@ -89,7 +89,7 @@ class OscarBuilderTest {
 
         // Assert
         assertNotNull(module);
-        assertNull(module.getDateDerniereLivraison());
+        assertNull(module.getDateDerniereLivraisonEnProduction());
     }
 
     @Test

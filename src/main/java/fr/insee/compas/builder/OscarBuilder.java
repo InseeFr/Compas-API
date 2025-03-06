@@ -22,15 +22,17 @@ public class OscarBuilder {
                 getPathApplication(moduleNode)
                         .path("nom")
                         .asText()); // Assuming modName and appName are the same
-        JsonNode dateDerniereLivraisonNode = moduleNode.path("dateDerniereLivraison");
+        JsonNode dateDerniereLivraisonEnProductionNode =
+                moduleNode.path("dateDerniereLivraisonEnProduction");
 
-        if (!dateDerniereLivraisonNode.isMissingNode() && !dateDerniereLivraisonNode.isNull()) {
-            module.setDateDerniereLivraison(
-                    Instant.ofEpochMilli(dateDerniereLivraisonNode.asLong())
+        if (!dateDerniereLivraisonEnProductionNode.isMissingNode()
+                && !dateDerniereLivraisonEnProductionNode.isNull()) {
+            module.setDateDerniereLivraisonEnProduction(
+                    Instant.ofEpochMilli(dateDerniereLivraisonEnProductionNode.asLong())
                             .atZone(ZoneId.systemDefault())
                             .toLocalDate());
         } else {
-            module.setDateDerniereLivraison(null);
+            module.setDateDerniereLivraisonEnProduction(null);
         }
         module.setKeySonar(moduleNode.path("projectKeySonar").asText());
         module.setIdApplication(getPathApplication(moduleNode).path("id").asInt());

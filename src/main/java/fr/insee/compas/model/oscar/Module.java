@@ -18,7 +18,7 @@ public class Module {
     String domaineFonctionnel;
     String keySonar;
     String sndi;
-    LocalDate dateDerniereLivraison;
+    LocalDate dateDerniereLivraisonEnProduction;
 
     public Module() {
         super();

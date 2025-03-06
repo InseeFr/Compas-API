@@ -16,5 +16,5 @@ public class ApplicationOscarView implements Serializable {
     private String nomTechnique;
     private String nom;
     private String description;
-    private LocalDate dateDerniereLivraison;
+    private LocalDate dateDerniereLivraisonEnProduction;
 }

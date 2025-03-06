@@ -98,7 +98,7 @@ class IndicateurOscarServiceTest {
                         .modName("name1")
                         .domaineSndi("sndi1")
                         .keySonar("keySonar1")
-                        .dateDerniereLivraison(LocalDate.now().minusDays(2))
+                        .dateDerniereLivraisonEnProduction(LocalDate.now().minusDays(2))
                         .build();
         Module module2 =
                 Module.builder()
