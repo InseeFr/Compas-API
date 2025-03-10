@@ -33,6 +33,8 @@ import fr.insee.compas.mapper.MetriqueVmMapper;
 import fr.insee.compas.model.compas.IndicateurType;
 import fr.insee.compas.model.compas.SourceType;
 import fr.insee.compas.model.compas.TableFaits;
+import fr.insee.compas.model.compas.dto.MetriqueApplicationDTO;
+import fr.insee.compas.model.compas.dto.MetriqueModuleDTO;
 import fr.insee.compas.model.greenit.IndicateurApplicationGreenIT;
 import fr.insee.compas.model.greenit.IndicateurModuleGreenIT;
 import fr.insee.compas.model.greenit.MetriqueVm;
@@ -375,5 +377,33 @@ public class GreenItService {
 
     public void setMetrics(List<MetriqueVm> metrics) {
         this.metrics = metrics;
+    }
+
+    public List<MetriqueApplicationDTO> getApplicationConsommationElectrique() {
+        final List<Object[]> results =
+                tableFaitsRepository.findLatestSummedValuesByIndicateurForAllApplications(
+                        IndicateurType.CONSO_ELEC.getValue());
+        return results.stream()
+                .map(
+                        result ->
+                                new MetriqueApplicationDTO(
+                                        (Integer) result[0],
+                                        ((java.sql.Date) result[1]).toLocalDate(),
+                                        (BigDecimal) result[2]))
+                .toList();
+    }
+
+    public List<MetriqueModuleDTO> getModuleConsommationElectrique() {
+        final List<Object[]> results =
+                tableFaitsRepository.findLatestSummedValuesByIndicateurForAllModules(
+                        IndicateurType.CONSO_ELEC.getValue());
+        return results.stream()
+                .map(
+                        result ->
+                                new MetriqueModuleDTO(
+                                        (Integer) result[0],
+                                        ((java.sql.Date) result[1]).toLocalDate(),
+                                        (BigDecimal) result[2]))
+                .toList();
     }
 }

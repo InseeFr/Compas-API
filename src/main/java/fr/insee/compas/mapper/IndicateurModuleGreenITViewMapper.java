@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.stereotype.Component;
 
 import fr.insee.compas.model.greenit.IndicateurModuleGreenIT;
+import fr.insee.compas.util.IndicateurViewUtil;
 import fr.insee.compas.view.IndicateurModuleGreenITView;
 
 @Component
@@ -26,6 +27,7 @@ public class IndicateurModuleGreenITViewMapper {
                 .ramMaxi(gestionPourcentageOuSansObjet(ind.getRamMaxi()))
                 .conso(ind.getConso() + " Wh")
                 .nbVm(ind.getNbVm() + " vm")
+                .lettreGreen(IndicateurViewUtil.getGradeFromConsommationElectrique(ind.getConso()))
                 .build();
     }
 

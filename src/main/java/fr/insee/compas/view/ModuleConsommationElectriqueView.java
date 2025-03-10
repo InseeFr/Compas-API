@@ -9,16 +9,9 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class IndicateurModuleGreenITView {
+public class ModuleConsommationElectriqueView {
     private Integer moduleId;
-    private String moduleName;
-    private String ramMaxi;
-    private String ramAllocated;
-    private String diskUsed;
-    private String diskAllocated;
-    private String cpuMaxi;
-    private String cpuAllocated;
+    private String date;
     private String conso;
-    private String nbVm;
     private String lettreGreen;
 }

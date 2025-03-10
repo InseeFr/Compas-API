@@ -42,15 +42,33 @@ public interface TableFaitsRepository extends JpaRepository<TableFaits, Long> {
     @Query(
             value =
                     """
-    SELECT *
-          FROM (
-               SELECT *,
-               ROW_NUMBER() OVER (PARTITION BY id_module ORDER BY date DESC, id DESC) AS row_num
-                      FROM table_faits
-                      WHERE id_indicateur = :idIndicateur
-               ) subquery
-               WHERE row_num = 1
-""",
+                        SELECT tf
+                        FROM TableFaits tf
+                        WHERE tf.date = (
+                            SELECT MAX(tf2.date)
+                            FROM TableFaits tf2
+                            WHERE tf2.idIndicateur = tf.idIndicateur
+                            AND tf2.idIndicateur = :idIndicateur
+                        )
+                        AND tf.idIndicateur = :idIndicateur
+                    """)
+    List<TableFaits> findLatestValueByIndicateur(@Param("idIndicateur") Integer idIndicateur);
+
+    @Query(
+            value =
+                    """
+                        SELECT*
+
+                        FROM (
+                                   SELECT *,
+                                   ROW_NUMBER()
+
+                        OVER (PARTITION BY id_module ORDER BY date DESC, id DESC) AS row_num
+                                          FROM table_faits
+                                          WHERE id_indicateur = :idIndicateur
+                                   ) subquery
+                                   WHERE row_num = 1
+                    """,
             nativeQuery = true)
     List<TableFaits> findLatestValueByIndicateurByModule(
             @Param("idIndicateur") Integer idIndicateur);
@@ -58,7 +76,17 @@ public interface TableFaitsRepository extends JpaRepository<TableFaits, Long> {
     @Query(
             value =
                     """
-    SELECT *
+    select subquery.id_Application, subquery.date, subquery.totalValeur from (select id_Application , date, sum(tf.valeur) over (partition by tf.id_Application, tf.date order by tf.date desc) as totalValeur,
+     row_number() over (partition by tf.id_Application order by tf.date desc) as row_num FROM Table_Faits tf WHERE tf.id_Indicateur = :idIndicateur) as subquery where subquery.row_num = 1 order by totalValeur desc
+""",
+            nativeQuery = true)
+    List<Object[]> findLatestSummedValuesByIndicateurForAllApplications(
+            @Param("idIndicateur") Integer idIndicateur);
+
+    @Query(
+            value =
+                    """
+            SELECT *
           FROM (
                SELECT *,
                ROW_NUMBER() OVER (PARTITION BY id_application ORDER BY date DESC, id DESC) AS row_num
@@ -69,6 +97,16 @@ public interface TableFaitsRepository extends JpaRepository<TableFaits, Long> {
 """,
             nativeQuery = true)
     List<TableFaits> findLatestValueByIndicateurByApplication(
+            @Param("idIndicateur") Integer idIndicateur);
+
+    @Query(
+            value =
+                    """
+    select subquery.id_Module, subquery.date, subquery.totalValeur from (select id_Module , date, sum(tf.valeur) over (partition by tf.id_Module, tf.date order by tf.date desc) as totalValeur,
+     row_number() over (partition by tf.id_Module order by tf.date desc) as row_num FROM Table_Faits tf WHERE tf.id_Indicateur = :idIndicateur and id_Module is not null) as subquery where subquery.row_num = 1 order by totalValeur desc
+""",
+            nativeQuery = true)
+    List<Object[]> findLatestSummedValuesByIndicateurForAllModules(
             @Param("idIndicateur") Integer idIndicateur);
 
     @Query(

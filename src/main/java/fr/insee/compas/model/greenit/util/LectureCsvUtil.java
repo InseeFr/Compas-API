@@ -13,13 +13,12 @@ public class LectureCsvUtil {
 
         return Optional.ofNullable(ligne)
                 .map(
-                        l -> {
-                            return BigDecimal.valueOf(
-                                    Double.valueOf(
-                                            l.replace(",", ".")
-                                                    .replace(" ", "")
-                                                    .replace("-", "0")));
-                        })
+                        l ->
+                                BigDecimal.valueOf(
+                                        Double.valueOf(
+                                                l.replace(",", ".")
+                                                        .replace(" ", "")
+                                                        .replace("-", "0"))))
                 .orElse(null);
     }
 }

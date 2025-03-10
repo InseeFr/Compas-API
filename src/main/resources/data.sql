@@ -20,6 +20,9 @@ INSERT INTO source (id,libelle) VALUES (101,'VmWare-fichiers');
 
 	 
 INSERT INTO table_faits (id_module, id_indicateur, id_application,date, valeur, id_source) VALUES(244, 201, 130, '2024-12-04', 8, 1);
+INSERT INTO table_faits (id_module, id_indicateur, id_application,date, valeur, id_source) VALUES(244, 201, 130, '2024-12-02', 8, 1);
+INSERT INTO table_faits (id_module, id_indicateur, id_application,date, valeur, id_source) VALUES(243, 201, 130, '2024-12-04', 8, 1);
+INSERT INTO table_faits (id_module, id_indicateur, id_application,date, valeur, id_source) VALUES(248, 201, 131, '2024-12-04', 8, 1);
 INSERT INTO table_faits (id_module,id_indicateur, id_application,date,valeur,id_source) VALUES (248,1, 131,'2024-12-02',87736,0);
 INSERT INTO table_faits (id_module,id_indicateur, id_application,date,valeur,id_source) VALUES (266,1,137,'2024-12-02',572751,0);
 INSERT INTO table_faits (id_module,id_indicateur, id_application,date,valeur,id_source) VALUES (483,1,196,'2024-12-02',2242,0);
