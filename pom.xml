@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>fr.insee</groupId>
 	<artifactId>compas</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.2-SNAPSHOT</version>
 	<name>compas</name>
 	<description>Application pour le Tableau de Bord DDSI</description>
 

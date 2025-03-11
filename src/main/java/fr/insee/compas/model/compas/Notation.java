@@ -9,6 +9,9 @@ public enum Notation {
     C("C"),
     D("D"),
     E("E"),
+    F("F"),
+    G("G"),
+    H("H"),
     X("X"), // pour le cas où la distance est -1
     NR("NR"), // pour les cas où l'indicateur est non renseigné
     SO("SO"); // pour les cas où l'indicateur est sans objet
