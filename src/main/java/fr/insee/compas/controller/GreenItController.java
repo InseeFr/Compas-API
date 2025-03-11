@@ -31,7 +31,7 @@ import fr.insee.compas.view.ModuleConsommationElectriqueView;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
-@RequestMapping("/kpi_green")
+@RequestMapping("/kpi-green")
 @Tag(name = "API Kpi GreenIt", description = "API des indicateurs GreenIT")
 public class GreenItController {
 

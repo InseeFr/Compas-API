@@ -18,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @Slf4j
-@RequestMapping("/developpementLogiciel")
+@RequestMapping("/developpement-logiciel")
 public class IndicateurDeveloppementLogicielController {
 
     private final IndicateurOscarService indicateurOscarService;

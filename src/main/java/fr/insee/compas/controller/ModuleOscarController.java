@@ -14,7 +14,7 @@ import fr.insee.compas.service.IndicateurOscarService;
 import io.swagger.v3.oas.annotations.Operation;
 
 @RestController
-@RequestMapping("/module_oscar")
+@RequestMapping("/module-oscar")
 public class ModuleOscarController {
 
     private final ModuleOscarRepository moduleRepository;
