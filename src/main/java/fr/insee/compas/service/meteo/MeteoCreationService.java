@@ -1,9 +1,11 @@
 package fr.insee.compas.service.meteo;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
 import fr.insee.compas.model.compas.TableFaits;
-import fr.insee.compas.model.meteo.DemandeCreationModificationMeteo;
+import fr.insee.compas.model.meteo.DemandeCreationMeteo;
 import fr.insee.compas.repository.TableFaitsRepository;
 
 import lombok.AllArgsConstructor;
@@ -24,18 +26,23 @@ public class MeteoCreationService {
      * Créer le {@link fr.insee.compas.model.compas.TableFaits} pour la demande
      *
      * @param demandeCreationMeteo : params saisie
-     * @return le id du {@link fr.insee.compas.model.compas.TableFaits} créé
+     * @return les ids de {@link fr.insee.compas.model.compas.TableFaits} créés
      */
-    public Long creerMeteo(DemandeCreationModificationMeteo demandeCreationMeteo) {
-        TableFaits tableFaits =
-                TableFaits.builder()
-                        .idApplication(demandeCreationMeteo.getIdApplication())
-                        .idIndicateur(ID_INDICATEUR_METEO)
-                        .valeur(demandeCreationMeteo.getValeurMeteo())
-                        .idSource(ID_SOURCE_SAISIE_MANUELLE)
-                        .commentaire(demandeCreationMeteo.getCommentaire())
-                        .date(demandeCreationMeteo.getDate())
-                        .build();
-        return tableFaitsRepository.save(tableFaits).getId();
+    public List<Long> creerMeteo(DemandeCreationMeteo demandeCreationMeteo) {
+        return demandeCreationMeteo.getIdsApplication().stream()
+                .map(
+                        idApplication -> {
+                            TableFaits tableFaits =
+                                    TableFaits.builder()
+                                            .idApplication(idApplication)
+                                            .idIndicateur(ID_INDICATEUR_METEO)
+                                            .valeur(demandeCreationMeteo.getValeurMeteo())
+                                            .idSource(ID_SOURCE_SAISIE_MANUELLE)
+                                            .commentaire(demandeCreationMeteo.getCommentaire())
+                                            .date(demandeCreationMeteo.getDate())
+                                            .build();
+                            return tableFaitsRepository.save(tableFaits).getId();
+                        })
+                .toList();
     }
 }

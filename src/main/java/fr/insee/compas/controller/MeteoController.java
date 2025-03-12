@@ -6,7 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import fr.insee.compas.model.meteo.DemandeCreationModificationMeteo;
+import fr.insee.compas.model.meteo.DemandeCreationMeteo;
 import fr.insee.compas.model.meteo.Meteo;
 import fr.insee.compas.service.meteo.MeteoAffichageService;
 import fr.insee.compas.service.meteo.MeteoCreationService;
@@ -27,9 +27,10 @@ public class MeteoController {
     @PostMapping
     @Operation(
             summary =
-                    "Création d'une météo pour une application. Renvoie l'id du TableFaits créé. ")
-    public ResponseEntity<Long> creerMeteo(
-            @RequestBody DemandeCreationModificationMeteo demandeCreationMeteo) {
+                    "Création d'une météo pour une application. Renvoie les ids des TableFaits"
+                            + " créés. ")
+    public ResponseEntity<List<Long>> creerMeteo(
+            @RequestBody DemandeCreationMeteo demandeCreationMeteo) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(meteoCreationService.creerMeteo(demandeCreationMeteo));
     }

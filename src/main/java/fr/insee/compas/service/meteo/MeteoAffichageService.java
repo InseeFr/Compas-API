@@ -41,7 +41,9 @@ public class MeteoAffichageService {
                             tableFaitsRepository
                                     .findBy(
                                             Example.of(tableFaitsExample),
-                                            q -> q.sortBy(Sort.by("date").descending()).first())
+                                            q ->
+                                                    q.sortBy(Sort.by("date", "id").descending())
+                                                            .first())
                                     .ifPresent(
                                             tableFait -> {
                                                 meteo.setDate(tableFait.getDate());
