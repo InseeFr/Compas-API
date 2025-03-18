@@ -21,4 +21,5 @@ public class IndicateurApplicationQualiteView {
     private String nbCveMedium;
     private String nbCveLow;
     private String lettreNiveauCve;
+    private String lettreFiabilite;
 }

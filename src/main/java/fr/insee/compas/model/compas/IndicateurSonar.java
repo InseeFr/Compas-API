@@ -1,6 +1,4 @@
-package fr.insee.compas.model;
-
-import fr.insee.compas.model.compas.IndicateurType;
+package fr.insee.compas.model.compas;
 
 import lombok.Getter;
 
@@ -8,7 +6,8 @@ import lombok.Getter;
 public enum IndicateurSonar {
     LINES_TO_COVER("lines_to_cover", IndicateurType.NBR_LIGNE),
     UNCOVERED_LINES("uncovered_lines", IndicateurType.NBR_LIGNE_TEST),
-    SQALE_INDEX("sqale_index", IndicateurType.DETTE_TECH);
+    SQALE_INDEX("sqale_index", IndicateurType.DETTE_TECH),
+    FIABILITE("reliability_rating", IndicateurType.FIABILITE);
 
     private final String key;
     private final IndicateurType indicateurType;

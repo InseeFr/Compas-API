@@ -8,7 +8,7 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
-import fr.insee.compas.model.IndicateurSonar;
+import fr.insee.compas.model.compas.IndicateurSonar;
 import fr.insee.compas.model.compas.TableFaits;
 import fr.insee.compas.model.oscar.Module;
 import fr.insee.compas.model.sonar.Measure;

@@ -152,4 +152,39 @@ public interface TableFaitsRepository extends JpaRepository<TableFaits, Long> {
                     """,
             nativeQuery = true)
     List<Object[]> findAggregatedAvgResults(Integer idIndicateur);
+
+    @Query(
+            value =
+                    """
+       WITH latest_data AS (
+                                       SELECT
+                                           id_module,
+                                           id_application,
+                                           id_indicateur,
+                                           valeur,
+                                           date,
+                                           ROW_NUMBER() OVER (PARTITION BY id_module, id_application, id_indicateur ORDER BY date DESC) AS rn
+                                       FROM
+                                           table_faits
+                                   )
+                                   SELECT
+                                      id_module AS moduleId,
+                                      MAX(CASE WHEN id_indicateur = 1 THEN valeur END) AS nbLigneCode,
+                                      MAX(CASE WHEN id_indicateur = 2 THEN valeur END) AS nbLigneCodeNonTeste,
+                                      MAX(CASE WHEN id_indicateur = 3 THEN valeur END) AS nbCveCritical,
+                                      MAX(CASE WHEN id_indicateur = 4 THEN valeur END) AS nbCveHigh,
+                                      MAX(CASE WHEN id_indicateur = 5 THEN valeur END) AS nbCveMedium,
+                                      MAX(CASE WHEN id_indicateur = 6 THEN valeur END) AS nbCveLow,
+                                      MAX(CASE WHEN id_indicateur = 11 THEN valeur END) AS detteTechnique,
+                                      MAX(CASE WHEN id_indicateur = 12 THEN valeur END) AS fiabilite
+                                   FROM
+                                       latest_data
+                                   WHERE
+                                       rn = 1 and id_module is not null
+                                   GROUP BY
+                                       id_module,
+                                       id_application;
+""",
+            nativeQuery = true)
+    List<Object[]> findValueIndicateurQualiteBrute();
 }

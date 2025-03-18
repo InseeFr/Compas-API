@@ -65,6 +65,9 @@ public class IndicateurQualiteApplicationService {
         Map<Integer, AggregatedSumResultDto> mapLigneCodeNonTeste =
                 tableFaitsService.findAgregationSumByIndicateurAndApplication(
                         IndicateurType.NBR_LIGNE_TEST.getValue());
+        Map<Integer, AggregatedSumResultDto> mapFiabilite =
+                tableFaitsService.findAgregationAvgByIndicateurAndApplication(
+                        IndicateurType.FIABILITE.getValue());
         log.info("fin récupération données agrégées");
 
         List<IndicateurApplicationQualiteView> resultat = new ArrayList<>();
@@ -117,6 +120,17 @@ public class IndicateurQualiteApplicationService {
                                 mapByIdModuleCveLow.get(moduleApplication).getValeur());
                 viewApplication.setLettreNiveauCve(
                         utilsService.convertNiveauCveEnLettre(calcul.doubleValue()));
+            }
+            if (mapFiabilite != null && mapFiabilite.get(moduleApplication) != null) {
+                viewApplication.setLettreFiabilite(
+                        Character.toString(
+                                (char)
+                                        ('A'
+                                                + mapFiabilite
+                                                        .get(moduleApplication)
+                                                        .getSumValeur()
+                                                        .intValue()
+                                                - 1)));
             }
             resultat.add(viewApplication);
         }

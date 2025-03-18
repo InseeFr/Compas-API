@@ -3,6 +3,7 @@ package fr.insee.compas.service;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 import fr.insee.compas.dto.AggregatedSumResultDto;
 import fr.insee.compas.model.compas.TableFaits;
 import fr.insee.compas.repository.TableFaitsRepository;
+import fr.insee.compas.view.IndicateurModuleQualiteView;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -69,5 +71,33 @@ public class TableFaitsService {
                                         new AggregatedSumResultDto(
                                                 new BigDecimal(((Number) obj[1]).toString()),
                                                 ((Number) obj[0]).intValue())));
+    }
+
+    public Map<Integer, IndicateurModuleQualiteView> getIndicateurQualite() {
+        List<Object[]> faits = tableFaitsRepository.findValueIndicateurQualiteBrute();
+        Map<Integer, IndicateurModuleQualiteView> results =
+                faits.stream()
+                        .collect(
+                                Collectors.toMap(
+                                        obj -> ((Number) obj[0]).intValue(),
+                                        obj ->
+                                                IndicateurModuleQualiteView.builder()
+                                                        .moduleId(((Number) obj[0]).intValue())
+                                                        .nbLigneCode(toStringOrEmpty(obj[1]))
+                                                        .nbLigneCodeNonTeste(
+                                                                toStringOrEmpty(obj[2]))
+                                                        .nbCveCritical(toStringOrEmpty(obj[3]))
+                                                        .nbCveHigh(toStringOrEmpty(obj[4]))
+                                                        .nbCveMedium(toStringOrEmpty(obj[5]))
+                                                        .nbCveLow(toStringOrEmpty(obj[6]))
+                                                        .detteTechnique(toStringOrEmpty(obj[7]))
+                                                        .fiabilite(toStringOrEmpty(obj[8]))
+                                                        .build()));
+
+        return results;
+    }
+
+    private String toStringOrEmpty(Object obj) {
+        return Optional.ofNullable(obj).map(Object::toString).orElse("");
     }
 }

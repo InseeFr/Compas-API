@@ -5,10 +5,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
-import fr.insee.compas.model.compas.IndicateurType;
-import fr.insee.compas.model.compas.TableFaits;
+import fr.insee.compas.model.compas.Notation;
 import fr.insee.compas.model.oscar.Module;
 import fr.insee.compas.service.OscarService;
 import fr.insee.compas.service.TableFaitsService;
@@ -45,93 +45,90 @@ public class IndicateurQualiteModuleService {
         // Récupérer les informations des modules depuis l'API
         List<Module> modules = oscarService.getModules();
 
-        // Matrics au niveau module
-        Map<Integer, TableFaits> mapByIdModuleLigneCode =
-                tableFaitsService.getMapMetricByModule(IndicateurType.NBR_LIGNE.getValue());
-        Map<Integer, TableFaits> mapByIdModuleLigneNonTeste =
-                tableFaitsService.getMapMetricByModule(IndicateurType.NBR_LIGNE_TEST.getValue());
-        Map<Integer, TableFaits> mapByIdModuleCveCritical =
-                tableFaitsService.getMapMetricByModule(IndicateurType.CVE_CRITICAL.getValue());
-        Map<Integer, TableFaits> mapByIdModuleCveHigh =
-                tableFaitsService.getMapMetricByModule(IndicateurType.CVE_HIGH.getValue());
-        Map<Integer, TableFaits> mapByIdModuleCveMedium =
-                tableFaitsService.getMapMetricByModule(IndicateurType.CVE_MEDIUM.getValue());
-        Map<Integer, TableFaits> mapByIdModuleCveLow =
-                tableFaitsService.getMapMetricByModule(IndicateurType.CVE_LOW.getValue());
+        // Metrics au niveau module
+        Map<Integer, IndicateurModuleQualiteView> mapQualite =
+                tableFaitsService.getIndicateurQualite();
 
         List<IndicateurModuleQualiteView> resultat = new ArrayList<>();
 
         // Traiter chaque module
         for (Module module : modules) {
-            IndicateurModuleQualiteView viewModule = new IndicateurModuleQualiteView();
+            IndicateurModuleQualiteView viewModule = mapQualite.get(module.getId());
+            if (viewModule == null) {
+                viewModule = new IndicateurModuleQualiteView();
+            }
             viewModule.setModuleId(module.getId());
             viewModule.setApplicationName(module.getAppName());
             viewModule.setSndi(module.getSndi());
-            viewModule.setDomaine(module.getDomaineSndi());
+            viewModule.setDomaineSndi(module.getDomaineSndi());
             viewModule.setModuleName(module.getModName());
 
-            Integer moduleId = module.getId();
-            calculIndicateurCouvertureTestUnitaire(
-                    module,
-                    mapByIdModuleLigneCode,
-                    moduleId,
-                    mapByIdModuleLigneNonTeste,
-                    viewModule);
-
-            calculIndicateurCve(
-                    moduleId,
-                    mapByIdModuleCveCritical,
-                    mapByIdModuleCveHigh,
-                    mapByIdModuleCveMedium,
-                    mapByIdModuleCveLow,
-                    viewModule);
+            calculIndicateurCouvertureTestUnitaire(module, viewModule);
+            calculIndicateurCve(viewModule);
+            calculIndicateurFiabilite(module, viewModule);
+            calculIndicateurDetteTechnique(module, viewModule);
             resultat.add(viewModule);
         }
 
         return resultat;
     }
 
-    private void calculIndicateurCve(
-            Integer moduleId,
-            Map<Integer, TableFaits> mapByIdModuleCveCritical,
-            Map<Integer, TableFaits> mapByIdModuleCveHigh,
-            Map<Integer, TableFaits> mapByIdModuleCveMedium,
-            Map<Integer, TableFaits> mapByIdModuleCveLow,
-            IndicateurModuleQualiteView viewModule) {
-        if (mapByIdModuleCveCritical.size() > 1 && mapByIdModuleCveCritical.get(moduleId) != null) {
-            TableFaits c = mapByIdModuleCveCritical.get(moduleId);
-            TableFaits e = mapByIdModuleCveHigh.get(moduleId);
-            TableFaits m = mapByIdModuleCveMedium.get(moduleId);
-            TableFaits f = mapByIdModuleCveLow.get(moduleId);
+    private void calculIndicateurDetteTechnique(
+            Module module, IndicateurModuleQualiteView viewModule) {
+        if (StringUtils.isNotEmpty(viewModule.getDetteTechnique())) {
+            viewModule.setLettreDetteTechnique(
+                    utilsService.getLettreDetteTechnique(viewModule.getDetteTechnique()));
+        } else {
+            if ("Sans objet".equals(module.getKeySonar().trim())) {
+                viewModule.setDetteTechnique(Notation.SO.getGrade());
+                viewModule.setLettreDetteTechnique(Notation.SO.getGrade());
 
-            viewModule.setNbCveLow(String.valueOf(f.getValeur()));
-            viewModule.setNbCveMedium(String.valueOf(m.getValeur()));
-            viewModule.setNbCveHigh(String.valueOf(e.getValeur()));
-            viewModule.setNbCveCritical(String.valueOf(c.getValeur()));
+            } else {
+                viewModule.setDetteTechnique(Notation.NR.getGrade());
+                viewModule.setLettreDetteTechnique(Notation.NR.getGrade());
+            }
+        }
+    }
+
+    private void calculIndicateurFiabilite(Module module, IndicateurModuleQualiteView viewModule) {
+        if (StringUtils.isNotEmpty(viewModule.getFiabilite())) {
+            viewModule.setLettreFiabilite(
+                    Character.toString(
+                            (char) ('A' + Double.parseDouble(viewModule.getFiabilite()) - 1)));
+        } else {
+            if ("Sans objet".equals(module.getKeySonar().trim())) {
+                viewModule.setFiabilite(Notation.SO.getGrade());
+                viewModule.setLettreFiabilite(Notation.SO.getGrade());
+
+            } else {
+                viewModule.setFiabilite(Notation.NR.getGrade());
+                viewModule.setLettreFiabilite(Notation.NR.getGrade());
+            }
+        }
+    }
+
+    private void calculIndicateurCve(IndicateurModuleQualiteView viewModule) {
+        if (StringUtils.isNotEmpty(viewModule.getNbCveCritical())) {
+
             BigDecimal calcul =
                     utilsService.getCalculIndicateurCve(
-                            c.getValeur(), e.getValeur(), m.getValeur(), f.getValeur());
+                            BigDecimal.valueOf(Double.parseDouble(viewModule.getNbCveCritical())),
+                            BigDecimal.valueOf(Double.parseDouble(viewModule.getNbCveCritical())),
+                            BigDecimal.valueOf(Double.parseDouble(viewModule.getNbCveCritical())),
+                            BigDecimal.valueOf(Double.parseDouble(viewModule.getNbCveCritical())));
             viewModule.setLettreNiveauCve(
                     utilsService.convertNiveauCveEnLettre(calcul.doubleValue()));
         }
     }
 
     private void calculIndicateurCouvertureTestUnitaire(
-            Module module,
-            Map<Integer, TableFaits> mapByIdModuleLigneCode,
-            Integer moduleId,
-            Map<Integer, TableFaits> mapByIdModuleLigneNonTeste,
-            IndicateurModuleQualiteView viewModule) {
+            Module module, IndicateurModuleQualiteView viewModule) {
 
-        TableFaits moduleLigneCode = mapByIdModuleLigneCode.get(moduleId);
-        TableFaits moduleLigneCodeNonTeste = mapByIdModuleLigneNonTeste.get(moduleId);
-
-        if (moduleLigneCode != null && moduleLigneCode.getValeur() != null) {
+        if (StringUtils.isNotEmpty(viewModule.getNbLigneCode())) {
             // Calculer le pourcentage
-            double percentage =
-                    utilsService.calculPourcentageCouvertureTest(
-                            moduleLigneCode.getValeur().intValue(),
-                            moduleLigneCodeNonTeste.getValeur().intValue());
+            int ligne = (int) Double.parseDouble(viewModule.getNbLigneCode());
+            int ligneNonTeste = (int) Double.parseDouble(viewModule.getNbLigneCodeNonTeste());
+            double percentage = utilsService.calculPourcentageCouvertureTest(ligne, ligneNonTeste);
 
             String pourcentage = (int) percentage + " %";
 

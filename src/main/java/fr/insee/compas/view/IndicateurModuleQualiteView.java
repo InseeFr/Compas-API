@@ -14,12 +14,19 @@ public class IndicateurModuleQualiteView {
     private String moduleName;
     private String applicationName;
     private String sndi;
-    private String domaine;
-    private String lettreCouvertureTestUniaire;
+    private String domaineSndi;
+    private String domaineFonctionnel;
+    private String nbLigneCode;
+    private String nbLigneCodeNonTeste;
     private String pourcentageCouvertureTestUniaire;
     private String nbCveCritical;
     private String nbCveHigh;
     private String nbCveMedium;
     private String nbCveLow;
+    private String detteTechnique;
+    private String fiabilite;
     private String lettreNiveauCve;
+    private String lettreDetteTechnique;
+    private String lettreFiabilite;
+    private String lettreCouvertureTestUniaire;
 }

@@ -11,7 +11,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
-import fr.insee.compas.model.IndicateurSonar;
+import fr.insee.compas.model.compas.IndicateurSonar;
 import fr.insee.compas.model.sonar.*;
 
 import lombok.extern.slf4j.Slf4j;

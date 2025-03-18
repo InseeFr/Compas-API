@@ -23,7 +23,8 @@ public enum IndicateurType {
     CONSO_ELEC(207),
     NBR_VM(208),
     NBR_JOUR_MEP(301),
-    DETTE_TECH(11);
+    DETTE_TECH(11),
+    FIABILITE(12);
 
     private final int value;
 
