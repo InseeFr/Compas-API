@@ -10,7 +10,9 @@ import fr.insee.compas.model.compas.Notation;
 public class UtilsService {
 
     public double calculPourcentageCouvertureTest(Integer ligneCode, Integer ligneCodeNonTeste) {
-        return ligneCode > 0 ? (1 - ((double) ligneCodeNonTeste / ligneCode)) * 100 : 0.0;
+        return ligneCode > 0
+                ? Math.round((1 - ((double) ligneCodeNonTeste / ligneCode)) * 100)
+                : 0.0;
     }
 
     public String convertPourcentageEnNote(double percentage) {
@@ -69,5 +71,12 @@ public class UtilsService {
         } else {
             return Notation.E.getGrade();
         }
+    }
+
+
+
+
+    public String convertirChiffreEnLettre(BigDecimal value){
+        return Character.toString((char)('A' + value.intValue() - 1));
     }
 }

@@ -83,10 +83,10 @@ class IndicateurQualiteModuleServiceTest {
     void getIndicateurNiveauModuleTestAvecAnalyseSonarSansObjet() {
         Module module =
                 Module.builder()
-                        .id(484)
-                        .modName("ddl - default")
-                        .appName("ddl")
-                        .sndi("SNDI Paris")
+                        .id(488)
+                        .modName("module")
+                        .appName("application")
+                        .sndi("SNDI")
                         .keySonar("Sans objet")
                         .build();
 

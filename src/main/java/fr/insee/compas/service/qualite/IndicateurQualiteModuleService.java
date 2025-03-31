@@ -126,7 +126,7 @@ public class IndicateurQualiteModuleService {
             Module module, IndicateurModuleQualiteView viewModule) {
 
         if (StringUtils.isNotEmpty(viewModule.getNbLigneCode())
-                && StringUtils.isNotEmpty(viewModule.getNbLigneCodeNonTeste())) {
+                && Double.parseDouble(viewModule.getNbLigneCode()) > 0) {
             // Calculer le pourcentage
             int ligne = (int) Double.parseDouble(viewModule.getNbLigneCode());
             int ligneNonTeste = (int) Double.parseDouble(viewModule.getNbLigneCodeNonTeste());

@@ -43,7 +43,6 @@ public class IndicateurQualiteApplicationService {
         List<Application> applications = oscarService.getApplications();
 
         // Metrics au niveau module
-
         Map<Integer, TableFaits> mapByIdModuleCveCritical =
                 tableFaitsService.getMapMetricByApplication(
                         IndicateurType.CVE_CRITICAL_APPLI.getValue());
@@ -82,22 +81,27 @@ public class IndicateurQualiteApplicationService {
             viewApplication.setApplicationId(application.getIdApplication());
 
             Integer moduleApplication = application.getIdApplication();
-            if (mapLigneCode != null
-                    && mapLigneCodeNonTeste.get(moduleApplication) != null
-                    && mapLigneCode.get(moduleApplication) != null) {
-                double percentage =
-                        utilsService.calculPourcentageCouvertureTest(
-                                mapLigneCode.get(moduleApplication).getSumValeur().intValue(),
-                                mapLigneCodeNonTeste
-                                        .get(moduleApplication)
-                                        .getSumValeur()
-                                        .intValue());
+            if (mapLigneCode != null && mapLigneCode.get(moduleApplication) != null) {
+                if (mapLigneCode.get(moduleApplication).getSumValeur().intValue() > 0) {
+                    double percentage =
+                            utilsService.calculPourcentageCouvertureTest(
+                                    mapLigneCode.get(moduleApplication).getSumValeur().intValue(),
+                                    mapLigneCodeNonTeste
+                                            .get(moduleApplication)
+                                            .getSumValeur()
+                                            .intValue());
 
-                String pourcentage = (int) percentage + " %";
-                // Obtenir la note
-                String lettre = utilsService.convertPourcentageEnNote(percentage);
-                viewApplication.setPourcentageCouvertureTestUniaire(pourcentage);
-                viewApplication.setLettreCouvertureTestUniaire(lettre);
+                    String pourcentage = (int) percentage + " %";
+                    // Obtenir la note
+                    String lettre = utilsService.convertPourcentageEnNote(percentage);
+                    viewApplication.setPourcentageCouvertureTestUniaire(pourcentage);
+                    viewApplication.setLettreCouvertureTestUniaire(lettre);
+                } else {
+                    // SI la somme des modules est négative tous les modules sont SO
+                    viewApplication.setPourcentageCouvertureTestUniaire("");
+                    viewApplication.setLettreCouvertureTestUniaire("SO");
+                }
+
             } else {
                 viewApplication.setPourcentageCouvertureTestUniaire("");
                 viewApplication.setLettreCouvertureTestUniaire("NR");
@@ -125,14 +129,8 @@ public class IndicateurQualiteApplicationService {
             }
             if (mapFiabilite != null && mapFiabilite.get(moduleApplication) != null) {
                 viewApplication.setLettreFiabilite(
-                        Character.toString(
-                                (char)
-                                        ('A'
-                                                + mapFiabilite
-                                                        .get(moduleApplication)
-                                                        .getSumValeur()
-                                                        .intValue()
-                                                - 1)));
+                        utilsService.convertirChiffreEnLettre(mapFiabilite.get(moduleApplication).getSumValeur()));
+
             }
             resultat.add(viewApplication);
         }

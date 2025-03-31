@@ -9,6 +9,7 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 
 import fr.insee.compas.model.compas.IndicateurSonar;
+import fr.insee.compas.model.compas.IndicateurType;
 import fr.insee.compas.model.compas.TableFaits;
 import fr.insee.compas.model.oscar.Module;
 import fr.insee.compas.model.sonar.Measure;
@@ -59,6 +60,19 @@ public class RecuperationIndicateurSonarService {
                     log.warn("Le module {} n'a pas une analyse Sonar correcte", module.getId());
                     compteurModuleOscarWithProjectKeySansAnalyse++;
                 }
+            } else if (!"null".equals(module.getKeySonar())) {
+                log.info(
+                        "le module est SO pour sonar, on met donc -1 pour l'indicateur ligne de"
+                                + " code");
+                tableFaitsRepository.save(
+                        TableFaits.builder()
+                                .idModule(module.getId())
+                                .idApplication(module.getIdApplication())
+                                .idIndicateur(IndicateurType.NBR_LIGNE.getValue())
+                                .date(now)
+                                .valeur(new BigDecimal(-1))
+                                .idSource(0)
+                                .build());
             }
         }
 
