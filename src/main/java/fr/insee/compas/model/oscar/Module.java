@@ -19,6 +19,7 @@ public class Module {
     String keySonar;
     String sndi;
     LocalDate dateDerniereLivraisonEnProduction;
+    String typeLivrable;
 
     public Module() {
         super();

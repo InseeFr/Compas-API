@@ -82,7 +82,9 @@ public class IndicateurQualiteApplicationService {
             viewApplication.setApplicationId(application.getIdApplication());
 
             Integer moduleApplication = application.getIdApplication();
-            if (mapLigneCode != null && mapLigneCode.get(moduleApplication) != null) {
+            if (mapLigneCode != null
+                    && mapLigneCodeNonTeste.get(moduleApplication) != null
+                    && mapLigneCode.get(moduleApplication) != null) {
                 double percentage =
                         utilsService.calculPourcentageCouvertureTest(
                                 mapLigneCode.get(moduleApplication).getSumValeur().intValue(),

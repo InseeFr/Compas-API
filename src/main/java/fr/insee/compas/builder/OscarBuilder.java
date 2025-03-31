@@ -41,6 +41,7 @@ public class OscarBuilder {
                 getPathApplication(moduleNode).path("domaineSndi").path("nom").asText());
         module.setDomaineFonctionnel(
                 getPathApplication(moduleNode).path("domaineFonctionnel").path("nom").asText());
+        module.setTypeLivrable((moduleNode).path("typeLivrable").asText());
         return module;
     }
 

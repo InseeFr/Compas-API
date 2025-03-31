@@ -62,6 +62,7 @@ public class IndicateurQualiteModuleService {
             viewModule.setSndi(module.getSndi());
             viewModule.setDomaineSndi(module.getDomaineSndi());
             viewModule.setModuleName(module.getModName());
+            viewModule.setDomaineFonctionnel(module.getDomaineFonctionnel());
 
             calculIndicateurCouvertureTestUnitaire(module, viewModule);
             calculIndicateurCve(viewModule);
@@ -124,7 +125,8 @@ public class IndicateurQualiteModuleService {
     private void calculIndicateurCouvertureTestUnitaire(
             Module module, IndicateurModuleQualiteView viewModule) {
 
-        if (StringUtils.isNotEmpty(viewModule.getNbLigneCode())) {
+        if (StringUtils.isNotEmpty(viewModule.getNbLigneCode())
+                && StringUtils.isNotEmpty(viewModule.getNbLigneCodeNonTeste())) {
             // Calculer le pourcentage
             int ligne = (int) Double.parseDouble(viewModule.getNbLigneCode());
             int ligneNonTeste = (int) Double.parseDouble(viewModule.getNbLigneCodeNonTeste());

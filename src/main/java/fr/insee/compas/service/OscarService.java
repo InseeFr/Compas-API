@@ -27,13 +27,13 @@ public class OscarService {
 
     private final RestTemplate restTemplate;
     private final OscarBuilder oscarBuilder;
-    private final ObjectMapper objectMapper; // ✅ Injecter ObjectMapper
+    private final ObjectMapper objectMapper;
 
     public OscarService(
             RestTemplate restTemplate, OscarBuilder oscarBuilder, ObjectMapper objectMapper) {
         this.restTemplate = restTemplate;
         this.oscarBuilder = oscarBuilder;
-        this.objectMapper = objectMapper; // ✅ Utiliser l'ObjectMapper injecté
+        this.objectMapper = objectMapper;
     }
 
     public List<Module> getModules() {
