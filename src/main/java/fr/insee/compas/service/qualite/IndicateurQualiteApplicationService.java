@@ -129,8 +129,8 @@ public class IndicateurQualiteApplicationService {
             }
             if (mapFiabilite != null && mapFiabilite.get(moduleApplication) != null) {
                 viewApplication.setLettreFiabilite(
-                        utilsService.convertirChiffreEnLettre(mapFiabilite.get(moduleApplication).getSumValeur()));
-
+                        utilsService.convertirChiffreEnLettre(
+                                mapFiabilite.get(moduleApplication).getSumValeur()));
             }
             resultat.add(viewApplication);
         }

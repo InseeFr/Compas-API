@@ -73,10 +73,7 @@ public class UtilsService {
         }
     }
 
-
-
-
-    public String convertirChiffreEnLettre(BigDecimal value){
-        return Character.toString((char)('A' + value.intValue() - 1));
+    public String convertirChiffreEnLettre(BigDecimal value) {
+        return Character.toString((char) ('A' + value.intValue() - 1));
     }
 }
