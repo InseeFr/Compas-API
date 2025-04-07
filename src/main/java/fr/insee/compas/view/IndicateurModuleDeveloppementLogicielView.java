@@ -9,6 +9,6 @@ import lombok.Data;
 @Builder
 public class IndicateurModuleDeveloppementLogicielView {
     private Integer moduleId;
-    private String noteDistance;
-    private Integer valueDistance;
+    private String note;
+    private Integer value;
 }

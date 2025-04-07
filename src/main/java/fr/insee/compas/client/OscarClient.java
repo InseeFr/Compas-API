@@ -29,6 +29,9 @@ public interface OscarClient {
     @GetMapping("/modules")
     ResponseEntity<List<ModuleOscarView>> getAllModuleOscar();
 
+    @GetMapping("/modules-historiques")
+    ResponseEntity<String> getModuleHistoriqueOscar();
+
     @GetMapping("/virtual-machines")
     ResponseEntity<List<VmOscarView>> getAllVmOscar();
 }

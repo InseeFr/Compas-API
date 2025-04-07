@@ -11,6 +11,7 @@ import lombok.Data;
 @AllArgsConstructor
 public class Module {
     Integer id;
+    String sourceCreation;
     String modName;
     Integer idApplication;
     String appName;
@@ -18,6 +19,7 @@ public class Module {
     String domaineFonctionnel;
     String keySonar;
     String sndi;
+    String statut;
     LocalDate dateDerniereLivraisonEnProduction;
     String typeLivrable;
 

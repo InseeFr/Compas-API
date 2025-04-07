@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
-import fr.insee.compas.dto.AggregatedSumResultDto;
+import fr.insee.compas.dto.AggregatedResultDto;
 import fr.insee.compas.model.compas.TableFaits;
 import fr.insee.compas.repository.TableFaitsRepository;
 import fr.insee.compas.view.IndicateurModuleQualiteView;
@@ -47,7 +47,7 @@ public class TableFaitsService {
                                 ));
     }
 
-    public Map<Integer, AggregatedSumResultDto> findAgregationSumByIndicateurAndApplication(
+    public Map<Integer, AggregatedResultDto> findAgregationSumByIndicateurAndApplication(
             int indicateur) {
         List<Object[]> results = tableFaitsRepository.findAggregatedSumResults(indicateur);
         return results.stream()
@@ -55,12 +55,12 @@ public class TableFaitsService {
                         Collectors.toMap(
                                 obj -> ((Number) obj[0]).intValue(), // Clé : ID Application
                                 obj ->
-                                        new AggregatedSumResultDto(
+                                        new AggregatedResultDto(
                                                 new BigDecimal(((Number) obj[1]).toString()),
                                                 ((Number) obj[0]).intValue())));
     }
 
-    public Map<Integer, AggregatedSumResultDto> findAgregationAvgByIndicateurAndApplication(
+    public Map<Integer, AggregatedResultDto> findAgregationAvgByIndicateurAndApplication(
             int indicateur) {
         List<Object[]> results = tableFaitsRepository.findAggregatedAvgResults(indicateur);
         return results.stream()
@@ -68,7 +68,7 @@ public class TableFaitsService {
                         Collectors.toMap(
                                 obj -> ((Number) obj[0]).intValue(), // Clé : ID Application
                                 obj ->
-                                        new AggregatedSumResultDto(
+                                        new AggregatedResultDto(
                                                 new BigDecimal(((Number) obj[1]).toString()),
                                                 ((Number) obj[0]).intValue())));
     }

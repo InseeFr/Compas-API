@@ -7,7 +7,7 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class AggregatedSumResultDto {
+public class AggregatedResultDto {
     private BigDecimal sumValeur;
     private Integer idApplication;
 }

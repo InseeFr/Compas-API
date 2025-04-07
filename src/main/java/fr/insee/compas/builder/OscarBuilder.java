@@ -1,6 +1,7 @@
 package fr.insee.compas.builder;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 
 import org.springframework.stereotype.Component;
@@ -9,15 +10,44 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import fr.insee.compas.model.oscar.Application;
 import fr.insee.compas.model.oscar.Module;
+import fr.insee.compas.model.oscar.ModuleHistorique;
 
 @Component
 public class OscarBuilder {
 
+    public ModuleHistorique buildModuleHistorique(JsonNode moduleHistoriqueNode) {
+
+        ModuleHistorique moduleHistorique = new ModuleHistorique();
+        moduleHistorique.setIdModuleHistorique(
+                moduleHistoriqueNode.path("idModuleHistorique").asInt());
+        moduleHistorique.setAuteurOperation(moduleHistoriqueNode.path("auteurOperation").asText());
+        moduleHistorique.setIdModule(moduleHistoriqueNode.path("idModule").asInt());
+        moduleHistorique.setStatut(moduleHistoriqueNode.path("statut").asText());
+        JsonNode dateNode = moduleHistoriqueNode.path("dateOperation");
+        if (dateNode.isArray() && dateNode.size() >= 6) {
+            LocalDateTime dateOperation =
+                    LocalDateTime.of(
+                            dateNode.get(0).asInt(),
+                            dateNode.get(1).asInt(),
+                            dateNode.get(2).asInt(),
+                            dateNode.get(3).asInt(),
+                            dateNode.get(4).asInt(),
+                            dateNode.get(5).asInt(),
+                            dateNode.size() > 6 ? dateNode.get(6).asInt() : 0);
+            moduleHistorique.setDateOperation(dateOperation);
+        }
+        moduleHistorique.setOperation(moduleHistoriqueNode.path("operation").asText());
+
+        return moduleHistorique;
+    }
+
     public Module buildModule(JsonNode moduleNode) {
         Module module = new fr.insee.compas.model.oscar.Module();
         module.setId(moduleNode.path("id").asInt());
+        module.setSourceCreation(moduleNode.path("sourceCreation").asText());
 
         module.setModName(moduleNode.path("nom").asText());
+        module.setStatut(moduleNode.path("statut").asText());
         module.setAppName(
                 getPathApplication(moduleNode)
                         .path("nom")

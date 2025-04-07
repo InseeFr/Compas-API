@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,8 +21,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import fr.insee.compas.builder.OscarBuilder;
+import fr.insee.compas.client.OscarClient;
 import fr.insee.compas.model.oscar.Application;
 import fr.insee.compas.model.oscar.Module;
+import fr.insee.compas.model.oscar.ModuleHistorique;
 
 @ExtendWith(MockitoExtension.class)
 class OscarServiceTest {
@@ -33,6 +36,8 @@ class OscarServiceTest {
     @Mock private OscarBuilder oscarBuilder;
 
     @Mock private ObjectMapper objectMapper;
+
+    @Mock private OscarClient oscarClient;
 
     @BeforeEach
     void setUp() {
@@ -152,5 +157,32 @@ class OscarServiceTest {
 
         // ✅ Vérifier que `buildModule()` n'est jamais appelé
         verify(oscarBuilder, never()).buildModule(any(JsonNode.class));
+    }
+
+    @Test
+    void testGetModuleHistorique_JsonProcessingException() throws Exception {
+        // Données invalides simulées
+        String invalidJson = "INVALID_JSON";
+        ResponseEntity<String> responseEntity = new ResponseEntity<>(invalidJson, HttpStatus.OK);
+
+        // Simuler l'API qui retourne un JSON invalide
+        when(oscarClient.getModuleHistoriqueOscar()).thenReturn(responseEntity);
+
+        // Simuler une exception lors du parsing
+        when(objectMapper.readTree(invalidJson))
+                .thenThrow(new JsonProcessingException("Invalid JSON") {});
+
+        // Appel à la méthode qui doit gérer l'exception
+        Map<String, List<ModuleHistorique>> moduleHistoriquesMap =
+                oscarService.getModulesHistorique();
+
+        // Assertions
+        assertNotNull(moduleHistoriquesMap);
+        assertTrue(
+                moduleHistoriquesMap.isEmpty()); // En cas de JSON invalide, la map doit être vide
+        verify(oscarClient, times(1))
+                .getModuleHistoriqueOscar(); // Vérifiez qu'il y a un appel à l'API
+        verify(oscarBuilder, never())
+                .buildModuleHistorique(any(JsonNode.class)); // Aucun objet ne doit être créé
     }
 }

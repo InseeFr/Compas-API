@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import fr.insee.compas.model.compas.ModuleOscar;
 import fr.insee.compas.repository.ModuleOscarRepository;
-import fr.insee.compas.service.IndicateurOscarService;
+import fr.insee.compas.service.OscarService;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -19,12 +19,12 @@ public class ModuleOscarController {
 
     private final ModuleOscarRepository moduleRepository;
 
-    private final IndicateurOscarService moduleService;
+    private final OscarService oscarService;
 
     public ModuleOscarController(
-            ModuleOscarRepository moduleRepository, IndicateurOscarService moduleService) {
+            ModuleOscarRepository moduleRepository, OscarService oscarService) {
         this.moduleRepository = moduleRepository;
-        this.moduleService = moduleService;
+        this.oscarService = oscarService;
     }
 
     @GetMapping("/find-all")
@@ -42,6 +42,6 @@ public class ModuleOscarController {
     @PutMapping("/mise-a-jour")
     @Operation(summary = "Mettre à jour les modules de Compas à partir d'Oscar")
     public void miseAjourModule() {
-        moduleService.miseAjourModuleOscarEnBaseDeDonnees();
+        oscarService.miseAjourModuleOscarEnBaseDeDonnees();
     }
 }

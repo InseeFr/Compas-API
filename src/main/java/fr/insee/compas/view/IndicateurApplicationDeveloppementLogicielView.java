@@ -10,6 +10,6 @@ import lombok.Data;
 public class IndicateurApplicationDeveloppementLogicielView {
 
     private Integer applicationId;
-    private String noteDistance;
-    private Integer valueDistance;
+    private String note;
+    private Integer value;
 }

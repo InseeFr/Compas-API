@@ -7,7 +7,7 @@ import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
-import fr.insee.compas.dto.AggregatedSumResultDto;
+import fr.insee.compas.dto.AggregatedResultDto;
 import fr.insee.compas.model.compas.IndicateurType;
 import fr.insee.compas.model.compas.TableFaits;
 import fr.insee.compas.model.oscar.Application;
@@ -56,15 +56,15 @@ public class IndicateurQualiteApplicationService {
                 tableFaitsService.getMapMetricByApplication(
                         IndicateurType.CVE_LOW_APPLI.getValue());
         log.info("debut récupération données agrégées");
-        Map<Integer, AggregatedSumResultDto> mapLigneCode =
+        Map<Integer, AggregatedResultDto> mapLigneCode =
                 tableFaitsService.findAgregationSumByIndicateurAndApplication(
                         IndicateurType.NBR_LIGNE.getValue());
         log.info("fin récupération données agrégées");
         log.info("debut récupération données agrégées");
-        Map<Integer, AggregatedSumResultDto> mapLigneCodeNonTeste =
+        Map<Integer, AggregatedResultDto> mapLigneCodeNonTeste =
                 tableFaitsService.findAgregationSumByIndicateurAndApplication(
                         IndicateurType.NBR_LIGNE_TEST.getValue());
-        Map<Integer, AggregatedSumResultDto> mapFiabilite =
+        Map<Integer, AggregatedResultDto> mapFiabilite =
                 tableFaitsService.findAgregationAvgByIndicateurAndApplication(
                         IndicateurType.FIABILITE.getValue());
         log.info("fin récupération données agrégées");

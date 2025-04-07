@@ -134,22 +134,27 @@ public interface TableFaitsRepository extends JpaRepository<TableFaits, Long> {
     @Query(
             value =
                     """
-                    WITH DernieresValeurs AS (
-                        SELECT tf.id_application, tf.id_module, tf.date, tf.valeur
-                        FROM table_faits tf
-                        WHERE tf.id_indicateur = :idIndicateur
-                             AND tf.id = (
-                                 SELECT MAX(tf2.id)
-                                 FROM table_faits tf2
-                                 WHERE tf2.id_module = tf.id_module
-                                 AND tf2.id_application = tf.id_application
-                                 AND tf2.id_indicateur = tf.id_indicateur
-                             )
-                    )
-                    SELECT dv.id_application, AVG(dv.valeur) AS sumValeur
-                    FROM DernieresValeurs dv
-                    GROUP BY dv.id_application;
-                    """,
+    WITH DernieresValeurs AS (
+        SELECT tf.id_application, tf.id_module, tf.date, tf.valeur
+        FROM table_faits tf
+        WHERE tf.id_indicateur = :idIndicateur
+             AND tf.id = (
+                 SELECT MAX(tf2.id)
+                 FROM table_faits tf2
+                 WHERE tf2.id_module = tf.id_module
+                 AND tf2.id_application = tf.id_application
+                 AND tf2.id_indicateur = tf.id_indicateur
+             )
+    )
+    SELECT dv.id_application,
+        CASE
+            WHEN COUNT(CASE WHEN dv.valeur NOT IN (-1, -2) THEN 1 END) > 0 THEN AVG(dv.valeur)
+            WHEN COUNT(DISTINCT dv.valeur) = 1 THEN MAX(dv.valeur)
+            ELSE -2 -- Si mélange de NR (-2) et SO (-1), mettre NR (-2)
+        END AS sumValeur
+    FROM DernieresValeurs dv
+    GROUP BY dv.id_application;
+""",
             nativeQuery = true)
     List<Object[]> findAggregatedAvgResults(Integer idIndicateur);
 
