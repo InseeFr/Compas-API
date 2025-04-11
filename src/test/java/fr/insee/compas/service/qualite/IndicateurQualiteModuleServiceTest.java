@@ -14,7 +14,7 @@ import org.springframework.test.context.jdbc.Sql;
 
 import fr.insee.compas.model.oscar.Module;
 import fr.insee.compas.service.OscarService;
-import fr.insee.compas.view.IndicateurModuleQualiteView;
+import fr.insee.compas.view.IndicateurQualiteView;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -28,7 +28,7 @@ class IndicateurQualiteModuleServiceTest {
     @Sql(
             scripts = {"classpath:qualite/data-qualite.sql"},
             executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-    void getIndicateurNiveauModuleTestAvecAnalyseSonar() {
+    void getIndicateurNiveauModuleTestAvecAnalyseSonarAvecCveA() {
         Module module =
                 Module.builder()
                         .id(483)
@@ -43,7 +43,7 @@ class IndicateurQualiteModuleServiceTest {
 
         var listeIndicateurModule = indicateurService.getIndicateurNiveauModule();
         assertThat(listeIndicateurModule).hasSize(1);
-        IndicateurModuleQualiteView view = listeIndicateurModule.getFirst();
+        IndicateurQualiteView view = listeIndicateurModule.getFirst();
         assertThat(view.getLettreCouvertureTestUniaire()).isEqualTo("A");
         assertThat(view.getLettreFiabilite()).isEqualTo("A");
         assertThat(view.getLettreNiveauCve()).isEqualTo("A");
@@ -54,10 +54,36 @@ class IndicateurQualiteModuleServiceTest {
     @Sql(
             scripts = {"classpath:qualite/data-qualite.sql"},
             executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-    void getIndicateurNiveauModuleTestSansAnalyseSonarNiTrivy() {
+    void getIndicateurNiveauModuleTestAvecAnalyseSonarAvecCveE() {
         Module module =
                 Module.builder()
                         .id(484)
+                        .modName("module")
+                        .appName("application")
+                        .sndi("SNDI")
+                        .keySonar("keySonar")
+                        .build();
+
+        List<Module> mockModules = List.of(module);
+        Mockito.when(oscarService.getModules()).thenReturn(mockModules);
+
+        var listeIndicateurModule = indicateurService.getIndicateurNiveauModule();
+        assertThat(listeIndicateurModule).hasSize(1);
+        IndicateurQualiteView view = listeIndicateurModule.getFirst();
+        assertThat(view.getLettreCouvertureTestUniaire()).isEqualTo("A");
+        assertThat(view.getLettreFiabilite()).isEqualTo("A");
+        assertThat(view.getLettreNiveauCve()).isEqualTo("E");
+        assertThat(view.getLettreDetteTechnique()).isEqualTo("A");
+    }
+
+    @Test
+    @Sql(
+            scripts = {"classpath:qualite/data-qualite.sql"},
+            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+    void getIndicateurNiveauModuleTestSansAnalyseSonarNiTrivy() {
+        Module module =
+                Module.builder()
+                        .id(485)
                         .modName("module")
                         .appName("application")
                         .sndi("SNDI")
@@ -67,10 +93,10 @@ class IndicateurQualiteModuleServiceTest {
         List<Module> mockModules = List.of(module);
         Mockito.when(oscarService.getModules()).thenReturn(mockModules);
 
-        List<IndicateurModuleQualiteView> listeIndicateurModule =
+        List<IndicateurQualiteView> listeIndicateurModule =
                 indicateurService.getIndicateurNiveauModule();
         assertThat(listeIndicateurModule).hasSize(1);
-        IndicateurModuleQualiteView view = listeIndicateurModule.getFirst();
+        IndicateurQualiteView view = listeIndicateurModule.getFirst();
         assertThat(view.getLettreCouvertureTestUniaire()).isEqualTo("NR");
         assertThat(view.getLettreFiabilite()).isEqualTo("NR");
         assertThat(view.getLettreNiveauCve()).isEqualTo(null);
@@ -95,7 +121,7 @@ class IndicateurQualiteModuleServiceTest {
 
         var listeIndicateurModule = indicateurService.getIndicateurNiveauModule();
         assertThat(listeIndicateurModule).hasSize(1);
-        IndicateurModuleQualiteView view = listeIndicateurModule.getFirst();
+        IndicateurQualiteView view = listeIndicateurModule.getFirst();
         assertThat(view.getLettreCouvertureTestUniaire()).isEqualTo("SO");
         assertThat(view.getLettreDetteTechnique()).isEqualTo("SO");
         assertThat(view.getLettreFiabilite()).isEqualTo("SO");
@@ -103,7 +129,7 @@ class IndicateurQualiteModuleServiceTest {
 
     @Test
     @Sql(
-            scripts = {"classpath:qualite/data-qualite-sans-sonar.sql"},
+            scripts = {"classpath:qualite/data-qualite-sonar-so.sql"},
             executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
     void getIndicateurNiveauModuleTestSansAnalyseSonar() {
         Module module =
@@ -120,7 +146,7 @@ class IndicateurQualiteModuleServiceTest {
 
         var listeIndicateurModule = indicateurService.getIndicateurNiveauModule();
         assertThat(listeIndicateurModule).hasSize(1);
-        IndicateurModuleQualiteView view = listeIndicateurModule.getFirst();
+        IndicateurQualiteView view = listeIndicateurModule.getFirst();
         assertThat(view.getLettreCouvertureTestUniaire()).isEqualTo("NR");
         assertThat(view.getLettreFiabilite()).isEqualTo("NR");
         assertThat(view.getLettreDetteTechnique()).isEqualTo("NR");

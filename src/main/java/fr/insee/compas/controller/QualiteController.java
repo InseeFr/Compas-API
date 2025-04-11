@@ -12,8 +12,7 @@ import fr.insee.compas.service.qualite.IndicateurQualiteApplicationService;
 import fr.insee.compas.service.qualite.IndicateurQualiteModuleService;
 import fr.insee.compas.service.qualite.RecupCveService;
 import fr.insee.compas.service.qualite.RecuperationIndicateurSonarService;
-import fr.insee.compas.view.IndicateurApplicationQualiteView;
-import fr.insee.compas.view.IndicateurModuleQualiteView;
+import fr.insee.compas.view.IndicateurQualiteView;
 
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.extern.slf4j.Slf4j;
@@ -56,19 +55,17 @@ public class QualiteController {
     }
 
     @GetMapping("/modules")
-    public List<IndicateurModuleQualiteView> getIndicateurQualiteByModule() throws IOException {
+    public List<IndicateurQualiteView> getIndicateurQualiteByModule() throws IOException {
         log.info("Début du endpoint  récupération indicateur Qualite par module");
-        List<IndicateurModuleQualiteView> result = moduleService.getIndicateurNiveauModule();
+        List<IndicateurQualiteView> result = moduleService.getIndicateurNiveauModule();
         log.info("Fin du endpoint récupération indicateur Qualite par module");
         return result;
     }
 
     @GetMapping("/applications")
-    public List<IndicateurApplicationQualiteView> getIndicateurQualiteByApplication()
-            throws IOException {
+    public List<IndicateurQualiteView> getIndicateurQualiteByApplication() throws IOException {
         log.info("Début du endpoint récupération indicateur Qualite par application ");
-        List<IndicateurApplicationQualiteView> result =
-                applicationService.getIndicateurNiveauApplication();
+        List<IndicateurQualiteView> result = applicationService.getIndicateurNiveauApplication();
         log.info("Fin du endpoint récupération indicateur Qualite par application");
         return result;
     }

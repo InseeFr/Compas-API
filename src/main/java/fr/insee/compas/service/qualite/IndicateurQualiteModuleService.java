@@ -13,7 +13,7 @@ import fr.insee.compas.model.oscar.Module;
 import fr.insee.compas.service.OscarService;
 import fr.insee.compas.service.TableFaitsService;
 import fr.insee.compas.service.UtilsService;
-import fr.insee.compas.view.IndicateurModuleQualiteView;
+import fr.insee.compas.view.IndicateurQualiteView;
 
 @Service
 public class IndicateurQualiteModuleService {
@@ -40,22 +40,21 @@ public class IndicateurQualiteModuleService {
      * @return Liste des indicateurs avec les informations de filtre des modules pour affichages
      *     dans le table.
      */
-    public List<IndicateurModuleQualiteView> getIndicateurNiveauModule() {
+    public List<IndicateurQualiteView> getIndicateurNiveauModule() {
 
         // Récupérer les informations des modules depuis l'API
         List<Module> modules = oscarService.getModules();
 
         // Metrics au niveau module
-        Map<Integer, IndicateurModuleQualiteView> mapQualite =
-                tableFaitsService.getIndicateurQualite();
+        Map<Integer, IndicateurQualiteView> mapQualite = tableFaitsService.getIndicateurQualite();
 
-        List<IndicateurModuleQualiteView> resultat = new ArrayList<>();
+        List<IndicateurQualiteView> resultat = new ArrayList<>();
 
         // Traiter chaque module
         for (Module module : modules) {
-            IndicateurModuleQualiteView viewModule = mapQualite.get(module.getId());
+            IndicateurQualiteView viewModule = mapQualite.get(module.getId());
             if (viewModule == null) {
-                viewModule = new IndicateurModuleQualiteView();
+                viewModule = new IndicateurQualiteView();
             }
             viewModule.setModuleId(module.getId());
             viewModule.setApplicationName(module.getAppName());
@@ -68,14 +67,14 @@ public class IndicateurQualiteModuleService {
             calculIndicateurCve(viewModule);
             calculIndicateurFiabilite(module, viewModule);
             calculIndicateurDetteTechnique(module, viewModule);
+            viewModule.calculerLettreGlobalQualite();
             resultat.add(viewModule);
         }
 
         return resultat;
     }
 
-    private void calculIndicateurDetteTechnique(
-            Module module, IndicateurModuleQualiteView viewModule) {
+    private void calculIndicateurDetteTechnique(Module module, IndicateurQualiteView viewModule) {
         if (StringUtils.isNotEmpty(viewModule.getDetteTechnique())) {
             viewModule.setLettreDetteTechnique(
                     utilsService.getLettreDetteTechnique(viewModule.getDetteTechnique()));
@@ -91,7 +90,7 @@ public class IndicateurQualiteModuleService {
         }
     }
 
-    private void calculIndicateurFiabilite(Module module, IndicateurModuleQualiteView viewModule) {
+    private void calculIndicateurFiabilite(Module module, IndicateurQualiteView viewModule) {
         if (StringUtils.isNotEmpty(viewModule.getFiabilite())) {
             viewModule.setLettreFiabilite(
                     Character.toString(
@@ -108,22 +107,22 @@ public class IndicateurQualiteModuleService {
         }
     }
 
-    private void calculIndicateurCve(IndicateurModuleQualiteView viewModule) {
+    private void calculIndicateurCve(IndicateurQualiteView viewModule) {
         if (StringUtils.isNotEmpty(viewModule.getNbCveCritical())) {
 
             BigDecimal calcul =
                     utilsService.getCalculIndicateurCve(
                             BigDecimal.valueOf(Double.parseDouble(viewModule.getNbCveCritical())),
-                            BigDecimal.valueOf(Double.parseDouble(viewModule.getNbCveCritical())),
-                            BigDecimal.valueOf(Double.parseDouble(viewModule.getNbCveCritical())),
-                            BigDecimal.valueOf(Double.parseDouble(viewModule.getNbCveCritical())));
+                            BigDecimal.valueOf(Double.parseDouble(viewModule.getNbCveHigh())),
+                            BigDecimal.valueOf(Double.parseDouble(viewModule.getNbCveMedium())),
+                            BigDecimal.valueOf(Double.parseDouble(viewModule.getNbCveLow())));
             viewModule.setLettreNiveauCve(
                     utilsService.convertNiveauCveEnLettre(calcul.doubleValue()));
         }
     }
 
     private void calculIndicateurCouvertureTestUnitaire(
-            Module module, IndicateurModuleQualiteView viewModule) {
+            Module module, IndicateurQualiteView viewModule) {
 
         if (StringUtils.isNotEmpty(viewModule.getNbLigneCode())
                 && Double.parseDouble(viewModule.getNbLigneCode()) > 0) {
