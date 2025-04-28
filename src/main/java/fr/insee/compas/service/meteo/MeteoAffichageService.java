@@ -48,6 +48,7 @@ public class MeteoAffichageService {
                                             tableFait -> {
                                                 meteo.setDate(tableFait.getDate());
                                                 meteo.setValeurMeteo(tableFait.getValeur());
+                                                meteo.setCommentaire(tableFait.getCommentaire());
                                             });
                             return meteo;
                         })

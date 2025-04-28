@@ -44,23 +44,42 @@ public class RecuperationIndicateurSonarService {
         int compteurModuleOscarWithProjectKey = 0;
         int compteurModuleOscarWithProjectKeySansAnalyse = 0;
         for (Module module : modules) {
-            if (!"null".equals(module.getKeySonar())
-                    && !module.getKeySonar().equals("Sans objet")) {
+            boolean analyseSonarNonNulEtNonSansObjet =
+                    !"null".equals(module.getKeySonar())
+                            && !module.getKeySonar().equals("Sans objet");
+            // cas ou une key sonar est renseigné
+            if (analyseSonarNonNulEtNonSansObjet) {
                 compteurModuleOscarWithProjectKey++;
+                boolean moduleSansAnalyse = false;
+                // on lance la recherche sur le sonar interne
                 RecuperationMeasures measures =
-                        sonarService.getDataFromSonarAPIMeasures(module.getKeySonar());
+                        sonarService.getDataFromSonarAPIMeasures(module.getKeySonar(), "gitlab");
+
                 if (measures != null
                         && measures.getComponent() != null
                         && !measures.getComponent().getMeasures().isEmpty()) {
-                    boolean moduleSansAnalyse = putIndicateurSonarInBdd(module, measures, now);
-                    if (!moduleSansAnalyse) {
-                        compteurModuleOscarWithProjectKeySansAnalyse++;
+                    // on a un retour
+                    moduleSansAnalyse = putIndicateurSonarInBdd(module, measures, now);
+                }
+                if (!moduleSansAnalyse) {
+                    // on fait l'appel à l'api de sonarcloud
+                    measures =
+                            sonarService.getDataFromSonarAPIMeasures(
+                                    module.getKeySonar(), "github");
+                    if (measures != null
+                            && measures.getComponent() != null
+                            && !measures.getComponent().getMeasures().isEmpty()) {
+                        // on a un retour
+                        moduleSansAnalyse = putIndicateurSonarInBdd(module, measures, now);
                     }
-                } else {
+                }
+
+                if (!moduleSansAnalyse) {
                     log.warn("Le module {} n'a pas une analyse Sonar correcte", module.getId());
                     compteurModuleOscarWithProjectKeySansAnalyse++;
                 }
-            } else if (!"null".equals(module.getKeySonar())) {
+            }
+            if (module.getKeySonar().equals("Sans objet")) {
                 log.info(
                         "le module est SO pour sonar, on met donc -1 pour l'indicateur ligne de"
                                 + " code");
@@ -105,9 +124,7 @@ public class RecuperationIndicateurSonarService {
                                 .idSource(0)
                                 .build());
 
-                if (metric == IndicateurSonar.LINES_TO_COVER) {
-                    estVide = false;
-                }
+                estVide = false;
             }
         }
         return !estVide;

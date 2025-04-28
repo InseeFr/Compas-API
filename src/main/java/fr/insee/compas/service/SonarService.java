@@ -1,7 +1,10 @@
 package fr.insee.compas.service;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -24,42 +27,83 @@ import okhttp3.Response;
 public class SonarService {
 
     @Value("${fr.insee.compas.sonar.token:}")
-    private String token;
+    private String tokenGitlab;
 
-    private OkHttpClient client;
-    private ObjectMapper objectMapper;
+    @Value("${fr.insee.compas.github.token:}")
+    private String tokenGithub;
+
+    @Value("${fr.insee.compas.proxy.name:}")
+    private String proxyName;
+
+    @Value("${fr.insee.compas.proxy.port:}")
+    private int proxyPort;
+
+    private String urlGitlab =
+            "http://sonar.insee.fr/api/measures/component?component=%s&metricKeys=%s";
+    private String urlGithub =
+            "https://sonarcloud.io/api/measures/component?component=%s&metricKeys=%s";
+
+    private final ObjectMapper objectMapper;
 
     public SonarService() {
-        this.client = new OkHttpClient();
+
         this.objectMapper = new ObjectMapper();
         this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         this.objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
     }
 
-    public RecuperationMeasures getDataFromSonarAPIMeasures(String projetSonar) throws IOException {
+    public RecuperationMeasures getDataFromSonarAPIMeasures(String projetSonar, String source)
+            throws IOException {
+        Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyName, proxyPort));
+        OkHttpClient clientExterne =
+                new OkHttpClient.Builder()
+                        .proxy(proxy)
+                        .connectTimeout(30, TimeUnit.SECONDS) // Timeout pour la connexion
+                        .readTimeout(30, TimeUnit.SECONDS) // Timeout pour la lecture des données
+                        .writeTimeout(30, TimeUnit.SECONDS) // Timeout pour l'écriture des données
+                        .build();
+        OkHttpClient clientInterne = new OkHttpClient.Builder().build();
+
+        String url;
+        String token;
+        Request request;
 
         String metrics =
                 Arrays.stream(IndicateurSonar.values())
                         .map(IndicateurSonar::getKey)
                         .collect(Collectors.joining(","));
 
-        String url =
-                String.format(
-                        "http://sonar.insee.fr/api/measures/component?component=%s&metricKeys=%s",
-                        projetSonar, metrics);
-
-        Request request =
-                new Request.Builder()
-                        .url(url)
-                        .addHeader("Authorization", "Bearer " + token)
-                        .build();
-
-        try (Response response = client.newCall(request).execute()) {
-            if (response.body() == null || !response.isSuccessful()) {
-                return null;
+        if ("gitlab".equals(source)) {
+            url = String.format(urlGitlab, projetSonar, metrics);
+            token = tokenGitlab;
+            request =
+                    new Request.Builder()
+                            .url(url)
+                            .addHeader("Authorization", "Bearer " + token)
+                            .build();
+            try (Response response = clientInterne.newCall(request).execute()) {
+                if (response.body() == null || !response.isSuccessful()) {
+                    return null;
+                }
+                String jsonString = response.body().string();
+                return objectMapper.readValue(jsonString, RecuperationMeasures.class);
             }
-            String jsonString = response.body().string();
-            return objectMapper.readValue(jsonString, RecuperationMeasures.class);
+
+        } else {
+            url = String.format(urlGithub, projetSonar, metrics);
+            token = tokenGithub;
+            request =
+                    new Request.Builder()
+                            .url(url)
+                            .addHeader("Authorization", "Bearer " + token)
+                            .build();
+            try (Response response = clientExterne.newCall(request).execute()) {
+                if (response.body() == null || !response.isSuccessful()) {
+                    return null;
+                }
+                String jsonString = response.body().string();
+                return objectMapper.readValue(jsonString, RecuperationMeasures.class);
+            }
         }
     }
 }

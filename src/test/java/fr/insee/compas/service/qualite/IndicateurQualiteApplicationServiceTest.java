@@ -55,7 +55,7 @@ class IndicateurQualiteApplicationServiceTest {
     void getIndicateurNiveauApplicationTestAvecAnalyseSonarSansObjet() {
         Application app =
                 Application.builder()
-                        .idApplication(197)
+                        .idApplication(198)
                         .appName("application")
                         .sndi("SNDI")
                         .build();
@@ -70,6 +70,7 @@ class IndicateurQualiteApplicationServiceTest {
         assertThat(view.getLettreNiveauCve()).isEqualTo("E");
         assertThat(view.getLettreDetteTechnique()).isEqualTo("SO");
         assertThat(view.getLettreFiabilite()).isEqualTo("SO");
+        assertThat(view.getLettreGlobalQualite()).isEqualTo("SO");
     }
 
     @Test
@@ -94,5 +95,6 @@ class IndicateurQualiteApplicationServiceTest {
         assertThat(view.getLettreNiveauCve()).isEqualTo("E");
         assertThat(view.getLettreDetteTechnique()).isEqualTo("NR");
         assertThat(view.getLettreFiabilite()).isEqualTo("NR");
+        assertThat(view.getLettreGlobalQualite()).isEqualTo("NR");
     }
 }

@@ -75,6 +75,16 @@ public class OscarService {
         return modules;
     }
 
+    public List<Module> getModulesIhm() {
+        List<Module> modules = getModules();
+        return modules.stream()
+                .filter(
+                        module ->
+                                module.getTypeLivrable() != null
+                                        && module.getTypeLivrable().contains("IHM"))
+                .toList();
+    }
+
     public Map<String, List<ModuleHistorique>> getModulesHistorique() {
         Map<String, List<ModuleHistorique>> modulesHistoriqueMap = new HashMap<>();
 

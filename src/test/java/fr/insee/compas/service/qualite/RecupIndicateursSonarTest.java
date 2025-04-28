@@ -113,16 +113,17 @@ class RecupIndicateursSonarTest {
         when(oscarService.getModules()).thenReturn(modules);
 
         RecuperationMeasures mesuresValides = new RecuperationMeasures();
-        Measure m = new Measure("lines", "1000");
+        Measure m = new Measure("lines_to_cover", "1000");
         List<Measure> mesures = List.of(m);
         Component c = Component.builder().measures(mesures).build();
         mesuresValides.setComponent(c);
-        when(sonarService.getDataFromSonarAPIMeasures("keySonarValide")).thenReturn(mesuresValides);
+        when(sonarService.getDataFromSonarAPIMeasures("keySonarValide", "gitlab"))
+                .thenReturn(mesuresValides);
 
         // 2. Appeler la méthode à tester
         recupIndicateursSonarService.putIndicateursSonar();
 
         // 3. Vérifier les appels et les effets
-        verify(tableFaitsRepository, times(1)).save(any(TableFaits.class));
+        verify(tableFaitsRepository, times(2)).save(any(TableFaits.class));
     }
 }

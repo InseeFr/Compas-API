@@ -79,14 +79,15 @@ public class IndicateurQualiteView {
             case "B" -> 2;
             case "C" -> 3;
             case "D" -> 4;
-            case "E" -> 5;
-            case "X" -> 5;
+            case "E", "X" -> 5;
+            case "SO" -> 0;
             default -> -1; // Invalid
         };
     }
 
     private String convertirValeurEnLettre(int valeur) {
         return switch (valeur) {
+            case 0 -> "SO";
             case 1 -> "A";
             case 2 -> "B";
             case 3 -> "C";

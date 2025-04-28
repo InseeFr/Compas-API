@@ -23,4 +23,5 @@ public class Meteo {
 
     private LocalDate date;
     private BigDecimal valeurMeteo;
+    private String commentaire;
 }

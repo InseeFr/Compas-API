@@ -2,7 +2,6 @@ package fr.insee.compas.service.a11y;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -34,7 +33,7 @@ public class A11yAffichageService {
                                                 infosSaisiesA11yEntity // Valeur : l'objet
                                         // TableFaits
                                         ));
-        return oscarService.getModules().stream()
+        return oscarService.getModulesIhm().stream()
                 .map(
                         module -> {
                             IndicateursModuleA11Y indicateursModuleA11Y =
@@ -70,18 +69,13 @@ public class A11yAffichageService {
     }
 
     private String getTypeAuditLibelle(Integer typeAuditId) {
-        switch (typeAuditId) {
-            case 510:
-                return "Aucun audit";
-            case 511:
-                return "Audit partiel";
-            case 512:
-                return "Audit complet";
-            case 513:
-                return "Audit complet externe";
-            default:
-                return "Inconnu"; // Valeur par défaut si non trouvé
-        }
+        return switch (typeAuditId) {
+            case 510 -> "Aucun audit";
+            case 511 -> "Audit partiel";
+            case 512 -> "Audit complet";
+            case 513 -> "Audit complet externe";
+            default -> "Inconnu"; // Valeur par défaut si non trouvé
+        };
     }
 
     /** Calcule le Notation en fonction du type d'audit et du score. */
@@ -104,7 +98,7 @@ public class A11yAffichageService {
             return Notation.H; // Pas de déclaration mais IndicateurSonar
         }
 
-        if (Objects.equals(typeAudit, null) || typeAudit == 510) {
+        if (typeAudit == 510) {
             return Notation.G; // Déclaration mais aucun audit
         }
         // Cas par défaut pour audit partiel
