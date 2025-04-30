@@ -26,6 +26,8 @@ class GreenItServiceWithCsvDataTest {
 
     @InjectMocks private GreenItService greenItService;
 
+    @Mock private FichierControlService fichierControlService;
+
     @Mock private TableFaitsRepository tableFaitsRepository;
 
     @Mock private MetriqueVmMapper metriqueVmMapper;
@@ -43,19 +45,10 @@ class GreenItServiceWithCsvDataTest {
 
     @Test
     void testSaveCsvData_FichierInvalide() throws IOException {
-        final Path csvPath = Path.of("src/test/resources/metrique-failed.csv");
+        final Path csvPath = Path.of("src/test/resources/vm-metrique-20250110.csv");
         final MultipartFile file = new MockMultipartFile("file", Files.readAllBytes(csvPath));
 
         assertThatThrownBy(() -> greenItService.loadCSVData(file))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Erreur lors de la lecture");
-    }
-
-    @Test
-    void testMiseAJourIndicateursGreenItFromFile_FichierInvalide() throws IOException {
-        final Path csvPath = Path.of("src/test/resources/metrique-failed.csv");
-        final MultipartFile file = new MockMultipartFile("file", Files.readAllBytes(csvPath));
-        assertThatThrownBy(() -> greenItService.miseAJourIndicateursGreenItFromFile(file))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Erreur lors de la lecture");
     }

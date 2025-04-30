@@ -14,15 +14,15 @@ public class UtilsServiceTest {
 
     @Test
     void testCalculPourcentageCouvertureTest() {
-        double result = utilsService.calculPourcentageCouvertureTest(100, 20);
+        final double result = utilsService.calculPourcentageCouvertureTest(100, 20);
         assertEquals(80.0, result, 0.01, "Le pourcentage attendu est de 80%");
-        double result2 = utilsService.calculPourcentageCouvertureTest(100, 100);
+        final double result2 = utilsService.calculPourcentageCouvertureTest(100, 100);
         assertEquals(0.0, result2, 0.01, "Le pourcentage attendu est de 0%");
-        double result3 = utilsService.calculPourcentageCouvertureTest(0, 0);
+        final double result3 = utilsService.calculPourcentageCouvertureTest(0, 0);
         assertEquals(0.0, result3, 0.01, "Le pourcentage attendu est de 0%");
-        double result4 = utilsService.calculPourcentageCouvertureTest(50, 60);
+        final double result4 = utilsService.calculPourcentageCouvertureTest(50, 60);
         assertEquals(-20.0, result4, 0.01, "Le pourcentage attendu est de -20%");
-        double result5 = utilsService.calculPourcentageCouvertureTest(141108, 139768);
+        final double result5 = utilsService.calculPourcentageCouvertureTest(141108, 139768);
         assertEquals(1.0, result5, 0.01, "Le pourcentage attendu est de 1%");
     }
 
@@ -67,8 +67,8 @@ public class UtilsServiceTest {
     @Test
     void testGetCalcul() {
         // Calcul attendu : (2 * 1000) + (3 * 100) + (4 * 10) + (5 * 1) + 1 = 2346
-        BigDecimal expected = BigDecimal.valueOf(Math.log10(2346));
-        BigDecimal actual =
+        final BigDecimal expected = BigDecimal.valueOf(Math.log10(2346));
+        final BigDecimal actual =
                 utilsService.getCalculIndicateurCve(
                         new BigDecimal("2"),
                         new BigDecimal("3"),

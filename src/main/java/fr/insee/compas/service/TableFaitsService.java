@@ -26,7 +26,7 @@ public class TableFaitsService {
     }
 
     public Map<Integer, TableFaits> getMapMetricByModule(int indicateur) {
-        List<TableFaits> metrics =
+        final List<TableFaits> metrics =
                 tableFaitsRepository.findLatestValueByIndicateurByModule(indicateur);
         return metrics.stream()
                 .collect(
@@ -37,7 +37,7 @@ public class TableFaitsService {
     }
 
     public Map<Integer, TableFaits> getMapMetricByApplication(int indicateur) {
-        List<TableFaits> metrics =
+        final List<TableFaits> metrics =
                 tableFaitsRepository.findLatestValueByIndicateurByApplication(indicateur);
         return metrics.stream()
                 .collect(
@@ -49,7 +49,7 @@ public class TableFaitsService {
 
     public Map<Integer, AggregatedResultDto> findAgregationSumByIndicateurAndApplication(
             int indicateur) {
-        List<Object[]> results = tableFaitsRepository.findAggregatedSumResults(indicateur);
+        final List<Object[]> results = tableFaitsRepository.findAggregatedSumResults(indicateur);
         return results.stream()
                 .collect(
                         Collectors.toMap(
@@ -62,7 +62,7 @@ public class TableFaitsService {
 
     public Map<Integer, AggregatedResultDto> findAgregationMaxByIndicateurAndApplication(
             int indicateur) {
-        List<Object[]> results = tableFaitsRepository.findAggregatedMaxResults(indicateur);
+        final List<Object[]> results = tableFaitsRepository.findAggregatedMaxResults(indicateur);
         return results.stream()
                 .collect(
                         Collectors.toMap(
@@ -75,7 +75,7 @@ public class TableFaitsService {
 
     public Map<Integer, AggregatedResultDto> findAgregationAvgByIndicateurAndApplication(
             int indicateur) {
-        List<Object[]> results = tableFaitsRepository.findAggregatedAvgResults(indicateur);
+        final List<Object[]> results = tableFaitsRepository.findAggregatedAvgResults(indicateur);
         return results.stream()
                 .collect(
                         Collectors.toMap(
@@ -87,7 +87,7 @@ public class TableFaitsService {
     }
 
     public Map<Integer, IndicateurQualiteView> getIndicateurQualite() {
-        List<Object[]> faits = tableFaitsRepository.findValueIndicateurQualiteBrute();
+        final List<Object[]> faits = tableFaitsRepository.findValueIndicateurQualiteBrute();
 
         return faits.stream()
                 .collect(

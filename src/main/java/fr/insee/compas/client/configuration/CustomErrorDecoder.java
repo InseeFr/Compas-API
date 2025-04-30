@@ -9,7 +9,7 @@ import org.springframework.http.HttpStatus;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import fr.insee.compas.exception.CompasClientException;
-import fr.insee.compas.exception.CompasServerException;
+import fr.insee.compas.exception.CompasUploadException;
 import fr.insee.compas.exception.ErrorVM;
 
 import feign.codec.ErrorDecoder;
@@ -59,7 +59,7 @@ public class CustomErrorDecoder {
                 return new CompasClientException(response.status(), errorVM);
             }
             if (response.status() >= 500 && response.status() <= 599) {
-                return new CompasServerException(response.status(), errorVM);
+                return new CompasUploadException(response.status(), errorVM);
             }
             return decoder.decode(methodKey, response);
         };

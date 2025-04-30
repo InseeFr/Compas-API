@@ -28,6 +28,8 @@ import fr.insee.compas.client.view.ApplicationOscarView;
 import fr.insee.compas.client.view.ModuleOscarView;
 import fr.insee.compas.client.view.VmOscarView;
 import fr.insee.compas.exception.CompasClientException;
+import fr.insee.compas.exception.CompasException;
+import fr.insee.compas.exception.CompasUploadException;
 import fr.insee.compas.exception.ErrorVM;
 import fr.insee.compas.mapper.MetriqueVmMapper;
 import fr.insee.compas.model.compas.IndicateurType;
@@ -53,6 +55,12 @@ public class GreenItService {
 
     private final TableFaitsRepository tableFaitsRepository;
 
+    private List<MetriqueVm> metrics;
+
+    private static final Logger logger = LoggerFactory.getLogger(GreenItService.class);
+
+    public static final BigDecimal MULTIPLE_POUR_CONSO_HORAIRE = new BigDecimal(12);
+
     public GreenItService(
             OscarClient oscarClient,
             MetriqueVmMapper metriqueVmMapper,
@@ -64,10 +72,6 @@ public class GreenItService {
         this.tableFaitsRepository = tableFaitsRepository;
         this.metrics = metrics;
     }
-
-    private List<MetriqueVm> metrics;
-
-    private static final Logger logger = LoggerFactory.getLogger(GreenItService.class);
 
     public IndicateurModuleGreenIT getIndicateursModuleGreenIT(Integer moduleId) {
         log.debug(
@@ -227,19 +231,19 @@ public class GreenItService {
         return numerateur.divide(denominateur, RoundingMode.UP).multiply(new BigDecimal(100));
     }
 
-    public void miseAJourIndicateursGreenIT() {
+    public void miseAJourIndicateursGreenIT(LocalDate fileDate) {
         final ResponseEntity<List<VmOscarView>> vmOscars = oscarClient.getAllVmOscar();
         if (vmOscars.getBody() == null) {
             final ErrorVM errorVM = new ErrorVM();
             errorVM.setMessage("Erreur retour body Oscar");
             throw new CompasClientException(500, errorVM);
         } else {
-            miseAJourIndicateursApplicationGreenIT(vmOscars.getBody());
-            miseAJourIndicateursModuleGreenIT(vmOscars.getBody());
+            miseAJourIndicateursApplicationGreenIT(vmOscars.getBody(), fileDate);
+            miseAJourIndicateursModuleGreenIT(vmOscars.getBody(), fileDate);
         }
     }
 
-    void miseAJourIndicateursApplicationGreenIT(List<VmOscarView> vmOscars) {
+    void miseAJourIndicateursApplicationGreenIT(List<VmOscarView> vmOscars, LocalDate fileDate) {
         final Map<Integer, List<VmOscarView>> vmApplis =
                 vmOscars.stream()
                         .filter(p -> p.getIdModule() == null)
@@ -253,11 +257,11 @@ public class GreenItService {
                                     String.format(
                                             "taille de la vm applis %d et id %d ",
                                             vms.size(), e.getKey()));
-                            peuplerIndicateurs(null, e.getKey(), vms);
+                            peuplerIndicateurs(null, e.getKey(), vms, fileDate);
                         });
     }
 
-    void miseAJourIndicateursModuleGreenIT(List<VmOscarView> vmOscars) {
+    void miseAJourIndicateursModuleGreenIT(List<VmOscarView> vmOscars, LocalDate fileDate) {
         final Map<Integer, List<VmOscarView>> vmModules =
                 vmOscars.stream()
                         .filter(p -> p.getIdModule() != null)
@@ -274,25 +278,22 @@ public class GreenItService {
                                     String.format(
                                             "taille de la vm modules %d et moduleId %d ",
                                             +vms.size(), e.getKey()));
-                            peuplerIndicateurs(e.getKey(), vmFirst.get().getIdApplication(), vms);
+                            peuplerIndicateurs(
+                                    e.getKey(), vmFirst.get().getIdApplication(), vms, fileDate);
                         });
     }
 
-    public void miseAJourIndicateursGreenItFromFile(MultipartFile file) {
-        if (metrics != null && !metrics.isEmpty()) {
-            logger.info("le fichier csv est déjà uploadé");
-        } else {
-            metrics = new ArrayList<>();
-            metrics =
-                    loadCSVData(file).stream()
-                            .map(metriqueVmMapper::toMetriqueVm)
-                            .flatMap(Optional::stream)
-                            .toList();
-            miseAJourIndicateursGreenIT();
-        }
+    public void miseAJourIndicateursGreenItFromFile(MultipartFile file, LocalDate fileDate) {
+        metrics = new ArrayList<>();
+        metrics =
+                loadCSVData(file).stream()
+                        .map(metriqueVmMapper::toMetriqueVm)
+                        .flatMap(Optional::stream)
+                        .toList();
+        miseAJourIndicateursGreenIT(fileDate);
     }
 
-    public List<MetriqueVmCsvRead> loadCSVData(MultipartFile file) {
+    public List<MetriqueVmCsvRead> loadCSVData(MultipartFile file) throws CompasException {
         List<MetriqueVmCsvRead> metriqueVmCsvReads = new ArrayList<>();
         try (Reader reader = new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8)) {
             final CsvToBean<MetriqueVmCsvRead> csvToBean =
@@ -306,53 +307,54 @@ public class GreenItService {
             final ErrorVM errorVM = new ErrorVM();
             logger.info("Erreur lors de la lecture du csv");
             errorVM.setMessage("Erreur lors de la lecture : " + e.getMessage());
-            throw new CompasClientException(500, errorVM);
+            throw new CompasUploadException(500, errorVM);
         }
         return metriqueVmCsvReads;
     }
 
-    private void peuplerIndicateurs(Integer modId, Integer appId, List<String> vms) {
-        final TableFaits indRamAllocated = buildGreen(modId, appId);
+    private void peuplerIndicateurs(
+            Integer modId, Integer appId, List<String> vms, LocalDate fileDate) {
+        final TableFaits indRamAllocated = buildGreen(modId, appId, fileDate);
         indRamAllocated.setIdIndicateur(IndicateurType.RAM_ALLOUEE.getValue());
         indRamAllocated.setValeur(calculAgregatValeur(vms, MetriqueVm::getRamAllocated));
         tableFaitsRepository.save(indRamAllocated);
-        final TableFaits indRamMaxi = buildGreen(modId, appId);
+        final TableFaits indRamMaxi = buildGreen(modId, appId, fileDate);
         indRamMaxi.setIdIndicateur(IndicateurType.RAM_MAXI.getValue());
         indRamMaxi.setValeur(calculAgregatValeur(vms, MetriqueVm::getRamMaxi));
         tableFaitsRepository.save(indRamMaxi);
-        final TableFaits indDiskAllocated = buildGreen(modId, appId);
+        final TableFaits indDiskAllocated = buildGreen(modId, appId, fileDate);
         indDiskAllocated.setIdIndicateur(IndicateurType.DISQUE_ALLOUE.getValue());
         indDiskAllocated.setValeur(calculAgregatValeur(vms, MetriqueVm::getDiskAllocated));
         tableFaitsRepository.save(indDiskAllocated);
-        final TableFaits indDiskUsed = buildGreen(modId, appId);
+        final TableFaits indDiskUsed = buildGreen(modId, appId, fileDate);
         indDiskUsed.setIdIndicateur(IndicateurType.DISQUE_CONSOMME.getValue());
         indDiskUsed.setValeur(calculAgregatValeur(vms, MetriqueVm::getDiskUsed));
         tableFaitsRepository.save(indDiskUsed);
-        final TableFaits indCpuAllocated = buildGreen(modId, appId);
+        final TableFaits indCpuAllocated = buildGreen(modId, appId, fileDate);
         indCpuAllocated.setIdIndicateur(IndicateurType.CPU_ALLOUEE.getValue());
         indCpuAllocated.setValeur(calculAgregatValeur(vms, MetriqueVm::getRamAllocated));
         tableFaitsRepository.save(indCpuAllocated);
-        final TableFaits indCpuMaxi = buildGreen(modId, appId);
+        final TableFaits indCpuMaxi = buildGreen(modId, appId, fileDate);
         indCpuMaxi.setIdIndicateur(IndicateurType.CPU_MAXI.getValue());
         indCpuMaxi.setValeur(calculAgregatValeur(vms, MetriqueVm::getRamMaxi));
         tableFaitsRepository.save(indCpuMaxi);
-        final TableFaits indConso = buildGreen(modId, appId);
+        final TableFaits indConso = buildGreen(modId, appId, fileDate);
         indConso.setIdIndicateur(IndicateurType.CONSO_ELEC.getValue());
         indConso.setValeur(calculAgregatValeur(vms, m -> calculConsoElectrique(m.getConso())));
         tableFaitsRepository.save(indConso);
-        final TableFaits indNbVm = buildGreen(modId, appId);
+        final TableFaits indNbVm = buildGreen(modId, appId, fileDate);
         indNbVm.setIdIndicateur(IndicateurType.NBR_VM.getValue());
         indNbVm.setValeur(
                 BigDecimal.valueOf(metrics.stream().filter(m -> vms.contains(m.getVm())).count()));
         tableFaitsRepository.save(indNbVm);
     }
 
-    private TableFaits buildGreen(Integer modId, Integer appId) {
+    private TableFaits buildGreen(Integer modId, Integer appId, LocalDate fileDate) {
         return TableFaits.builder()
                 .idModule(modId)
                 .idApplication(appId)
                 .idSource(SourceType.FICHIER_VM.getValue())
-                .date(LocalDate.now())
+                .date(fileDate)
                 .build();
     }
 
@@ -368,7 +370,7 @@ public class GreenItService {
         if (consoIn == null) {
             return new BigDecimal(0);
         }
-        return consoIn.multiply(new BigDecimal(30));
+        return consoIn.multiply(MULTIPLE_POUR_CONSO_HORAIRE);
     }
 
     public List<MetriqueVm> getMetrics() {

@@ -5,6 +5,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.assertj.core.api.SoftAssertions;
@@ -29,6 +30,8 @@ import fr.insee.compas.repository.TableFaitsRepository;
 class GreenItServiceMajTest {
 
     private GreenItService greenItService;
+
+    @Mock private FichierControlService fichierControlService;
 
     @Mock private OscarClient oscarClient;
 
@@ -68,22 +71,24 @@ class GreenItServiceMajTest {
                         VmOscarView.builder().idApplication(123).build());
         Mockito.when(oscarClient.getAllVmOscar()).thenReturn(ResponseEntity.ok(mockVms));
 
-        assertDoesNotThrow(() -> greenItService.miseAJourIndicateursGreenIT());
+        assertDoesNotThrow(() -> greenItService.miseAJourIndicateursGreenIT(LocalDate.now()));
 
-        verify(greenItService, times(1)).miseAJourIndicateursApplicationGreenIT(mockVms);
-        verify(greenItService, times(1)).miseAJourIndicateursModuleGreenIT(mockVms);
+        verify(greenItService, times(1))
+                .miseAJourIndicateursApplicationGreenIT(mockVms, LocalDate.now());
+        verify(greenItService, times(1))
+                .miseAJourIndicateursModuleGreenIT(mockVms, LocalDate.now());
     }
 
     @Test
     void testMiseAJourIndicateursGreenIT_ErreurBodyNull() {
         // Mock retour OscarClient avec un body null
         Mockito.when(oscarClient.getAllVmOscar()).thenReturn(ResponseEntity.ok(null));
-        // Vérifier que l'exception est bien levée
+        final LocalDate localDate = LocalDate.now();
         final CompasClientException exception =
                 Assertions.assertThrows(
                         CompasClientException.class,
                         () -> {
-                            greenItService.miseAJourIndicateursGreenIT();
+                            greenItService.miseAJourIndicateursGreenIT(localDate);
                         });
         final SoftAssertions softAssertions = new SoftAssertions();
         softAssertions.assertThat(exception.getStatus()).isEqualTo(500);
@@ -97,9 +102,11 @@ class GreenItServiceMajTest {
     void testMiseAJourIndicateursGreenIT_AvecListeVide() {
         final List<VmOscarView> emptyList = List.of();
         Mockito.when(oscarClient.getAllVmOscar()).thenReturn(ResponseEntity.ok(emptyList));
-        assertDoesNotThrow(() -> greenItService.miseAJourIndicateursGreenIT());
+        assertDoesNotThrow(() -> greenItService.miseAJourIndicateursGreenIT(LocalDate.now()));
 
-        verify(greenItService, times(1)).miseAJourIndicateursApplicationGreenIT(emptyList);
-        verify(greenItService, times(1)).miseAJourIndicateursModuleGreenIT(emptyList);
+        verify(greenItService, times(1))
+                .miseAJourIndicateursApplicationGreenIT(emptyList, LocalDate.now());
+        verify(greenItService, times(1))
+                .miseAJourIndicateursModuleGreenIT(emptyList, LocalDate.now());
     }
 }

@@ -18,7 +18,7 @@ import fr.insee.compas.repository.TableFaitsRepository;
 
 @SpringBootTest
 @ActiveProfiles("test")
-public class MeteoCreationServiceTest {
+class MeteoCreationServiceTest {
 
     @Autowired MeteoCreationService meteoService;
 
@@ -26,11 +26,11 @@ public class MeteoCreationServiceTest {
 
     @Test
     void creerRessentiMeteoServiceTest() {
-        int idApplication1 = 100;
-        int idApplication2 = 101;
-        BigDecimal valeurMeteo = new BigDecimal(4);
-        String commentaire = "Tout se passe bien";
-        DemandeCreationMeteo demandeCreationMeteo =
+        final int idApplication1 = 100;
+        final int idApplication2 = 101;
+        final BigDecimal valeurMeteo = new BigDecimal(4);
+        final String commentaire = "Tout se passe bien";
+        final DemandeCreationMeteo demandeCreationMeteo =
                 DemandeCreationMeteo.builder()
                         .idsApplication(List.of(idApplication1, idApplication2))
                         .valeurMeteo(valeurMeteo)

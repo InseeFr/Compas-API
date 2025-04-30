@@ -1,5 +1,6 @@
 package fr.insee.compas.controller;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,6 +23,7 @@ import fr.insee.compas.model.compas.dto.MetriqueApplicationDTO;
 import fr.insee.compas.model.compas.dto.MetriqueModuleDTO;
 import fr.insee.compas.model.greenit.IndicateurApplicationGreenIT;
 import fr.insee.compas.model.greenit.IndicateurModuleGreenIT;
+import fr.insee.compas.service.FichierControlService;
 import fr.insee.compas.service.GreenItService;
 import fr.insee.compas.view.ApplicationConsommationElectriqueView;
 import fr.insee.compas.view.IndicateurApplicationGreenITView;
@@ -29,32 +31,21 @@ import fr.insee.compas.view.IndicateurModuleGreenITView;
 import fr.insee.compas.view.ModuleConsommationElectriqueView;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/kpi-green")
 @Tag(name = "API Kpi GreenIt", description = "API des indicateurs GreenIT")
+@RequiredArgsConstructor
 public class GreenItController {
 
     private final GreenItService greenItService;
+    private final FichierControlService fichierControlService;
     private final IndicateurModuleGreenITViewMapper indicateurModuleGreenITViewMapper;
     private final IndicateurApplicationGreenITViewMapper indicateurApplicationGreenITViewMapper;
     private final ApplicationConsommationElectriqueViewMapper
             applicationConsommationElectriqueViewMapper;
     private final ModuleConsommationElectriqueViewMapper moduleConsommationElectriqueViewMapper;
-
-    public GreenItController(
-            GreenItService greenItService,
-            IndicateurModuleGreenITViewMapper indicateurModuleGreenITViewMapper,
-            IndicateurApplicationGreenITViewMapper indicateurApplicationGreenITViewMapper,
-            ApplicationConsommationElectriqueViewMapper applicationConsommationElectriqueViewMapper,
-            ModuleConsommationElectriqueViewMapper moduleConsommationElectriqueViewMapper) {
-        this.greenItService = greenItService;
-        this.indicateurModuleGreenITViewMapper = indicateurModuleGreenITViewMapper;
-        this.indicateurApplicationGreenITViewMapper = indicateurApplicationGreenITViewMapper;
-        this.applicationConsommationElectriqueViewMapper =
-                applicationConsommationElectriqueViewMapper;
-        this.moduleConsommationElectriqueViewMapper = moduleConsommationElectriqueViewMapper;
-    }
 
     @GetMapping("/applications/{applicationId}")
     public ResponseEntity<IndicateurApplicationGreenITView> getNombreVirtualMachine(
@@ -102,7 +93,10 @@ public class GreenItController {
 
     @PostMapping(value = "/modules/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> uploadCSV(@RequestParam("file") final MultipartFile file) {
-        greenItService.miseAJourIndicateursGreenItFromFile(file);
+
+        final String fileName = file.getOriginalFilename();
+        final LocalDate fileDate = fichierControlService.controlFileName(fileName);
+        greenItService.miseAJourIndicateursGreenItFromFile(file, fileDate);
         return ResponseEntity.ok("Fichier CSV importé avec succès !");
     }
 }

@@ -1,6 +1,7 @@
 package fr.insee.compas.repository;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -214,4 +215,12 @@ public interface TableFaitsRepository extends JpaRepository<TableFaits, Long> {
 """,
             nativeQuery = true)
     List<Object[]> findValueIndicateurQualiteBrute();
+
+    @Query(
+            value =
+                    """
+select count(tf) from TableFaits tf where tf.idIndicateur = :idIndicateur and tf.date = :dateIn
+""")
+    Integer countGreenItValuesByDate(
+            @Param("dateIn") LocalDate dateIn, @Param("idIndicateur") Integer idIndicateur);
 }
