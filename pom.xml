@@ -78,7 +78,7 @@
 		<dependency>
 			<groupId>io.github.openfeign</groupId>
 			<artifactId>feign-httpclient</artifactId>
-			<version>13.5</version>
+			<version>13.6</version>
 		</dependency>
 		<dependency>
 			<groupId>io.github.openfeign</groupId>
