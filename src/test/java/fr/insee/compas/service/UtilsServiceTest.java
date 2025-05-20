@@ -3,10 +3,14 @@ package fr.insee.compas.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
 
 import org.junit.jupiter.api.Test;
 
 import fr.insee.compas.model.compas.Notation;
+import fr.insee.compas.model.sonar.Component;
+import fr.insee.compas.model.sonar.Measure;
+import fr.insee.compas.model.sonar.RecuperationMeasures;
 
 public class UtilsServiceTest {
 
@@ -102,5 +106,69 @@ public class UtilsServiceTest {
                 Notation.E.getGrade(),
                 utilsService.getLettreDetteTechnique("60000"),
                 "Valeur supérieure ou égale à 50400 doit retourner E");
+    }
+
+    @Test
+    public void testConcatenationMeasures() {
+        // Création du premier ensemble de mesures
+        Measure m1 = new Measure();
+        m1.setMetric("lines_to_cover");
+        m1.setValue("100");
+
+        Measure m2 = new Measure();
+        m2.setMetric("uncovered_lines");
+        m2.setValue("20");
+
+        Measure m3 = new Measure();
+        m3.setMetric("sqale_index");
+        m3.setValue("300");
+
+        Measure m4 = new Measure();
+        m4.setMetric("reliability_rating");
+        m4.setValue("A");
+
+        Component c1 = new Component();
+        c1.setMeasures(Arrays.asList(m1, m2, m3, m4));
+        RecuperationMeasures measures1 = new RecuperationMeasures();
+        measures1.setComponent(c1);
+
+        // Création du deuxième ensemble de mesures
+        Measure m5 = new Measure();
+        m5.setMetric("lines_to_cover");
+        m5.setValue("150");
+
+        Measure m6 = new Measure();
+        m6.setMetric("uncovered_lines");
+        m6.setValue("30");
+
+        Measure m7 = new Measure();
+        m7.setMetric("sqale_index");
+        m7.setValue("200");
+
+        Measure m8 = new Measure();
+        m8.setMetric("reliability_rating");
+        m8.setValue("B");
+
+        Component c2 = new Component();
+        c2.setMeasures(Arrays.asList(m5, m6, m7, m8));
+        RecuperationMeasures measures2 = new RecuperationMeasures();
+        measures2.setComponent(c2);
+
+        // Appel à la méthode à tester
+        RecuperationMeasures result = UtilsService.concatenationMeasures(measures1, measures2);
+
+        // Vérifications
+        assertEquals("250.0", getValueByMetric(result, "lines_to_cover"));
+        assertEquals("50.0", getValueByMetric(result, "uncovered_lines"));
+        assertEquals("500.0", getValueByMetric(result, "sqale_index"));
+        assertEquals("B", getValueByMetric(result, "reliability_rating"));
+    }
+
+    private String getValueByMetric(RecuperationMeasures measures, String metric) {
+        return measures.getComponent().getMeasures().stream()
+                .filter(m -> m.getMetric().equals(metric))
+                .findFirst()
+                .map(Measure::getValue)
+                .orElse(null);
     }
 }

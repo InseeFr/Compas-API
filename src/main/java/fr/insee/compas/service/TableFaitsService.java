@@ -86,8 +86,8 @@ public class TableFaitsService {
                                                 ((Number) obj[0]).intValue())));
     }
 
-    public Map<Integer, IndicateurQualiteView> getIndicateurQualite() {
-        final List<Object[]> faits = tableFaitsRepository.findValueIndicateurQualiteBrute();
+    public Map<Integer, IndicateurQualiteView> getIndicateurModuleQualite() {
+        final List<Object[]> faits = tableFaitsRepository.findValueIndicateurModuleQualiteBrute();
 
         return faits.stream()
                 .collect(
@@ -104,6 +104,24 @@ public class TableFaitsService {
                                                 .nbCveLow(toStringOrEmpty(obj[6]))
                                                 .detteTechnique(toStringOrEmpty(obj[7]))
                                                 .fiabilite(toStringOrEmpty(obj[8]))
+                                                .build()));
+    }
+
+    public Map<Integer, IndicateurQualiteView> getIndicateurApplicationQualite() {
+        final List<Object[]> faits =
+                tableFaitsRepository.findValueIndicateurApplicationQualiteBrute();
+
+        return faits.stream()
+                .collect(
+                        Collectors.toMap(
+                                obj -> ((Number) obj[0]).intValue(),
+                                obj ->
+                                        IndicateurQualiteView.builder()
+                                                .applicationId(((Number) obj[0]).intValue())
+                                                .nbLigneCode(toStringOrEmpty(obj[1]))
+                                                .nbLigneCodeNonTeste(toStringOrEmpty(obj[2]))
+                                                .detteTechnique(toStringOrEmpty(obj[3]))
+                                                .fiabilite(toStringOrEmpty(obj[4]))
                                                 .build()));
     }
 

@@ -184,14 +184,13 @@ public interface TableFaitsRepository extends JpaRepository<TableFaits, Long> {
     @Query(
             value =
                     """
-       WITH latest_data AS (
+    WITH latest_data AS (
                                        SELECT
                                            id_module,
-                                           id_application,
                                            id_indicateur,
                                            valeur,
                                            date,
-                                           ROW_NUMBER() OVER (PARTITION BY id_module, id_application, id_indicateur ORDER BY date DESC) AS rn
+                                           ROW_NUMBER() OVER (PARTITION BY id_module, id_indicateur ORDER BY date DESC) AS rn
                                        FROM
                                            table_faits
                                    )
@@ -210,11 +209,41 @@ public interface TableFaitsRepository extends JpaRepository<TableFaits, Long> {
                                    WHERE
                                        rn = 1 and id_module is not null
                                    GROUP BY
-                                       id_module,
+                                       id_module;
+""",
+            nativeQuery = true)
+    List<Object[]> findValueIndicateurModuleQualiteBrute();
+
+    @Query(
+            value =
+                    """
+       WITH latest_data AS (
+                                       SELECT
+                                           id_module,
+                                           id_application,
+                                           id_indicateur,
+                                           valeur,
+                                           date,
+                                           ROW_NUMBER() OVER (PARTITION BY id_application, id_indicateur ORDER BY date DESC) AS rn
+                                       FROM
+                                           table_faits
+                                       WHERE id_module is null
+                                   )
+                                   SELECT
+                                      id_application AS applicationId,
+                                      MAX(CASE WHEN id_indicateur = 1 THEN valeur END) AS nbLigneCode,
+                                      MAX(CASE WHEN id_indicateur = 2 THEN valeur END) AS nbLigneCodeNonTeste,
+                                      MAX(CASE WHEN id_indicateur = 11 THEN valeur END) AS detteTechnique,
+                                      MAX(CASE WHEN id_indicateur = 12 THEN valeur END) AS fiabilite
+                                   FROM
+                                       latest_data
+                                   WHERE
+                                       rn = 1
+                                   GROUP BY
                                        id_application;
 """,
             nativeQuery = true)
-    List<Object[]> findValueIndicateurQualiteBrute();
+    List<Object[]> findValueIndicateurApplicationQualiteBrute();
 
     @Query(
             value =

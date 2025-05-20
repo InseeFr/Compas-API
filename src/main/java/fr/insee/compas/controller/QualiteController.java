@@ -2,12 +2,14 @@ package fr.insee.compas.controller;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import fr.insee.compas.model.sonar.RecuperationMeasures;
 import fr.insee.compas.service.qualite.IndicateurQualiteApplicationService;
 import fr.insee.compas.service.qualite.IndicateurQualiteModuleService;
 import fr.insee.compas.service.qualite.RecupCveService;
@@ -42,7 +44,9 @@ public class QualiteController {
     @Operation(summary = "mise à jour des indicateurs provenant de sonar")
     public void updateIndicateursSonar() throws IOException {
         log.info("Début de la récupération des indicateurs pour la couverture de test");
-        testUnitaireService.putIndicateursSonar();
+        Map<String, RecuperationMeasures> analyseModule =
+                testUnitaireService.putIndicateursSonarModule();
+        testUnitaireService.putIndicateursSonarApplication(analyseModule);
         log.info("fin de la récupération des indicateurs pour la couverture de test");
     }
 

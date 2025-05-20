@@ -61,7 +61,7 @@ class RecupIndicateursSonarTest {
         // Act
         boolean result =
                 recupIndicateursSonarService.putIndicateurSonarInBdd(
-                        module, recuperationMeasures, date);
+                        module, null, recuperationMeasures, date);
 
         // Assert
         assertTrue(result);
@@ -81,7 +81,7 @@ class RecupIndicateursSonarTest {
         // Act
         boolean result =
                 recupIndicateursSonarService.putIndicateurSonarInBdd(
-                        module, recuperationMeasures, date);
+                        module, null, recuperationMeasures, date);
 
         // Assert
         assertFalse(result);
@@ -121,7 +121,7 @@ class RecupIndicateursSonarTest {
                 .thenReturn(mesuresValides);
 
         // 2. Appeler la méthode à tester
-        recupIndicateursSonarService.putIndicateursSonar();
+        recupIndicateursSonarService.putIndicateursSonarModule();
 
         // 3. Vérifier les appels et les effets
         verify(tableFaitsRepository, times(2)).save(any(TableFaits.class));

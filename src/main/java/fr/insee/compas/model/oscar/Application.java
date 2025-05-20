@@ -16,4 +16,6 @@ public class Application {
     String domaineSndi;
     String domaineFonctionnel;
     String sndi;
+
+    public Application(Integer idApplication, String appName) {}
 }

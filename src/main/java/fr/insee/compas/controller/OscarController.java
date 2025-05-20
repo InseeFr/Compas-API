@@ -1,6 +1,8 @@
 package fr.insee.compas.controller;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -35,6 +37,12 @@ public class OscarController {
     @Operation(summary = "liste des modules d'oscar sans feign ")
     public List<Module> getModules() {
         return oscarService.getModules();
+    }
+
+    @GetMapping("/get-key-sonar-applications")
+    @Operation(summary = "liste des modules d'oscar sans feign ")
+    public Map<Application, Set<String>> getKeySonarParApplication() {
+        return oscarService.mapApplicationsToKeySonars();
     }
 
     @GetMapping("/get-applications")

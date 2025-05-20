@@ -1,9 +1,6 @@
 package fr.insee.compas.service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import jakarta.transaction.Transactional;
 
@@ -128,6 +125,28 @@ public class OscarService {
         }
 
         return applications;
+    }
+
+    public Map<Application, Set<String>> mapApplicationsToKeySonars() {
+        List<Module> modules = getModules();
+        Map<Application, Set<String>> appToKeySonars = new HashMap<>();
+
+        for (Module module : modules) {
+            // Create a representative Application object from Module data
+            Application app =
+                    Application.builder()
+                            .idApplication(module.getIdApplication())
+                            .appName(module.getAppName())
+                            .domaineSndi(module.getDomaineSndi())
+                            .domaineFonctionnel(module.getDomaineFonctionnel())
+                            .sndi(module.getSndi())
+                            .build();
+
+            // Initialize set if application not already in map
+            appToKeySonars.computeIfAbsent(app, k -> new HashSet<>()).add(module.getKeySonar());
+        }
+
+        return appToKeySonars;
     }
 
     @Transactional

@@ -46,7 +46,8 @@ public class IndicateurQualiteModuleService {
         List<Module> modules = oscarService.getModules();
 
         // Metrics au niveau module
-        Map<Integer, IndicateurQualiteView> mapQualite = tableFaitsService.getIndicateurQualite();
+        Map<Integer, IndicateurQualiteView> mapQualite =
+                tableFaitsService.getIndicateurModuleQualite();
 
         List<IndicateurQualiteView> resultat = new ArrayList<>();
 

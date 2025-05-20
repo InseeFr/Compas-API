@@ -5,9 +5,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
-import fr.insee.compas.dto.AggregatedResultDto;
 import fr.insee.compas.model.compas.IndicateurType;
 import fr.insee.compas.model.compas.TableFaits;
 import fr.insee.compas.model.oscar.Application;
@@ -39,6 +39,9 @@ public class IndicateurQualiteApplicationService {
 
     public List<IndicateurQualiteView> getIndicateurNiveauApplication() {
 
+        Map<Integer, IndicateurQualiteView> mapQualite =
+                tableFaitsService.getIndicateurApplicationQualite();
+
         // Récupérer les informations des modules depuis l'API
         List<Application> applications = oscarService.getApplications();
 
@@ -55,26 +58,15 @@ public class IndicateurQualiteApplicationService {
         Map<Integer, TableFaits> mapByIdModuleCveLow =
                 tableFaitsService.getMapMetricByApplication(
                         IndicateurType.CVE_LOW_APPLI.getValue());
-        log.info("debut récupération données agrégées");
-        Map<Integer, AggregatedResultDto> mapLigneCode =
-                tableFaitsService.findAgregationSumByIndicateurAndApplication(
-                        IndicateurType.NBR_LIGNE.getValue());
-        Map<Integer, AggregatedResultDto> mapLigneCodeNonTeste =
-                tableFaitsService.findAgregationSumByIndicateurAndApplication(
-                        IndicateurType.NBR_LIGNE_TEST.getValue());
-        Map<Integer, AggregatedResultDto> mapDetteTechnique =
-                tableFaitsService.findAgregationSumByIndicateurAndApplication(
-                        IndicateurType.DETTE_TECH.getValue());
-        Map<Integer, AggregatedResultDto> mapFiabilite =
-                tableFaitsService.findAgregationMaxByIndicateurAndApplication(
-                        IndicateurType.FIABILITE.getValue());
-        log.info("fin récupération données agrégées");
 
         List<IndicateurQualiteView> resultat = new ArrayList<>();
 
         // Traiter chaque application
         for (Application application : applications) {
-            IndicateurQualiteView viewApplication = new IndicateurQualiteView();
+            IndicateurQualiteView viewApplication = mapQualite.get(application.getIdApplication());
+            if (viewApplication == null) {
+                viewApplication = new IndicateurQualiteView();
+            }
             viewApplication.setApplicationName(application.getAppName());
             viewApplication.setSndi(application.getSndi());
             viewApplication.setDomaineSndi(application.getDomaineSndi());
@@ -82,8 +74,7 @@ public class IndicateurQualiteApplicationService {
             viewApplication.setApplicationId(application.getIdApplication());
 
             Integer moduleApplication = application.getIdApplication();
-            calculLettreCouvertureTest(
-                    mapLigneCode, moduleApplication, mapLigneCodeNonTeste, viewApplication);
+            calculLettreCouvertureTest(viewApplication);
 
             calculLettreCve(
                     mapByIdModuleCveCritical,
@@ -92,8 +83,8 @@ public class IndicateurQualiteApplicationService {
                     mapByIdModuleCveHigh,
                     mapByIdModuleCveMedium,
                     mapByIdModuleCveLow);
-            calculLettreFiabilite(mapFiabilite, moduleApplication, viewApplication);
-            calculLettreDetteTechnique(mapDetteTechnique, moduleApplication, viewApplication);
+            calculLettreFiabilite(viewApplication);
+            calculLettreDetteTechnique(viewApplication);
 
             viewApplication.calculerLettreGlobalQualite();
             resultat.add(viewApplication);
@@ -102,20 +93,13 @@ public class IndicateurQualiteApplicationService {
         return resultat;
     }
 
-    private void calculLettreCouvertureTest(
-            Map<Integer, AggregatedResultDto> mapLigneCode,
-            Integer moduleApplication,
-            Map<Integer, AggregatedResultDto> mapLigneCodeNonTeste,
-            IndicateurQualiteView viewApplication) {
-        if (mapLigneCode != null && mapLigneCode.get(moduleApplication) != null) {
-            if (mapLigneCode.get(moduleApplication).getSumValeur().intValue() > 0) {
+    private void calculLettreCouvertureTest(IndicateurQualiteView viewApplication) {
+        if (StringUtils.isNotEmpty(viewApplication.getNbLigneCode())) {
+            if (Double.parseDouble(viewApplication.getNbLigneCode()) > 0) {
                 double percentage =
                         utilsService.calculPourcentageCouvertureTest(
-                                mapLigneCode.get(moduleApplication).getSumValeur().intValue(),
-                                mapLigneCodeNonTeste
-                                        .get(moduleApplication)
-                                        .getSumValeur()
-                                        .intValue());
+                                (int) Double.parseDouble(viewApplication.getNbLigneCode()),
+                                (int) Double.parseDouble(viewApplication.getNbLigneCodeNonTeste()));
 
                 String pourcentage = (int) percentage + " %";
                 // Obtenir la note
@@ -167,30 +151,18 @@ public class IndicateurQualiteApplicationService {
         }
     }
 
-    private void calculLettreDetteTechnique(
-            Map<Integer, AggregatedResultDto> mapDetteTechnique,
-            Integer moduleApplication,
-            IndicateurQualiteView viewApplication) {
-        if (mapDetteTechnique != null && mapDetteTechnique.get(moduleApplication) != null) {
-            viewApplication.setDetteTechnique(
-                    String.valueOf(mapDetteTechnique.get(moduleApplication).getSumValeur()));
+    private void calculLettreDetteTechnique(IndicateurQualiteView viewApplication) {
+        if (StringUtils.isNotEmpty(viewApplication.getDetteTechnique())) {
             viewApplication.setLettreDetteTechnique(
-                    utilsService.getLettreDetteTechnique(
-                            String.valueOf(
-                                    mapDetteTechnique.get(moduleApplication).getSumValeur())));
+                    utilsService.getLettreDetteTechnique(viewApplication.getDetteTechnique()));
         }
     }
 
-    private void calculLettreFiabilite(
-            Map<Integer, AggregatedResultDto> mapFiabilite,
-            Integer moduleApplication,
-            IndicateurQualiteView viewApplication) {
-        if (mapFiabilite != null && mapFiabilite.get(moduleApplication) != null) {
-            viewApplication.setFiabilite(
-                    String.valueOf(mapFiabilite.get(moduleApplication).getSumValeur()));
+    private void calculLettreFiabilite(IndicateurQualiteView viewApplication) {
+        if (StringUtils.isNotEmpty(viewApplication.getFiabilite())) {
             viewApplication.setLettreFiabilite(
-                    utilsService.convertirChiffreEnLettre(
-                            mapFiabilite.get(moduleApplication).getSumValeur()));
+                    Character.toString(
+                            (char) ('A' + Double.parseDouble(viewApplication.getFiabilite()) - 1)));
         }
     }
 }

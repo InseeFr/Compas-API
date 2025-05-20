@@ -1,10 +1,15 @@
 package fr.insee.compas.service;
 
 import java.math.BigDecimal;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import fr.insee.compas.model.compas.IndicateurSonar;
 import fr.insee.compas.model.compas.Notation;
+import fr.insee.compas.model.sonar.Measure;
+import fr.insee.compas.model.sonar.RecuperationMeasures;
 
 @Service
 public class UtilsService {
@@ -75,5 +80,57 @@ public class UtilsService {
 
     public String convertirChiffreEnLettre(BigDecimal value) {
         return Character.toString((char) ('A' + value.intValue() - 1));
+    }
+
+    public static RecuperationMeasures concatenationMeasures(
+            RecuperationMeasures measures1, RecuperationMeasures measures2) {
+
+        if (measures1 == null
+                || measures1.getComponent() == null
+                || measures1.getComponent().getMeasures() == null
+                || measures1.getComponent().getMeasures().isEmpty()) {
+            return measures2;
+        }
+
+        Map<String, Measure> measureMap1 =
+                measures1.getComponent().getMeasures().stream()
+                        .collect(Collectors.toMap(Measure::getMetric, m -> m));
+        if (measures2 != null
+                && measures2.getComponent() != null
+                && measures2.getComponent().getMeasures() != null) {
+            for (Measure m2 : measures2.getComponent().getMeasures()) {
+                String metric = m2.getMetric();
+                Measure m1 = measureMap1.get(metric);
+                if (m1 != null) {
+                    if (IndicateurSonar.FIABILITE.name().equalsIgnoreCase(metric)
+                            || "reliability_rating".equalsIgnoreCase(metric)) {
+                        // Comparer les lettres et garder la plus grande
+                        String value1 = m1.getValue();
+                        String value2 = m2.getValue();
+                        String max = value1.compareToIgnoreCase(value2) >= 0 ? value1 : value2;
+                        m1.setValue(max);
+                    } else {
+                        try {
+                            double sum =
+                                    Double.parseDouble(m1.getValue())
+                                            + Double.parseDouble(m2.getValue());
+                            m1.setValue(String.valueOf(sum));
+                        } catch (NumberFormatException e) {
+                            // Ignorer ou logger si une valeur n'est pas un nombre
+                            System.err.println(
+                                    "Erreur de conversion numérique pour le metric " + metric);
+                        }
+                    }
+                } else {
+                    // Ajoute le measure s'il n'existait pas dans measures1
+                    measures1
+                            .getComponent()
+                            .getMeasures()
+                            .add(new Measure(m2.getMetric(), m2.getValue()));
+                }
+            }
+        }
+
+        return measures1;
     }
 }
