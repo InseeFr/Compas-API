@@ -16,7 +16,7 @@
 
 	<properties>
 		<java.version>21</java.version>
-		<spotless-maven-plugin.version>2.44.4</spotless-maven-plugin.version>
+		<spotless-maven-plugin.version>2.44.5</spotless-maven-plugin.version>
 		<googleJavaFormat.version>1.23.0</googleJavaFormat.version>
 		<sonar.exclusions>**/test/**, **/*Test.java, **/*Tests.java</sonar.exclusions>
 		<maven.compiler.source>21</maven.compiler.source>
