@@ -2,21 +2,20 @@ package fr.insee.compas.mapper;
 
 import java.util.Optional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import fr.insee.compas.model.greenit.MetriqueVm;
 import fr.insee.compas.model.greenit.MetriqueVmCsvRead;
 import fr.insee.compas.model.greenit.util.LectureCsvUtil;
 
+import lombok.extern.slf4j.Slf4j;
+
 @Component
+@Slf4j
 public class MetriqueVmMapper {
 
-    private static final Logger logger = LoggerFactory.getLogger(MetriqueVmMapper.class);
-
     public Optional<MetriqueVm> toMetriqueVm(MetriqueVmCsvRead csvRead) {
-        logger.debug("construction du Pojo métrique");
+        log.debug("construction du Pojo métrique");
         return Optional.ofNullable(csvRead).map(this::csvToPojo);
     }
 

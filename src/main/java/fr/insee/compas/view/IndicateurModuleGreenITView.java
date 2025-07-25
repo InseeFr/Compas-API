@@ -20,5 +20,8 @@ public class IndicateurModuleGreenITView {
     private String cpuAllocated;
     private String conso;
     private String nbVm;
+    private String consoScore;
+    private String impactScore;
+    private String gaspillageScore;
     private String lettreGreen;
 }

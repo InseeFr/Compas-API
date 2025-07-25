@@ -20,5 +20,8 @@ public class IndicateurApplicationGreenITView {
     private String cpuMaxi;
     private String conso;
     private String nbVm;
+    private String consoScore;
+    private String impactScore;
+    private String gaspillageScore;
     private String lettreGreen;
 }

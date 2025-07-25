@@ -6,8 +6,6 @@ import java.time.format.DateTimeParseException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import fr.insee.compas.exception.CompasUploadException;
@@ -15,7 +13,10 @@ import fr.insee.compas.exception.ErrorVM;
 import fr.insee.compas.model.compas.IndicateurType;
 import fr.insee.compas.repository.TableFaitsRepository;
 
+import lombok.extern.slf4j.Slf4j;
+
 @Service
+@Slf4j
 public class FichierControlService {
 
     private final TableFaitsRepository tableFaitsRepository;
@@ -26,8 +27,6 @@ public class FichierControlService {
         super();
         this.tableFaitsRepository = tableFaitsRepository;
     }
-
-    private static final Logger logger = LoggerFactory.getLogger(FichierControlService.class);
 
     private static final String FILE_NAME_PATTERN = "^vm-metrique-(\\d{8})\\.csv$";
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
@@ -49,7 +48,7 @@ public class FichierControlService {
                 return LocalDate.parse(dateStr, DATE_FORMATTER);
             } catch (final DateTimeParseException e) {
                 final ErrorVM errorVM = new ErrorVM();
-                logger.info(EXCEPTION_FORMAT_DATE_INVALIDE);
+                log.info(EXCEPTION_FORMAT_DATE_INVALIDE);
                 errorVM.setCle("date.formatInvalide");
                 errorVM.setMessage(EXCEPTION_FORMAT_DATE_INVALIDE);
                 throw new CompasUploadException(422, errorVM);
@@ -79,14 +78,14 @@ public class FichierControlService {
         final LocalDate fileDate = extractDateFromFileName(fileName);
         if (fileDate == null) {
             final ErrorVM errorVM = new ErrorVM();
-            logger.info(EXCEPTION_FORMAT_DATE_INVALIDE);
+            log.info(EXCEPTION_FORMAT_DATE_INVALIDE);
             errorVM.setCle("ficher.dateInvalide");
             errorVM.setMessage(EXCEPTION_FORMAT_DATE_INVALIDE);
             throw new CompasUploadException(422, errorVM);
         }
         if (isFileDejaRecu(fileDate)) {
             final ErrorVM errorVM = new ErrorVM();
-            logger.info("Fichier déjà chargé");
+            log.info("Fichier déjà chargé");
             errorVM.setCle("fichier.dejaReçu");
             errorVM.setMessage("Fichier déjà chargé");
             throw new CompasUploadException(400, errorVM);

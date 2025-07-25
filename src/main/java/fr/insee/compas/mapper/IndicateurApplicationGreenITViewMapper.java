@@ -1,20 +1,31 @@
 package fr.insee.compas.mapper;
 
+import java.math.RoundingMode;
 import java.util.Optional;
 
 import org.springframework.stereotype.Component;
 
+import fr.insee.compas.logic.GreenItScoreCalculator;
+import fr.insee.compas.model.greenit.GreenItScore;
 import fr.insee.compas.model.greenit.IndicateurApplicationGreenIT;
-import fr.insee.compas.util.IndicateurViewUtil;
 import fr.insee.compas.view.IndicateurApplicationGreenITView;
 
 @Component
 public class IndicateurApplicationGreenITViewMapper {
+
+    private final GreenItScoreCalculator greenItScoreCalculator;
+
+    public IndicateurApplicationGreenITViewMapper(GreenItScoreCalculator greenItScoreCalculator) {
+        super();
+        this.greenItScoreCalculator = greenItScoreCalculator;
+    }
+
     public Optional<IndicateurApplicationGreenITView> toView(IndicateurApplicationGreenIT ind) {
         return Optional.ofNullable(ind).map(this::mapToView);
     }
 
     private IndicateurApplicationGreenITView mapToView(IndicateurApplicationGreenIT indicateur) {
+        final GreenItScore greenItScore = greenItScoreCalculator.compute(indicateur);
         return IndicateurApplicationGreenITView.builder()
                 .applicationId(indicateur.getApplicationId())
                 .applicationName(indicateur.getApplicationName())
@@ -26,9 +37,11 @@ public class IndicateurApplicationGreenITViewMapper {
                 .cpuMaxi(indicateur.getCpuMaxi() + " %")
                 .conso(indicateur.getConso() + " Wh")
                 .nbVm(indicateur.getNbVm() + " vm")
-                .lettreGreen(
-                        IndicateurViewUtil.getGradeFromConsommationElectrique(
-                                indicateur.getConso()))
+                .consoScore(greenItScore.getConso().setScale(3, RoundingMode.UP).toString())
+                .impactScore(greenItScore.getImpact().setScale(3, RoundingMode.UP).toString())
+                .gaspillageScore(
+                        greenItScore.getGaspillage().setScale(3, RoundingMode.UP).toString())
+                .lettreGreen(greenItScoreCalculator.compute(indicateur).getGrade())
                 .build();
     }
 }

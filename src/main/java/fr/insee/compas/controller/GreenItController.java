@@ -15,37 +15,32 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import fr.insee.compas.mapper.ApplicationConsommationElectriqueViewMapper;
 import fr.insee.compas.mapper.IndicateurApplicationGreenITViewMapper;
 import fr.insee.compas.mapper.IndicateurModuleGreenITViewMapper;
-import fr.insee.compas.mapper.ModuleConsommationElectriqueViewMapper;
 import fr.insee.compas.model.compas.dto.MetriqueApplicationDTO;
 import fr.insee.compas.model.compas.dto.MetriqueModuleDTO;
 import fr.insee.compas.model.greenit.IndicateurApplicationGreenIT;
 import fr.insee.compas.model.greenit.IndicateurModuleGreenIT;
 import fr.insee.compas.service.FichierControlService;
 import fr.insee.compas.service.GreenItService;
-import fr.insee.compas.view.ApplicationConsommationElectriqueView;
 import fr.insee.compas.view.IndicateurApplicationGreenITView;
 import fr.insee.compas.view.IndicateurModuleGreenITView;
-import fr.insee.compas.view.ModuleConsommationElectriqueView;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/kpi-green")
 @Tag(name = "API Kpi GreenIt", description = "API des indicateurs GreenIT")
 @RequiredArgsConstructor
+@Slf4j
 public class GreenItController {
 
     private final GreenItService greenItService;
     private final FichierControlService fichierControlService;
     private final IndicateurModuleGreenITViewMapper indicateurModuleGreenITViewMapper;
     private final IndicateurApplicationGreenITViewMapper indicateurApplicationGreenITViewMapper;
-    private final ApplicationConsommationElectriqueViewMapper
-            applicationConsommationElectriqueViewMapper;
-    private final ModuleConsommationElectriqueViewMapper moduleConsommationElectriqueViewMapper;
 
     @GetMapping("/applications/{applicationId}")
     public ResponseEntity<IndicateurApplicationGreenITView> getNombreVirtualMachine(
@@ -67,28 +62,42 @@ public class GreenItController {
         return view.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/applications/consommation-electrique")
-    public ResponseEntity<List<ApplicationConsommationElectriqueView>>
-            getApplicationConsommationElectrique() {
+    @GetMapping("/applications")
+    public ResponseEntity<List<IndicateurApplicationGreenITView>> getApplications() {
         final List<MetriqueApplicationDTO> consommationsDTO =
                 greenItService.getApplicationConsommationElectrique();
-        final List<ApplicationConsommationElectriqueView> consos =
+        log.info("consommationsDTO : {}", consommationsDTO.size());
+        final List<IndicateurApplicationGreenIT> kpisGreen =
                 consommationsDTO.stream()
-                        .map(applicationConsommationElectriqueViewMapper::toView)
+                        .map(MetriqueApplicationDTO::getIdApplication)
+                        .distinct()
+                        .map(greenItService::getIndicateursApplicationGreenIT)
                         .toList();
-        return new ResponseEntity<>(consos, null, HttpStatus.OK);
+        final List<IndicateurApplicationGreenITView> views =
+                kpisGreen.stream()
+                        .map(indicateurApplicationGreenITViewMapper::toView)
+                        .flatMap(Optional::stream)
+                        .toList();
+        return new ResponseEntity<>(views, null, HttpStatus.OK);
     }
 
-    @GetMapping("/modules/consommation-electrique")
-    public ResponseEntity<List<ModuleConsommationElectriqueView>>
-            getConsommationElectriqueApplication() {
+    @GetMapping("/modules")
+    public ResponseEntity<List<IndicateurModuleGreenITView>> getModules() {
         final List<MetriqueModuleDTO> consommationsDTO =
                 greenItService.getModuleConsommationElectrique();
-        final List<ModuleConsommationElectriqueView> consos =
+        final List<IndicateurModuleGreenIT> kpisGreen =
                 consommationsDTO.stream()
-                        .map(moduleConsommationElectriqueViewMapper::toView)
+                        .map(
+                                dto ->
+                                        greenItService.getIndicateursModuleGreenIT(
+                                                dto.getIdModule(), dto.getDate()))
                         .toList();
-        return new ResponseEntity<>(consos, null, HttpStatus.OK);
+        final List<IndicateurModuleGreenITView> views =
+                kpisGreen.stream()
+                        .map(indicateurModuleGreenITViewMapper::toView)
+                        .flatMap(Optional::stream)
+                        .toList();
+        return new ResponseEntity<>(views, null, HttpStatus.OK);
     }
 
     @PostMapping(value = "/modules/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

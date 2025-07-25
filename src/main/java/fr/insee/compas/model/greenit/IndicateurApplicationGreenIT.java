@@ -11,15 +11,17 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class IndicateurApplicationGreenIT {
+public class IndicateurApplicationGreenIT extends IndicateurGreenIT {
     private Integer applicationId;
     private String applicationName;
-    private Integer ramAllocated;
-    private BigDecimal ramMaxi;
-    private Integer cpuAllocated;
-    private BigDecimal cpuMaxi;
-    private Integer diskAllocated;
-    private BigDecimal diskUsed;
-    private Integer conso;
-    private Integer nbVm;
+
+    @Override
+    public GreenItScore toGreenItScore(
+            BigDecimal score,
+            String grade,
+            BigDecimal conso,
+            BigDecimal pression,
+            BigDecimal gaspillage) {
+        return new GreenItScore(applicationId, null, score, grade, conso, pression, gaspillage);
+    }
 }

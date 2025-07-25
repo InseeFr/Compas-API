@@ -14,8 +14,6 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -57,8 +55,6 @@ public class GreenItService {
 
     private List<MetriqueVm> metrics;
 
-    private static final Logger logger = LoggerFactory.getLogger(GreenItService.class);
-
     public static final BigDecimal MULTIPLE_POUR_CONSO_HORAIRE = new BigDecimal(12);
 
     public GreenItService(
@@ -77,14 +73,24 @@ public class GreenItService {
         log.debug(
                 "on rentre bien dans la construction dans le service des indicateurs green par"
                         + " module");
+        final LocalDate lastDay =
+                tableFaitsRepository.findLastDateIndicateur(IndicateurType.CONSO_ELEC.getValue());
+        return getIndicateursModuleGreenIT(moduleId, lastDay);
+    }
+
+    public IndicateurModuleGreenIT getIndicateursModuleGreenIT(
+            Integer moduleId, LocalDate lastDay) {
+        log.debug(
+                "on rentre bien dans la construction dans le service des indicateurs green par"
+                        + " module");
         final ResponseEntity<ModuleOscarView> module = oscarClient.getModuleOscar(moduleId);
         final IndicateurModuleGreenIT greenIt = new IndicateurModuleGreenIT();
         final ModuleOscarView moduleOscarView = module.getBody();
         greenIt.setModuleId(moduleId);
         greenIt.setModuleName(moduleOscarView != null ? moduleOscarView.getNom() : "anonyme");
         final List<TableFaits> ramAlloueeLatestValues =
-                tableFaitsRepository.findLatestValueByIndicateurAndModule(
-                        IndicateurType.RAM_ALLOUEE.getValue(), moduleId);
+                tableFaitsRepository.findByDateAndIdIndicateurAndIdModule(
+                        lastDay, IndicateurType.RAM_ALLOUEE.getValue(), moduleId);
         final Optional<TableFaits> indRamAllouee = ramAlloueeLatestValues.stream().findFirst();
         if (indRamAllouee.isPresent()) {
             greenIt.setRamAllocated(indRamAllouee.get().getValeur().intValue());
@@ -92,11 +98,12 @@ public class GreenItService {
                     calculateMetricPercentModule(
                             IndicateurType.RAM_MAXI.getValue(),
                             greenIt.getRamAllocated(),
-                            moduleId));
+                            moduleId,
+                            lastDay));
         }
         final List<TableFaits> disqueAlloueLatestValues =
-                tableFaitsRepository.findLatestValueByIndicateurAndModule(
-                        IndicateurType.DISQUE_ALLOUE.getValue(), moduleId);
+                tableFaitsRepository.findByDateAndIdIndicateurAndIdModule(
+                        lastDay, IndicateurType.DISQUE_ALLOUE.getValue(), moduleId);
         final Optional<TableFaits> indDisqueAlloue = disqueAlloueLatestValues.stream().findFirst();
         if (indDisqueAlloue.isPresent()) {
             greenIt.setDiskAllocated(indDisqueAlloue.get().getValeur().intValue());
@@ -104,11 +111,12 @@ public class GreenItService {
                     calculateMetricPercentModule(
                             IndicateurType.DISQUE_CONSOMME.getValue(),
                             greenIt.getDiskAllocated(),
-                            moduleId));
+                            moduleId,
+                            lastDay));
         }
         final List<TableFaits> cpuAlloueeLatestValues =
-                tableFaitsRepository.findLatestValueByIndicateurAndModule(
-                        IndicateurType.CPU_ALLOUEE.getValue(), moduleId);
+                tableFaitsRepository.findByDateAndIdIndicateurAndIdModule(
+                        lastDay, IndicateurType.CPU_ALLOUEE.getValue(), moduleId);
         final Optional<TableFaits> indCpuAllouee = cpuAlloueeLatestValues.stream().findFirst();
         if (indCpuAllouee.isPresent()) {
             greenIt.setCpuAllocated(indCpuAllouee.get().getValeur().intValue());
@@ -116,23 +124,31 @@ public class GreenItService {
                     calculateMetricPercentModule(
                             IndicateurType.CPU_MAXI.getValue(),
                             greenIt.getCpuAllocated(),
-                            moduleId));
+                            moduleId,
+                            lastDay));
         }
 
         final List<TableFaits> consoLatestValues =
-                tableFaitsRepository.findLatestValueByIndicateurAndModule(
-                        IndicateurType.CONSO_ELEC.getValue(), moduleId);
+                tableFaitsRepository.findByDateAndIdIndicateurAndIdModule(
+                        lastDay, IndicateurType.CONSO_ELEC.getValue(), moduleId);
         final Optional<TableFaits> indConso = consoLatestValues.stream().findFirst();
         indConso.ifPresent(i -> greenIt.setConso(i.getValeur().intValue()));
         final List<TableFaits> nbVmLatestValues =
-                tableFaitsRepository.findLatestValueByIndicateurAndModule(
-                        IndicateurType.NBR_VM.getValue(), moduleId);
+                tableFaitsRepository.findByDateAndIdIndicateurAndIdModule(
+                        lastDay, IndicateurType.NBR_VM.getValue(), moduleId);
         final Optional<TableFaits> indNbVm = nbVmLatestValues.stream().findFirst();
         indNbVm.ifPresent(i -> greenIt.setNbVm(i.getValeur().intValue()));
         return greenIt;
     }
 
     public IndicateurApplicationGreenIT getIndicateursApplicationGreenIT(Integer applicationId) {
+        final LocalDate lastDay =
+                tableFaitsRepository.findLastDateIndicateur(IndicateurType.CONSO_ELEC.getValue());
+        return getIndicateursApplicationGreenIT(applicationId, lastDay);
+    }
+
+    public IndicateurApplicationGreenIT getIndicateursApplicationGreenIT(
+            Integer applicationId, LocalDate lastDay) {
         final ResponseEntity<ApplicationOscarView> application =
                 oscarClient.getApplicationOscar(applicationId);
         final IndicateurApplicationGreenIT greenIt = new IndicateurApplicationGreenIT();
@@ -140,67 +156,58 @@ public class GreenItService {
         greenIt.setApplicationId(applicationId);
         greenIt.setApplicationName(
                 applicationOscarView != null ? applicationOscarView.getNom() : "anonyme");
-        final List<BigDecimal> ramAlloueeLatestValues =
-                tableFaitsRepository.findLatestValueByIndicateurAndApplication(
-                        IndicateurType.RAM_ALLOUEE.getValue(), applicationId);
-        final Optional<BigDecimal> indRamAllouee =
-                ramAlloueeLatestValues.stream().filter(Objects::nonNull).findFirst();
-        if (indRamAllouee.isPresent()) {
-            greenIt.setRamAllocated(indRamAllouee.get().intValue());
-            greenIt.setRamMaxi(
-                    calculateMetricPercentApplication(
-                            IndicateurType.RAM_MAXI.getValue(),
-                            greenIt.getRamAllocated(),
-                            applicationId));
-        }
-        final List<BigDecimal> disqueAlloueLatestValues =
-                tableFaitsRepository.findLatestValueByIndicateurAndApplication(
-                        IndicateurType.DISQUE_ALLOUE.getValue(), applicationId);
-        final Optional<BigDecimal> indDisqueAlloue =
-                disqueAlloueLatestValues.stream().filter(Objects::nonNull).findFirst();
-        if (indDisqueAlloue.isPresent()) {
-            greenIt.setDiskAllocated(indDisqueAlloue.get().intValue());
-            greenIt.setDiskUsed(
-                    calculateMetricPercentApplication(
-                            IndicateurType.DISQUE_CONSOMME.getValue(),
-                            greenIt.getDiskAllocated(),
-                            applicationId));
-        }
-        final List<BigDecimal> cpuAlloueeLatestValues =
-                tableFaitsRepository.findLatestValueByIndicateurAndApplication(
-                        IndicateurType.CPU_ALLOUEE.getValue(), applicationId);
-        final Optional<BigDecimal> indCpuAllouee =
-                cpuAlloueeLatestValues.stream().filter(Objects::nonNull).findFirst();
-        if (indCpuAllouee.isPresent()) {
-            greenIt.setCpuAllocated(indCpuAllouee.get().intValue());
-            greenIt.setCpuMaxi(
-                    calculateMetricPercentApplication(
-                            IndicateurType.CPU_MAXI.getValue(),
-                            greenIt.getCpuAllocated(),
-                            applicationId));
-        }
-        final List<BigDecimal> consoLatestValues =
-                tableFaitsRepository.findLatestValueByIndicateurAndApplication(
-                        IndicateurType.CONSO_ELEC.getValue(), applicationId);
-        final Optional<BigDecimal> indConso =
-                consoLatestValues.stream().filter(Objects::nonNull).findFirst();
-        indConso.ifPresent(i -> greenIt.setConso(i.intValue()));
-        final List<BigDecimal> nbVmlatestValues =
-                tableFaitsRepository.findLatestValueByIndicateurAndApplication(
-                        IndicateurType.NBR_VM.getValue(), applicationId);
-        final Optional<BigDecimal> indNbVm =
-                nbVmlatestValues.stream().filter(Objects::nonNull).findFirst();
-        indNbVm.ifPresent(i -> greenIt.setNbVm(i.intValue()));
+        final BigDecimal ramAllouee =
+                tableFaitsRepository.findSumByDateAndIdIndicateurAndIdApplication(
+                        lastDay, IndicateurType.RAM_ALLOUEE.getValue(), applicationId);
+        greenIt.setRamAllocated(ramAllouee != null ? ramAllouee.intValue() : 0);
+        greenIt.setRamMaxi(
+                calculateMetricPercentApplication(
+                        IndicateurType.RAM_MAXI.getValue(),
+                        greenIt.getRamAllocated(),
+                        applicationId,
+                        lastDay));
+
+        final BigDecimal disqueAlloue =
+                tableFaitsRepository.findSumByDateAndIdIndicateurAndIdApplication(
+                        lastDay, IndicateurType.DISQUE_ALLOUE.getValue(), applicationId);
+        greenIt.setDiskAllocated(disqueAlloue != null ? disqueAlloue.intValue() : 0);
+        greenIt.setDiskUsed(
+                calculateMetricPercentApplication(
+                        IndicateurType.DISQUE_CONSOMME.getValue(),
+                        greenIt.getDiskAllocated(),
+                        applicationId,
+                        lastDay));
+
+        final BigDecimal cpuAllouee =
+                tableFaitsRepository.findSumByDateAndIdIndicateurAndIdApplication(
+                        lastDay, IndicateurType.CPU_ALLOUEE.getValue(), applicationId);
+        greenIt.setCpuAllocated(cpuAllouee != null ? cpuAllouee.intValue() : 0);
+        greenIt.setCpuMaxi(
+                calculateMetricPercentApplication(
+                        IndicateurType.CPU_MAXI.getValue(),
+                        greenIt.getCpuAllocated(),
+                        applicationId,
+                        lastDay));
+
+        final BigDecimal conso =
+                tableFaitsRepository.findSumByDateAndIdIndicateurAndIdApplication(
+                        lastDay, IndicateurType.CONSO_ELEC.getValue(), applicationId);
+        greenIt.setConso(conso != null ? conso.intValue() : 0);
+        final BigDecimal nbVm =
+                tableFaitsRepository.findSumByDateAndIdIndicateurAndIdApplication(
+                        lastDay, IndicateurType.NBR_VM.getValue(), applicationId);
+        greenIt.setNbVm(nbVm != null ? nbVm.intValue() : 0);
         return greenIt;
     }
 
     private BigDecimal calculateMetricPercentModule(
-            int indicateurType, Integer metricAllocated, Integer moduleId) {
+            int indicateurType, Integer metricAllocated, Integer moduleId, LocalDate lastDay) {
         if (metricAllocated == 0) {
             return null;
         }
         final List<TableFaits> metricLatestValues =
-                tableFaitsRepository.findLatestValueByIndicateurAndModule(indicateurType, moduleId);
+                tableFaitsRepository.findByDateAndIdIndicateurAndIdModule(
+                        lastDay, indicateurType, moduleId);
         final Optional<TableFaits> indicateur = metricLatestValues.stream().findFirst();
         if (!indicateur.isPresent()) {
             return null;
@@ -209,19 +216,21 @@ public class GreenItService {
     }
 
     private BigDecimal calculateMetricPercentApplication(
-            int indicateurType, Integer metricAllocated, Integer applicationId) {
+            int indicateurType, Integer metricAllocated, Integer applicationId, LocalDate lastDay) {
+
+        log.debug("indicateurType :" + indicateurType);
+        log.debug("metricAllocated :" + metricAllocated);
+        log.debug("applicationId :" + applicationId);
+
         if (metricAllocated == 0) {
             return null;
         }
-        final List<BigDecimal> metricLatestValues =
-                tableFaitsRepository.findLatestValueByIndicateurAndApplication(
-                        indicateurType, applicationId);
-        final Optional<BigDecimal> indicateur =
-                metricLatestValues.stream().filter(Objects::nonNull).findFirst();
-        if (!indicateur.isPresent()) {
-            return null;
-        }
-        return calculatePercent(indicateur.get(), new BigDecimal(metricAllocated));
+        final BigDecimal metric =
+                tableFaitsRepository.findSumByDateAndIdIndicateurAndIdApplication(
+                        lastDay, indicateurType, applicationId);
+
+        log.debug("valeur maxi :" + metric);
+        return calculatePercent(metric, new BigDecimal(metricAllocated));
     }
 
     private BigDecimal calculatePercent(BigDecimal numerateur, BigDecimal denominateur) {
@@ -253,7 +262,7 @@ public class GreenItService {
                         e -> {
                             final List<String> vms =
                                     e.getValue().stream().map(m -> m.getNom()).toList();
-                            logger.info(
+                            log.debug(
                                     String.format(
                                             "taille de la vm applis %d et id %d ",
                                             vms.size(), e.getKey()));
@@ -274,7 +283,7 @@ public class GreenItService {
                                     e.getValue().stream().filter(Objects::nonNull).findFirst();
                             final List<String> vms =
                                     e.getValue().stream().map(m -> m.getNom()).toList();
-                            logger.info(
+                            log.debug(
                                     String.format(
                                             "taille de la vm modules %d et moduleId %d ",
                                             +vms.size(), e.getKey()));
@@ -302,10 +311,10 @@ public class GreenItService {
                             .withIgnoreLeadingWhiteSpace(true)
                             .build();
             metriqueVmCsvReads = csvToBean.parse();
-            logger.debug("ça passe pour le parsing csv en String");
+            log.debug("ça passe pour le parsing csv en String");
         } catch (final Exception e) {
             final ErrorVM errorVM = new ErrorVM();
-            logger.info("Erreur lors de la lecture du csv");
+            log.info("Erreur lors de la lecture du csv");
             errorVM.setMessage("Erreur lors de la lecture : " + e.getMessage());
             throw new CompasUploadException(500, errorVM);
         }
@@ -332,11 +341,11 @@ public class GreenItService {
         tableFaitsRepository.save(indDiskUsed);
         final TableFaits indCpuAllocated = buildGreen(modId, appId, fileDate);
         indCpuAllocated.setIdIndicateur(IndicateurType.CPU_ALLOUEE.getValue());
-        indCpuAllocated.setValeur(calculAgregatValeur(vms, MetriqueVm::getRamAllocated));
+        indCpuAllocated.setValeur(calculAgregatValeur(vms, MetriqueVm::getCpuAllocated));
         tableFaitsRepository.save(indCpuAllocated);
         final TableFaits indCpuMaxi = buildGreen(modId, appId, fileDate);
         indCpuMaxi.setIdIndicateur(IndicateurType.CPU_MAXI.getValue());
-        indCpuMaxi.setValeur(calculAgregatValeur(vms, MetriqueVm::getRamMaxi));
+        indCpuMaxi.setValeur(calculAgregatValeur(vms, MetriqueVm::getCpuMaxi));
         tableFaitsRepository.save(indCpuMaxi);
         final TableFaits indConso = buildGreen(modId, appId, fileDate);
         indConso.setIdIndicateur(IndicateurType.CONSO_ELEC.getValue());
@@ -346,6 +355,8 @@ public class GreenItService {
         indNbVm.setIdIndicateur(IndicateurType.NBR_VM.getValue());
         indNbVm.setValeur(
                 BigDecimal.valueOf(metrics.stream().filter(m -> vms.contains(m.getVm())).count()));
+        log.info("nb de vm : " + indNbVm);
+        log.info("appId : " + appId);
         tableFaitsRepository.save(indNbVm);
     }
 

@@ -6,13 +6,13 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.math.BigDecimal;
 import java.sql.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
 import fr.insee.compas.model.compas.TableFaits;
 
@@ -27,12 +27,11 @@ class TableFaitsRepositoryTest {
 
     @Autowired private TableFaitsRepository tableFaitsRepository;
 
-    @Autowired private TestEntityManager entityManager;
-
     @Test
     void testFindIdsByEtatCourant() {
         final List<TableFaits> tdfs =
-                tableFaitsRepository.findLatestValueByIndicateurAndModule(201, 244);
+                tableFaitsRepository.findByDateAndIdIndicateurAndIdModule(
+                        LocalDate.of(2024, 12, 4), 201, 244);
         assertThat(tdfs).isNotNull().hasSize(1);
         assertThat(tdfs.get(0).getValeur()).isNotNull().isGreaterThan(BigDecimal.valueOf(1));
     }
@@ -40,7 +39,8 @@ class TableFaitsRepositoryTest {
     @Test
     void testDontFindIdsByEtatCourant() {
         final List<TableFaits> tdfs =
-                tableFaitsRepository.findLatestValueByIndicateurAndModule(242, 6);
+                tableFaitsRepository.findByDateAndIdIndicateurAndIdModule(
+                        LocalDate.of(2024, 12, 4), 242, 6);
         assertThat(tdfs).isNotNull().isEmpty();
     }
 
@@ -60,8 +60,8 @@ class TableFaitsRepositoryTest {
         final List<Object[]> results = tableFaitsRepository.findAggregatedSumResults(idIndicateur);
 
         assertEquals(1, results.size());
-        assertEquals(1, ((Number) results.getFirst()[0]).intValue()); // id_application attendu
-        assertEquals(300, ((Number) results.getFirst()[1]).intValue()); // Somme attendue
+        assertEquals(1, ((Number) results.get(0)[0]).intValue()); // id_application attendu
+        assertEquals(300, ((Number) results.get(0)[1]).intValue()); // Somme attendue
     }
 
     @Test
@@ -71,8 +71,8 @@ class TableFaitsRepositoryTest {
         final List<Object[]> results = tableFaitsRepository.findAggregatedAvgResults(idIndicateur);
 
         assertEquals(1, results.size());
-        assertEquals(1, ((Number) results.getFirst()[0]).intValue()); // id_application attendu
-        assertEquals(150, ((Number) results.getFirst()[1]).intValue()); // Somme attendue
+        assertEquals(1, ((Number) results.get(0)[0]).intValue()); // id_application attendu
+        assertEquals(150, ((Number) results.get(0)[1]).intValue()); // Somme attendue
     }
 
     @Test

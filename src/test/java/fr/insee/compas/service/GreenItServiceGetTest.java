@@ -87,8 +87,13 @@ class GreenItServiceGetTest {
     @Test
     void testGetIndicateursApplicationGreenIT() {
         Mockito.when(oscarClient.getApplicationOscar(123)).thenReturn(mockAppliSirene4());
-        final List<BigDecimal> list = new ArrayList<>();
-        list.add(new BigDecimal(8));
+        Mockito.when(oscarClient.getApplicationOscar(123)).thenReturn(mockAppliSirene4());
+        final TableFaits tableFaits = new TableFaits();
+        tableFaits.setIdApplication(123);
+        tableFaits.setIdIndicateur(IndicateurType.RAM_ALLOUEE.getValue());
+        tableFaits.setValeur(new BigDecimal(8));
+        final List<TableFaits> list = new ArrayList<>();
+        list.add(tableFaits);
         final List<VmOscarView> listVms = new ArrayList<>();
         listVms.add(
                 VmOscarView.builder()
@@ -97,9 +102,13 @@ class GreenItServiceGetTest {
                         .nom("pdsir4replm001")
                         .build());
         Mockito.when(
-                        tableFaitsRepository.findLatestValueByIndicateurAndApplication(
-                                IndicateurType.RAM_ALLOUEE.getValue(), 123))
-                .thenReturn(list);
+                        tableFaitsRepository.findSumByDateAndIdIndicateurAndIdApplication(
+                                null, IndicateurType.RAM_ALLOUEE.getValue(), 123))
+                .thenReturn(BigDecimal.valueOf(12.0));
+        Mockito.when(
+                        tableFaitsRepository.findSumByDateAndIdIndicateurAndIdApplication(
+                                null, IndicateurType.RAM_MAXI.getValue(), 123))
+                .thenReturn(BigDecimal.valueOf(12.0));
         final IndicateurApplicationGreenIT applicationGreenIT =
                 greenItService.getIndicateursApplicationGreenIT(123);
         final SoftAssertions softAssertions = new SoftAssertions();
@@ -120,8 +129,8 @@ class GreenItServiceGetTest {
         final List<TableFaits> list = new ArrayList<>();
         list.add(tableFaits);
         Mockito.when(
-                        tableFaitsRepository.findLatestValueByIndicateurAndModule(
-                                IndicateurType.RAM_ALLOUEE.getValue(), 238))
+                        tableFaitsRepository.findByDateAndIdIndicateurAndIdModule(
+                                null, IndicateurType.RAM_ALLOUEE.getValue(), 238))
                 .thenReturn(list);
         final IndicateurModuleGreenIT moduleGreenIT =
                 greenItService.getIndicateursModuleGreenIT(238);

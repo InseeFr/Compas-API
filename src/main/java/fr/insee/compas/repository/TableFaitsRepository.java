@@ -12,22 +12,31 @@ import fr.insee.compas.model.compas.TableFaits;
 
 public interface TableFaitsRepository extends JpaRepository<TableFaits, Long> {
 
+    List<TableFaits> findByDateAndIdIndicateurAndIdModule(
+            LocalDate date, Integer idIndicateur, Integer idModule);
+
+    List<TableFaits> findByDateAndIdIndicateurAndIdApplication(
+            LocalDate date, Integer idIndicateur, Integer idApplication);
+
     @Query(
             value =
                     """
-                        SELECT tf
-                        FROM TableFaits tf
-                        WHERE tf.date = (
-                            SELECT MAX(tf2.date)
-                            FROM TableFaits tf2
-                            WHERE tf2.idModule = tf.idModule
-                            AND tf2.idIndicateur = tf.idIndicateur
-                            AND tf2.idModule = :idModule
-                            AND tf2.idIndicateur = :idIndicateur
-                        )
+    SELECT sum(tf.valeur) FROM TableFaits tf WHERE tf.idApplication = :idApplication
+        AND tf.idIndicateur = :idIndicateur and tf.date = :date
+""")
+    BigDecimal findSumByDateAndIdIndicateurAndIdApplication(
+            @Param("date") LocalDate date,
+            @Param("idIndicateur") Integer idIndicateur,
+            @Param("idApplication") Integer idApplication);
+
+    @Query(
+            value =
+                    """
+                        SELECT MAX(tf.date)
+                            FROM TableFaits tf
+                            WHERE tf.idIndicateur = :idIndicateur
                     """)
-    List<TableFaits> findLatestValueByIndicateurAndModule(
-            @Param("idIndicateur") Integer idIndicateur, @Param("idModule") Integer idModule);
+    LocalDate findLastDateIndicateur(@Param("idIndicateur") Integer idIndicateur);
 
     @Query(
             value =
