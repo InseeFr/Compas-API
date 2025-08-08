@@ -1,6 +1,5 @@
 package fr.insee.compas.service.qualite;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -65,7 +64,6 @@ public class IndicateurQualiteModuleService {
             viewModule.setDomaineFonctionnel(module.getDomaineFonctionnel());
 
             calculIndicateurCouvertureTestUnitaire(module, viewModule);
-            calculIndicateurCve(viewModule);
             calculIndicateurFiabilite(module, viewModule);
             calculIndicateurDetteTechnique(module, viewModule);
             viewModule.calculerLettreGlobalQualite();
@@ -105,20 +103,6 @@ public class IndicateurQualiteModuleService {
                 viewModule.setFiabilite(Notation.NR.getGrade());
                 viewModule.setLettreFiabilite(Notation.NR.getGrade());
             }
-        }
-    }
-
-    private void calculIndicateurCve(IndicateurQualiteView viewModule) {
-        if (StringUtils.isNotEmpty(viewModule.getNbCveCritical())) {
-
-            BigDecimal calcul =
-                    utilsService.getCalculIndicateurCve(
-                            BigDecimal.valueOf(Double.parseDouble(viewModule.getNbCveCritical())),
-                            BigDecimal.valueOf(Double.parseDouble(viewModule.getNbCveHigh())),
-                            BigDecimal.valueOf(Double.parseDouble(viewModule.getNbCveMedium())),
-                            BigDecimal.valueOf(Double.parseDouble(viewModule.getNbCveLow())));
-            viewModule.setLettreNiveauCve(
-                    utilsService.convertNiveauCveEnLettre(calcul.doubleValue()));
         }
     }
 

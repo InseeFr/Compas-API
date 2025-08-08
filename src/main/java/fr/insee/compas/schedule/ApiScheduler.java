@@ -10,8 +10,8 @@ import org.springframework.stereotype.Component;
 import fr.insee.compas.model.sonar.RecuperationMeasures;
 import fr.insee.compas.service.DeveloppementLogicielService;
 import fr.insee.compas.service.OscarService;
-import fr.insee.compas.service.qualite.RecupCveService;
 import fr.insee.compas.service.qualite.RecuperationIndicateurSonarService;
+import fr.insee.compas.service.securite.RecupCveSecuriteService;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,13 +20,13 @@ import lombok.extern.slf4j.Slf4j;
 public class ApiScheduler {
     private final OscarService oscarService;
     private final RecuperationIndicateurSonarService indicateurSonar;
-    private final RecupCveService cveService;
+    private final RecupCveSecuriteService cveService;
     private final DeveloppementLogicielService developpementLogicielService;
 
     public ApiScheduler(
             OscarService oscarService,
             RecuperationIndicateurSonarService testUnitaireService,
-            RecupCveService cveService,
+            RecupCveSecuriteService cveService,
             DeveloppementLogicielService developpementLogicielService) {
         this.oscarService = oscarService;
         this.indicateurSonar = testUnitaireService;

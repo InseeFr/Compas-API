@@ -1,4 +1,4 @@
-package fr.insee.compas.service.qualite;
+package fr.insee.compas.service.securite;
 
 import java.util.*;
 

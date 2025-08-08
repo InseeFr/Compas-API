@@ -44,7 +44,6 @@ class IndicateurQualiteApplicationServiceTest {
         IndicateurQualiteView view = listeIndicateurModule.getFirst();
         assertThat(view.getLettreCouvertureTestUniaire()).isEqualTo("A");
         assertThat(view.getLettreFiabilite()).isEqualTo("A");
-        assertThat(view.getLettreNiveauCve()).isEqualTo("A");
         assertThat(view.getLettreDetteTechnique()).isEqualTo("A");
     }
 
@@ -67,7 +66,6 @@ class IndicateurQualiteApplicationServiceTest {
         assertThat(listeIndicateurModule).hasSize(1);
         var view = listeIndicateurModule.getFirst();
         assertThat(view.getLettreCouvertureTestUniaire()).isEqualTo("SO");
-        assertThat(view.getLettreNiveauCve()).isEqualTo("E");
         assertThat(view.getLettreDetteTechnique()).isEqualTo("SO");
         assertThat(view.getLettreFiabilite()).isEqualTo("SO");
         assertThat(view.getLettreGlobalQualite()).isEqualTo("SO");
@@ -92,7 +90,6 @@ class IndicateurQualiteApplicationServiceTest {
         assertThat(listeIndicateurModule).hasSize(1);
         var view = listeIndicateurModule.getFirst();
         assertThat(view.getLettreCouvertureTestUniaire()).isEqualTo("NR");
-        assertThat(view.getLettreNiveauCve()).isEqualTo("E");
         assertThat(view.getLettreDetteTechnique()).isEqualTo("NR");
         assertThat(view.getLettreFiabilite()).isEqualTo("NR");
         assertThat(view.getLettreGlobalQualite()).isEqualTo("NR");

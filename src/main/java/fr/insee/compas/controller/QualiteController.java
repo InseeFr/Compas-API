@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 import fr.insee.compas.model.sonar.RecuperationMeasures;
 import fr.insee.compas.service.qualite.IndicateurQualiteApplicationService;
 import fr.insee.compas.service.qualite.IndicateurQualiteModuleService;
-import fr.insee.compas.service.qualite.RecupCveService;
 import fr.insee.compas.service.qualite.RecuperationIndicateurSonarService;
 import fr.insee.compas.view.IndicateurQualiteView;
 
@@ -25,17 +24,14 @@ import lombok.extern.slf4j.Slf4j;
 public class QualiteController {
 
     private final RecuperationIndicateurSonarService testUnitaireService;
-    private final RecupCveService cveService;
     private final IndicateurQualiteModuleService moduleService;
     private final IndicateurQualiteApplicationService applicationService;
 
     public QualiteController(
             RecuperationIndicateurSonarService testUnitaireService,
-            RecupCveService cveService,
             IndicateurQualiteModuleService moduleService,
             IndicateurQualiteApplicationService applicationService) {
         this.testUnitaireService = testUnitaireService;
-        this.cveService = cveService;
         this.moduleService = moduleService;
         this.applicationService = applicationService;
     }
@@ -48,14 +44,6 @@ public class QualiteController {
                 testUnitaireService.putIndicateursSonarModule();
         testUnitaireService.putIndicateursSonarApplication(analyseModule);
         log.info("fin de la récupération des indicateurs pour la couverture de test");
-    }
-
-    @PutMapping("/indicateurs-cve")
-    @Operation(summary = "mise à jour des indicateurs cve en base de donnée")
-    public void updateIndicateurCve() {
-        log.info("Début de la récupération des indicateurs pour les cve pour les applications");
-        cveService.recupereCve();
-        log.info("Fin de la récupération des indicateurs pour les cve pour les applications");
     }
 
     @GetMapping("/modules")

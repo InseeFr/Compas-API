@@ -98,12 +98,8 @@ public class TableFaitsService {
                                                 .moduleId(((Number) obj[0]).intValue())
                                                 .nbLigneCode(toStringOrEmpty(obj[1]))
                                                 .nbLigneCodeNonTeste(toStringOrEmpty(obj[2]))
-                                                .nbCveCritical(toStringOrEmpty(obj[3]))
-                                                .nbCveHigh(toStringOrEmpty(obj[4]))
-                                                .nbCveMedium(toStringOrEmpty(obj[5]))
-                                                .nbCveLow(toStringOrEmpty(obj[6]))
-                                                .detteTechnique(toStringOrEmpty(obj[7]))
-                                                .fiabilite(toStringOrEmpty(obj[8]))
+                                                .detteTechnique(toStringOrEmpty(obj[3]))
+                                                .fiabilite(toStringOrEmpty(obj[4]))
                                                 .build()));
     }
 

@@ -20,13 +20,8 @@ public class IndicateurQualiteView {
     private String nbLigneCode;
     private String nbLigneCodeNonTeste;
     private String pourcentageCouvertureTestUniaire;
-    private String nbCveCritical;
-    private String nbCveHigh;
-    private String nbCveMedium;
-    private String nbCveLow;
     private String detteTechnique;
     private String fiabilite;
-    private String lettreNiveauCve;
     private String lettreDetteTechnique;
     private String lettreFiabilite;
     private String lettreCouvertureTestUniaire;

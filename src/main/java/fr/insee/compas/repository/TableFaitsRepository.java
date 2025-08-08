@@ -207,10 +207,6 @@ public interface TableFaitsRepository extends JpaRepository<TableFaits, Long> {
                                       id_module AS moduleId,
                                       MAX(CASE WHEN id_indicateur = 1 THEN valeur END) AS nbLigneCode,
                                       MAX(CASE WHEN id_indicateur = 2 THEN valeur END) AS nbLigneCodeNonTeste,
-                                      MAX(CASE WHEN id_indicateur = 3 THEN valeur END) AS nbCveCritical,
-                                      MAX(CASE WHEN id_indicateur = 4 THEN valeur END) AS nbCveHigh,
-                                      MAX(CASE WHEN id_indicateur = 5 THEN valeur END) AS nbCveMedium,
-                                      MAX(CASE WHEN id_indicateur = 6 THEN valeur END) AS nbCveLow,
                                       MAX(CASE WHEN id_indicateur = 11 THEN valeur END) AS detteTechnique,
                                       MAX(CASE WHEN id_indicateur = 12 THEN valeur END) AS fiabilite
                                    FROM

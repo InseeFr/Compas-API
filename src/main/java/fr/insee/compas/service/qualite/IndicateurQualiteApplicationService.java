@@ -1,6 +1,5 @@
 package fr.insee.compas.service.qualite;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -8,8 +7,6 @@ import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
-import fr.insee.compas.model.compas.IndicateurType;
-import fr.insee.compas.model.compas.TableFaits;
 import fr.insee.compas.model.oscar.Application;
 import fr.insee.compas.service.OscarService;
 import fr.insee.compas.service.TableFaitsService;
@@ -45,20 +42,6 @@ public class IndicateurQualiteApplicationService {
         // Récupérer les informations des modules depuis l'API
         List<Application> applications = oscarService.getApplications();
 
-        // Metrics au niveau application
-        Map<Integer, TableFaits> mapByIdModuleCveCritical =
-                tableFaitsService.getMapMetricByApplication(
-                        IndicateurType.CVE_CRITICAL_APPLI.getValue());
-        Map<Integer, TableFaits> mapByIdModuleCveHigh =
-                tableFaitsService.getMapMetricByApplication(
-                        IndicateurType.CVE_HIGH_APPLI.getValue());
-        Map<Integer, TableFaits> mapByIdModuleCveMedium =
-                tableFaitsService.getMapMetricByApplication(
-                        IndicateurType.CVE_MEDIUM_APPLI.getValue());
-        Map<Integer, TableFaits> mapByIdModuleCveLow =
-                tableFaitsService.getMapMetricByApplication(
-                        IndicateurType.CVE_LOW_APPLI.getValue());
-
         List<IndicateurQualiteView> resultat = new ArrayList<>();
 
         // Traiter chaque application
@@ -73,16 +56,8 @@ public class IndicateurQualiteApplicationService {
             viewApplication.setDomaineFonctionnel(application.getDomaineFonctionnel());
             viewApplication.setApplicationId(application.getIdApplication());
 
-            Integer moduleApplication = application.getIdApplication();
             calculLettreCouvertureTest(viewApplication);
 
-            calculLettreCve(
-                    mapByIdModuleCveCritical,
-                    moduleApplication,
-                    viewApplication,
-                    mapByIdModuleCveHigh,
-                    mapByIdModuleCveMedium,
-                    mapByIdModuleCveLow);
             calculLettreFiabilite(viewApplication);
             calculLettreDetteTechnique(viewApplication);
 
@@ -119,35 +94,6 @@ public class IndicateurQualiteApplicationService {
             viewApplication.setLettreCouvertureTestUniaire("NR");
             viewApplication.setLettreDetteTechnique("NR");
             viewApplication.setLettreFiabilite("NR");
-        }
-    }
-
-    private void calculLettreCve(
-            Map<Integer, TableFaits> mapByIdModuleCveCritical,
-            Integer moduleApplication,
-            IndicateurQualiteView viewApplication,
-            Map<Integer, TableFaits> mapByIdModuleCveHigh,
-            Map<Integer, TableFaits> mapByIdModuleCveMedium,
-            Map<Integer, TableFaits> mapByIdModuleCveLow) {
-        if (mapByIdModuleCveCritical != null
-                && mapByIdModuleCveCritical.get(moduleApplication) != null) {
-            viewApplication.setNbCveCritical(
-                    mapByIdModuleCveCritical.get(moduleApplication).getValeur().toString());
-            viewApplication.setNbCveHigh(
-                    mapByIdModuleCveHigh.get(moduleApplication).getValeur().toString());
-            viewApplication.setNbCveMedium(
-                    mapByIdModuleCveMedium.get(moduleApplication).getValeur().toString());
-            viewApplication.setNbCveLow(
-                    mapByIdModuleCveLow.get(moduleApplication).getValeur().toString());
-
-            BigDecimal calcul =
-                    utilsService.getCalculIndicateurCve(
-                            mapByIdModuleCveCritical.get(moduleApplication).getValeur(),
-                            mapByIdModuleCveHigh.get(moduleApplication).getValeur(),
-                            mapByIdModuleCveMedium.get(moduleApplication).getValeur(),
-                            mapByIdModuleCveLow.get(moduleApplication).getValeur());
-            viewApplication.setLettreNiveauCve(
-                    utilsService.convertNiveauCveEnLettre(calcul.doubleValue()));
         }
     }
 

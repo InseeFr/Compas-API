@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import fr.insee.compas.model.compas.IndicateurType;
+import fr.insee.compas.service.securite.UtilsCveService;
 
 class UtilsCveServiceTest {
 
