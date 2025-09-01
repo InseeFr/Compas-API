@@ -11,6 +11,8 @@ import lombok.Data;
 @AllArgsConstructor
 public class Module {
     Integer id;
+    String nomTechnique;
+    String applicationTechnique;
     String sourceCreation;
     String modName;
     Integer idApplication;
@@ -22,6 +24,7 @@ public class Module {
     String statut;
     LocalDate dateDerniereLivraisonEnProduction;
     String typeLivrable;
+    String urlCodeSource;
 
     public Module() {
         super();

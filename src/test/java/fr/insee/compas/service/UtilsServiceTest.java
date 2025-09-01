@@ -1,11 +1,14 @@
 package fr.insee.compas.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import fr.insee.compas.model.compas.Notation;
 import fr.insee.compas.model.sonar.Component;
@@ -170,5 +173,21 @@ public class UtilsServiceTest {
                 .findFirst()
                 .map(Measure::getValue)
                 .orElse(null);
+    }
+
+    @ParameterizedTest(name = "given URL={0} when extractRepoPath then returns {1}")
+    @CsvSource({
+        "https://gitlab.insee.fr/group/projet, group/projet",
+        "http://gitlab.insee.fr/group/projet, group/projet",
+        "https://gitlab.insee.fr/group/projet/, group/projet",
+        "https://gitlab.insee.fr/group/projet.git, group/projet"
+    })
+    void givenVariousGitlabUrls_whenExtractRepoPath_thenReturnCorrectPath(
+            String url, String expectedPath) {
+        // When
+        String repoPath = utilsService.extractRepoPath(url);
+
+        // Then
+        assertThat(repoPath).isEqualTo(expectedPath);
     }
 }

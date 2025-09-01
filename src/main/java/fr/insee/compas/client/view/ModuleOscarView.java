@@ -19,4 +19,5 @@ public class ModuleOscarView implements Serializable {
     private String zoneProduction;
     private String projectKeySonar;
     private ApplicationTechnique applicationTechnique;
+    private String urlCodeSource;
 }

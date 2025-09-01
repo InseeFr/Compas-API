@@ -8,6 +8,9 @@ INSERT INTO INDICATEUR (id,nom,type,brut_final) VALUES (205,'Cpu allouée', 'num
 INSERT INTO INDICATEUR (id,nom,type,brut_final) VALUES (206,'Cpu maxi', 'numeric', 'Brut');
 INSERT INTO INDICATEUR (id,nom,type,brut_final) VALUES (207,'Conso', 'numeric', 'Brut');
 INSERT INTO INDICATEUR (id,nom,type,brut_final) VALUES (208,'Nombre de Vm', 'numeric', 'Brut');
+INSERT INTO INDICATEUR (id,nom,type,brut_final) VALUES (301,'Nombre de jours depuis le dernier déploiement en production', 'numeric', 'Brut');
+INSERT INTO INDICATEUR (id,nom,type,brut_final) VALUES (302,'Nombre de déploiement en production depuis une date donnée', 'numeric', 'Brut');
+INSERT INTO INDICATEUR (id,nom,type,brut_final) VALUES (303,'Nombre de personnes ayant contribués à un projet depuis une date donnée', 'numeric', 'Brut');
 INSERT INTO INDICATEUR (id,nom,type,brut_final) VALUES (401,'Météo du dev (ressenti général)', 'numeric', 'Brut');
 	 
 INSERT INTO module_oscar (id_module,actif) VALUES (244,true);

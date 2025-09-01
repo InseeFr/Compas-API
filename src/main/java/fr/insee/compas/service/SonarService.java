@@ -29,8 +29,8 @@ public class SonarService {
     @Value("${fr.insee.compas.sonar.token:}")
     private String tokenGitlab;
 
-    @Value("${fr.insee.compas.github.token:}")
-    private String tokenGithub;
+    @Value("${fr.insee.compas.github.sonar.token:}")
+    private String tokenGithubSonar;
 
     @Value("${fr.insee.compas.proxy.name:}")
     private String proxyName;
@@ -91,7 +91,7 @@ public class SonarService {
 
         } else {
             url = String.format(urlGithub, projetSonar, metrics);
-            token = tokenGithub;
+            token = tokenGithubSonar;
             request =
                     new Request.Builder()
                             .url(url)

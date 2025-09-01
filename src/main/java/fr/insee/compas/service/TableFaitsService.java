@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import fr.insee.compas.dto.AggregatedResultDto;
 import fr.insee.compas.model.compas.TableFaits;
 import fr.insee.compas.repository.TableFaitsRepository;
+import fr.insee.compas.view.IndicateurDevopsView;
 import fr.insee.compas.view.IndicateurQualiteView;
 
 import lombok.extern.slf4j.Slf4j;
@@ -119,6 +120,49 @@ public class TableFaitsService {
                                                 .detteTechnique(toStringOrEmpty(obj[3]))
                                                 .fiabilite(toStringOrEmpty(obj[4]))
                                                 .build()));
+    }
+
+    public Map<Integer, IndicateurDevopsView> getIndicateurModuleDevops() {
+        final List<Object[]> faits = tableFaitsRepository.findValueIndicateurModuleDevopsBrute();
+
+        return faits.stream()
+                .collect(
+                        Collectors.toMap(
+                                obj -> ((Number) obj[0]).intValue(),
+                                obj ->
+                                        IndicateurDevopsView.builder()
+                                                .moduleId(((Number) obj[0]).intValue())
+                                                .distanceCount(toIntString(obj[1]))
+                                                .nbDeploymentCount(toIntString(obj[2]))
+                                                .nbContributorCount(toIntString(obj[3]))
+                                                .build()));
+    }
+
+    public Map<Integer, IndicateurDevopsView> getIndicateurApplicationDevops() {
+        final List<Object[]> faits =
+                tableFaitsRepository.findValueIndicateurApplicationDevopsBrute();
+
+        return faits.stream()
+                .collect(
+                        Collectors.toMap(
+                                obj -> ((Number) obj[0]).intValue(),
+                                obj ->
+                                        IndicateurDevopsView.builder()
+                                                .applicationId(((Number) obj[0]).intValue())
+                                                .distanceCount(toIntString(obj[1]))
+                                                .nbDeploymentCount(toIntString(obj[2]))
+                                                .nbContributorCount(toIntString(obj[3]))
+                                                .build()));
+    }
+
+    private String toIntString(Object value) {
+        if (value instanceof Number number) {
+            return String.valueOf(number.intValue());
+        } else if (value != null) {
+            return value.toString();
+        } else {
+            return "";
+        }
     }
 
     private String toStringOrEmpty(Object obj) {

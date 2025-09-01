@@ -253,6 +253,64 @@ public interface TableFaitsRepository extends JpaRepository<TableFaits, Long> {
     @Query(
             value =
                     """
+WITH latest_data AS (
+                               SELECT
+                                   id_module,
+                                   id_indicateur,
+                                   valeur,
+                                   date,
+                                   ROW_NUMBER() OVER (PARTITION BY id_module, id_indicateur ORDER BY date DESC) AS rn
+                               FROM
+                                   table_faits
+                           )
+                           SELECT
+                              id_module AS moduleId,
+                              MAX(CASE WHEN id_indicateur = 301 THEN valeur END) AS distanceCount,
+                              MAX(CASE WHEN id_indicateur = 302 THEN valeur END) AS nbDeploymentCount,
+                              MAX(CASE WHEN id_indicateur = 303 THEN valeur END) AS nbContributorCount
+                           FROM
+                               latest_data
+                           WHERE
+                               rn = 1 and id_module is not null
+                           GROUP BY
+                               id_module;
+""",
+            nativeQuery = true)
+    List<Object[]> findValueIndicateurModuleDevopsBrute();
+
+    @Query(
+            value =
+                    """
+WITH latest_data AS (
+                               SELECT
+                                   id_module,
+                                   id_application,
+                                   id_indicateur,
+                                   valeur,
+                                   date,
+                                   ROW_NUMBER() OVER (PARTITION BY id_application, id_indicateur ORDER BY date DESC) AS rn
+                               FROM
+                                   table_faits
+                               WHERE id_module is null
+                           )
+                           SELECT
+                              id_application AS applicationId,
+                              MAX(CASE WHEN id_indicateur = 301 THEN valeur END) AS distanceCount,
+                              MAX(CASE WHEN id_indicateur = 302 THEN valeur END) AS nbDeploymentCount,
+                              MAX(CASE WHEN id_indicateur = 303 THEN valeur END) AS nbContributorCount
+                           FROM
+                               latest_data
+                           WHERE
+                               rn = 1
+                           GROUP BY
+                               id_application;
+""",
+            nativeQuery = true)
+    List<Object[]> findValueIndicateurApplicationDevopsBrute();
+
+    @Query(
+            value =
+                    """
 select count(tf) from TableFaits tf where tf.idIndicateur = :idIndicateur and tf.date = :dateIn
 """)
     Integer countGreenItValuesByDate(

@@ -25,6 +25,7 @@ public class OscarBuilder {
         moduleHistorique.setStatut(moduleHistoriqueNode.path("statut").asText());
         JsonNode dateNode = moduleHistoriqueNode.path("dateOperation");
         if (dateNode.isArray() && dateNode.size() >= 6) {
+            // Cas ancien format : tableau [year, month, day, hour, minute, second, nanos]
             LocalDateTime dateOperation =
                     LocalDateTime.of(
                             dateNode.get(0).asInt(),
@@ -35,6 +36,11 @@ public class OscarBuilder {
                             dateNode.get(5).asInt(),
                             dateNode.size() > 6 ? dateNode.get(6).asInt() : 0);
             moduleHistorique.setDateOperation(dateOperation);
+
+        } else if (dateNode.isTextual()) {
+            // Cas ISO 8601 en String : "2025-02-25T16:41:38.994458"
+            LocalDateTime dateOperation = LocalDateTime.parse(dateNode.asText());
+            moduleHistorique.setDateOperation(dateOperation);
         }
         moduleHistorique.setOperation(moduleHistoriqueNode.path("operation").asText());
 
@@ -43,9 +49,12 @@ public class OscarBuilder {
 
     public Module buildModule(JsonNode moduleNode) {
         Module module = new fr.insee.compas.model.oscar.Module();
+        module.setNomTechnique(moduleNode.path("nomTechnique").asText());
+        module.setApplicationTechnique(
+                moduleNode.path("applicationTechnique").path("nom").asText());
         module.setId(moduleNode.path("id").asInt());
         module.setSourceCreation(moduleNode.path("sourceCreation").asText());
-
+        module.setUrlCodeSource(moduleNode.path("urlCodeSource").asText());
         module.setModName(moduleNode.path("nom").asText());
         module.setStatut(moduleNode.path("statut").asText());
         module.setAppName(

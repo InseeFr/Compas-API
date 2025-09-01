@@ -1,8 +1,9 @@
 package fr.insee.compas.client.configuration;
 
+import java.io.BufferedReader;
 import java.nio.charset.StandardCharsets;
+import java.util.stream.Collectors;
 
-import org.apache.commons.io.IOUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 
@@ -38,8 +39,9 @@ public class CustomErrorDecoder {
             log.error("Erreur rencontrée dans appel {} - Status {}", methodKey, response.status());
             ErrorVM errorVM = null;
             String body = null;
-            try {
-                body = IOUtils.toString(response.body().asReader(StandardCharsets.UTF_8));
+            try (BufferedReader reader =
+                    new BufferedReader(response.body().asReader(StandardCharsets.UTF_8))) {
+                body = reader.lines().collect(Collectors.joining("\n"));
                 errorVM = new ObjectMapper().readValue(body, ErrorVM.class);
             } catch (final Exception e) {
                 log.debug(" exception relevée", e);

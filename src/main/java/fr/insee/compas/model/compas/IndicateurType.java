@@ -24,6 +24,7 @@ public enum IndicateurType {
     NBR_VM(208),
     NBR_JOUR_MEP(301),
     DEPLOYMENT_COUNT(302),
+    NBR_CONTRIBUTIONS_PROJET(303),
     DETTE_TECH(11),
     FIABILITE(12);
 

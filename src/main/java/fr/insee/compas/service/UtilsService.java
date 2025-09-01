@@ -133,4 +133,21 @@ public class UtilsService {
 
         return measures1;
     }
+
+    public String extractRepoPath(String sourceUrl) {
+        if (sourceUrl == null || sourceUrl.isBlank()) return null;
+
+        final String gitlabDomain = "gitlab.insee.fr/";
+        String cleanUrl = sourceUrl.replaceFirst("^https?://", "");
+
+        int idx = cleanUrl.indexOf(gitlabDomain);
+        if (idx < 0) return null;
+
+        String repoPath =
+                cleanUrl.substring(idx + gitlabDomain.length())
+                        .replaceFirst("\\.git$", "")
+                        .replaceFirst("/$", "");
+
+        return repoPath.isBlank() ? null : repoPath;
+    }
 }

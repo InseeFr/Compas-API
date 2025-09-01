@@ -1,107 +1,80 @@
 package fr.insee.compas.service;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
-import java.net.URI;
-import java.net.URLEncoder;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
+import org.mockito.ArgumentCaptor;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
 
-import fr.insee.compas.model.oscar.Module;
-
-@ExtendWith(MockitoExtension.class)
 class GitlabServiceTest {
 
-    @Mock private HttpClient httpClient;
-
-    @Mock private HttpResponse<String> httpResponse;
-
-    @InjectMocks private GitlabService gitlabService;
-
-    private static final String TOKEN = "fake-token";
-    private static final String BASE_URL = "https://gitlab.insee.fr/api/v4";
-    private static final String PROJECT_ID = "13644";
+    private GitlabService service;
+    private RestTemplate restTemplate;
 
     @BeforeEach
-    void setUp() {
-        ReflectionTestUtils.setField(gitlabService, "token", TOKEN);
+    void setup() throws Exception {
+        restTemplate = mock(RestTemplate.class);
+
+        service = new GitlabService(restTemplate);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Private-Token", "dummy-token");
+        java.lang.reflect.Field headersField = GitlabService.class.getDeclaredField("headers");
+        headersField.setAccessible(true);
+        headersField.set(service, headers);
     }
 
     @Test
-    void testGetJson_Success() throws IOException, InterruptedException {
-        // Given
-        Module module =
-                Module.builder()
-                        .id(1)
-                        .modName("name1")
-                        .domaineSndi("sndi1")
-                        .keySonar("keySonar1")
-                        .build();
-        String encodedFilePath = URLEncoder.encode("rapports/1.json", StandardCharsets.UTF_8);
-        String expectedUrl =
-                String.format(
-                        "%s/projects/%s/repository/files/%s/raw",
-                        BASE_URL, PROJECT_ID, encodedFilePath);
-        String expectedResponse = "{\"key\": \"value\"}";
+    void testGetGitlabAuthorsForProject() throws IOException {
+        // GIVEN
+        String projectPath = "namespace/projet";
+        LocalDateTime start = LocalDateTime.now().minusDays(5);
+        LocalDateTime end = LocalDateTime.now();
 
-        Mockito.<HttpResponse<String>>when(
-                        httpClient.send(
-                                Mockito.argThat(req -> req.uri().equals(URI.create(expectedUrl))),
-                                any()))
-                .thenReturn(httpResponse);
-        when(httpResponse.statusCode()).thenReturn(200);
-        when(httpResponse.body()).thenReturn(expectedResponse);
+        // Création d'un JSON simulant la réponse de GitLab
+        String jsonResponse =
+                "[{\"author_email\":\"dev1@example.com\",\"author_name\":\"Dev One\"},"
+                        + "{\"author_email\":\"dev2@example.com\",\"author_name\":\"Dev Two\"}]";
 
-        // When
-        String jsonResponse = gitlabService.getJson(module);
+        ResponseEntity<String> responseEntity = new ResponseEntity<>(jsonResponse, HttpStatus.OK);
 
-        // Then
-        assertEquals(expectedResponse, jsonResponse);
-        verify(httpClient).send(any(HttpRequest.class), any());
-    }
+        // WHEN : mock du RestTemplate pour retourner la page
+        when(restTemplate.exchange(any(), any(), any(HttpEntity.class), eq(String.class)))
+                .thenReturn(responseEntity);
 
-    @Test
-    void testGetJson_Fail() throws IOException, InterruptedException {
-        // Given
-        Module module =
-                Module.builder()
-                        .id(2)
-                        .modName("name1")
-                        .domaineSndi("sndi1")
-                        .keySonar("keySonar1")
-                        .build();
+        // WHEN : appel de la méthode
+        Set<String> authors = service.getGitlabAuthorsForProject(projectPath, start, end);
 
-        String encodedFilePath = URLEncoder.encode("rapports/2.json", StandardCharsets.UTF_8);
-        String expectedUrl =
-                String.format(
-                        "%s/projects/%s/repository/files/%s/raw",
-                        BASE_URL, PROJECT_ID, encodedFilePath);
+        // THEN : vérifie que les auteurs uniques sont récupérés
+        assertEquals(2, authors.size());
+        assertTrue(authors.contains("dev1@example.com"));
+        assertTrue(authors.contains("dev2@example.com"));
 
-        Mockito.<HttpResponse<String>>when(
-                        httpClient.send(
-                                Mockito.argThat(req -> req.uri().equals(URI.create(expectedUrl))),
-                                any()))
-                .thenReturn(httpResponse);
-        when(httpResponse.statusCode()).thenReturn(404);
+        // THEN : capture l'entité envoyée au RestTemplate
+        ArgumentCaptor<HttpEntity<Void>> captor =
+                (ArgumentCaptor<HttpEntity<Void>>)
+                        (ArgumentCaptor<?>) ArgumentCaptor.forClass(HttpEntity.class);
 
-        // When
-        String jsonResponse = gitlabService.getJson(module);
+        verify(restTemplate).exchange(any(), any(), captor.capture(), eq(String.class));
 
-        // Then
-        assertEquals("", jsonResponse);
-        verify(httpClient).send(any(HttpRequest.class), any());
+        HttpEntity<Void> capturedEntity = captor.getValue();
+        assertNotNull(capturedEntity.getHeaders().getFirst("Private-Token"));
+        assertEquals("dummy-token", capturedEntity.getHeaders().getFirst("Private-Token"));
     }
 }
