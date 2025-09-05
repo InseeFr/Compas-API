@@ -15,7 +15,7 @@ import fr.insee.compas.model.sonar.Component;
 import fr.insee.compas.model.sonar.Measure;
 import fr.insee.compas.model.sonar.RecuperationMeasures;
 
-public class UtilsServiceTest {
+class UtilsServiceTest {
 
     private final UtilsService utilsService = new UtilsService();
 
@@ -112,7 +112,7 @@ public class UtilsServiceTest {
     }
 
     @Test
-    public void testConcatenationMeasures() {
+    void testConcatenationMeasures() {
         // Création du premier ensemble de mesures
         Measure m1 = new Measure();
         m1.setMetric("lines_to_cover");

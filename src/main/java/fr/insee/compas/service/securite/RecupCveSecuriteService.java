@@ -32,7 +32,7 @@ public class RecupCveSecuriteService {
     private final UtilsCveService utilService;
     private final RestTemplate restTemplate;
 
-    @Value("${api.analyzer.base-url:https://api-analyzer.developpement.insee.fr}")
+    @Value("${api.analyzer.base-url}")
     private String apiBaseUrl;
 
     private final AnalyzerAuthentification analyzerAuthentification;

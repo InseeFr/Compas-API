@@ -54,7 +54,7 @@ public class SecuriteController {
         log.info("Début du endpoint récupération indicateur Qualite par application ");
         List<IndicateurSecuriteApplicationView> result =
                 indicateurSecuriteService.getIndicateursApplicationView();
-        ;
+
         log.info("Fin du endpoint récupération indicateur Qualite par application");
         return result;
     }
