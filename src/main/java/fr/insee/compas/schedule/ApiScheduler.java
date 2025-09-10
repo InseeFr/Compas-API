@@ -34,7 +34,7 @@ public class ApiScheduler {
         this.updateIndicatorDevopsService = updateIndicatorDevopsService;
     }
 
-    @Scheduled(cron = "0 0 4 * * *")
+    @Scheduled(cron = "0 30 6 * * *")
     public void callApi() {
         log.info("mise à jour des modules oscar à la date de {}", LocalDate.now());
         oscarService.miseAjourModuleOscarEnBaseDeDonnees();
