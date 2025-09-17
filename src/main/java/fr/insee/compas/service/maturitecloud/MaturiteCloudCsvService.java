@@ -30,7 +30,7 @@ public class MaturiteCloudCsvService {
     // SQL d'insert
     private static final String INSERT_SQL =
             """
-            INSERT INTO compas_dev7.table_faits
+            INSERT INTO table_faits
                 (id_indicateur, "date", valeur, id_source, id_application, id_module, commentaire)
             VALUES (?, ?, ?, ?, ?, NULL, ?)
             """;

@@ -10,7 +10,6 @@ import lombok.Data;
 
 @Data
 @Entity
-@Table(name = "application_tips", schema = "compas_dev7")
 public class ApplicationTip {
 
     @Id
