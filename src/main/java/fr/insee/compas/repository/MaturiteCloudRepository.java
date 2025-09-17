@@ -32,8 +32,12 @@ SELECT
     r.id_application AS id_application,
     -- 601 maturité -> lettre
     CASE CAST(MAX(CASE WHEN r.id_indicateur = 601 THEN r.valeur END) AS INT)
-         WHEN 1 THEN 'A' WHEN 2 THEN 'B' WHEN 3 THEN 'C' WHEN 4 THEN 'D'
-         ELSE NULL
+                                                   WHEN 5 THEN 'A'
+                                                   WHEN 4 THEN 'B'
+                                                   WHEN 3 THEN 'C'
+                                                   WHEN 2 THEN 'D'
+                                                   WHEN 1 THEN 'E'
+                                                   ELSE NULL
     END AS maturite,
     -- 602 robustesse (numérique)
     MAX(CASE WHEN r.id_indicateur = 602 THEN r.valeur END) AS robustesse,
