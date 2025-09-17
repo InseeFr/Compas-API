@@ -3,13 +3,12 @@ package fr.insee.compas.controller;
 import java.io.IOException;
 import java.util.List;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import fr.insee.compas.service.securite.CveCriticalMonthlyService;
 import fr.insee.compas.service.securite.IndicateurSecuriteService;
 import fr.insee.compas.service.securite.RecupCveSecuriteService;
+import fr.insee.compas.view.IndicateurApplicationSecuriteMonthly;
 import fr.insee.compas.view.IndicateurSecuriteApplicationView;
 import fr.insee.compas.view.IndicateurSecuriteModuleView;
 
@@ -22,12 +21,15 @@ import lombok.extern.slf4j.Slf4j;
 public class SecuriteController {
 
     private final RecupCveSecuriteService cveSecuriteService;
+    private final CveCriticalMonthlyService cveCriticalMonthlyService;
     private final IndicateurSecuriteService indicateurSecuriteService;
 
     public SecuriteController(
             RecupCveSecuriteService cveSecuriteService,
-            IndicateurSecuriteService indicateurSecuriteService) {
+            IndicateurSecuriteService indicateurSecuriteService,
+            CveCriticalMonthlyService cveCriticalMonthlyService) {
         this.cveSecuriteService = cveSecuriteService;
+        this.cveCriticalMonthlyService = cveCriticalMonthlyService;
         this.indicateurSecuriteService = indicateurSecuriteService;
     }
 
@@ -56,6 +58,15 @@ public class SecuriteController {
                 indicateurSecuriteService.getIndicateursApplicationView();
 
         log.info("Fin du endpoint récupération indicateur Qualite par application");
+        return result;
+    }
+
+    @GetMapping("/applications/cve-critical/monthly")
+    @Operation(summary = "CVE critiques par application et par mois (mesures du 1er du mois)")
+    public List<IndicateurApplicationSecuriteMonthly> getCveCriticalMonthly() {
+        log.info("Début endpoint CVE critiques mensuel (sans filtre)");
+        List<IndicateurApplicationSecuriteMonthly> result = cveCriticalMonthlyService.getMonthly();
+        log.info("Fin endpoint CVE critiques mensuel : {} lignes", result.size());
         return result;
     }
 }

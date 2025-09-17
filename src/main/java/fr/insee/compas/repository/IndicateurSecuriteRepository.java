@@ -67,4 +67,39 @@ GROUP BY
 """,
             nativeQuery = true)
     List<Object[]> findValueBruteApplication();
+
+    @Query(
+            value =
+                    """
+WITH per_month AS (
+    SELECT
+        tf.id_application,
+        date_trunc('month', tf."date")::date AS month,
+        tf."date",
+        tf.valeur,
+        tf.id,
+        CASE WHEN EXTRACT(DAY FROM tf."date") = 1 THEN 0 ELSE 1 END AS not_first
+    FROM table_faits tf
+    WHERE tf.id_indicateur = 7              -- CVE critiques (application)
+      AND tf.id_module IS NULL
+      AND tf.id_application IS NOT NULL
+),
+ranked AS (
+    SELECT
+        id_application,
+        month,
+        valeur,
+        ROW_NUMBER() OVER (
+            PARTITION BY id_application, month
+            ORDER BY not_first ASC, "date" ASC, id DESC
+        ) AS rn
+    FROM per_month
+)
+SELECT id_application, month, valeur
+FROM ranked
+WHERE rn = 1
+ORDER BY id_application, month
+""",
+            nativeQuery = true)
+    List<Object[]> findMonthlyCriticalByApplication();
 }
