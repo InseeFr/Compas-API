@@ -11,7 +11,7 @@ public interface MaturiteCloudRepository extends JpaRepository<TableFaits, Long>
 
     @Query(
             value =
-                    """
+"""
 WITH ranked AS (
     SELECT
         tf.id_application,

@@ -1,5 +1,5 @@
 default:
-  image: gitlab-registry.insee.fr:443/kubernetes/images/build/maven-jdk:21
+  image: gitlab-registry.insee.fr:443/kubernetes/images/build/maven-jdk:25
   tags:
     - docker
 
@@ -42,11 +42,11 @@ job_code_formatting:
 build-app:
   stage: build 🔨
   script:
-    - "mvn -V package"
+    - "mvn clean package"
   artifacts:
     untracked: true
     paths:
-      - ./target/ROOT.jar
+      - ./target/*.jar
     
     expire_in: 1 day
 

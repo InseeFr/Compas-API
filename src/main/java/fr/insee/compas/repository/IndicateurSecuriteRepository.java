@@ -11,7 +11,7 @@ public interface IndicateurSecuriteRepository extends JpaRepository<TableFaits, 
 
     @Query(
             value =
-                    """
+"""
 WITH latest_data AS (
     SELECT
         id_module,
@@ -40,7 +40,7 @@ GROUP BY
 
     @Query(
             value =
-                    """
+"""
     WITH latest_data AS (
         SELECT
             id_application,
@@ -70,7 +70,7 @@ GROUP BY
 
     @Query(
             value =
-                    """
+"""
 WITH per_month AS (
     SELECT
         tf.id_application,

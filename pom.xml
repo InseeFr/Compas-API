@@ -15,12 +15,12 @@
 	<description>Application pour le Tableau de Bord DDSI</description>
 
 	<properties>
-		<java.version>21</java.version>
+		<java.version>25</java.version>
 		<spotless-maven-plugin.version>3.0.0</spotless-maven-plugin.version>
-		<googleJavaFormat.version>1.23.0</googleJavaFormat.version>
+		<googleJavaFormat.version>1.27.0</googleJavaFormat.version>
 		<sonar.exclusions>**/test/**, **/*Test.java, **/*Tests.java</sonar.exclusions>
-		<maven.compiler.source>21</maven.compiler.source>
-		<maven.compiler.target>21</maven.compiler.target>
+		<maven.compiler.source>25</maven.compiler.source>
+		<maven.compiler.target>25</maven.compiler.target>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -127,13 +127,26 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>repackage</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.14.1</version>
 				<configuration>
-					<excludes>
-						<exclude>
+					<!--Ajout nécessaire à partir de java 23-->
+					<annotationProcessorPaths>
+						<path>
 							<groupId>org.projectlombok</groupId>
 							<artifactId>lombok</artifactId>
-						</exclude>
-					</excludes>
+						</path>
+					</annotationProcessorPaths>
 				</configuration>
 			</plugin>
 			<plugin>

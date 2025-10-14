@@ -20,7 +20,7 @@ public interface TableFaitsRepository extends JpaRepository<TableFaits, Long> {
 
     @Query(
             value =
-                    """
+"""
     SELECT sum(tf.valeur) FROM TableFaits tf WHERE tf.idApplication = :idApplication
         AND tf.idIndicateur = :idIndicateur and tf.date = :date
 """)
@@ -85,7 +85,7 @@ public interface TableFaitsRepository extends JpaRepository<TableFaits, Long> {
 
     @Query(
             value =
-                    """
+"""
     select subquery.id_Application, subquery.date, subquery.totalValeur from (select id_Application , date, sum(tf.valeur) over (partition by tf.id_Application, tf.date order by tf.date desc) as totalValeur,
      row_number() over (partition by tf.id_Application order by tf.date desc) as row_num FROM Table_Faits tf WHERE tf.id_Indicateur = :idIndicateur) as subquery where subquery.row_num = 1 order by totalValeur desc
 """,
@@ -95,7 +95,7 @@ public interface TableFaitsRepository extends JpaRepository<TableFaits, Long> {
 
     @Query(
             value =
-                    """
+"""
             SELECT *
           FROM (
                SELECT *,
@@ -111,7 +111,7 @@ public interface TableFaitsRepository extends JpaRepository<TableFaits, Long> {
 
     @Query(
             value =
-                    """
+"""
     select subquery.id_Module, subquery.date, subquery.totalValeur from (select id_Module , date, sum(tf.valeur) over (partition by tf.id_Module, tf.date order by tf.date desc) as totalValeur,
      row_number() over (partition by tf.id_Module order by tf.date desc) as row_num FROM Table_Faits tf WHERE tf.id_Indicateur = :idIndicateur and id_Module is not null) as subquery where subquery.row_num = 1 order by totalValeur desc
 """,
@@ -165,7 +165,7 @@ public interface TableFaitsRepository extends JpaRepository<TableFaits, Long> {
 
     @Query(
             value =
-                    """
+"""
     WITH DernieresValeurs AS (
         SELECT tf.id_application, tf.id_module, tf.date, tf.valeur
         FROM table_faits tf
@@ -192,7 +192,7 @@ public interface TableFaitsRepository extends JpaRepository<TableFaits, Long> {
 
     @Query(
             value =
-                    """
+"""
     WITH latest_data AS (
                                        SELECT
                                            id_module,
@@ -221,7 +221,7 @@ public interface TableFaitsRepository extends JpaRepository<TableFaits, Long> {
 
     @Query(
             value =
-                    """
+"""
        WITH latest_data AS (
                                        SELECT
                                            id_module,
@@ -252,7 +252,7 @@ public interface TableFaitsRepository extends JpaRepository<TableFaits, Long> {
 
     @Query(
             value =
-                    """
+"""
 WITH latest_data AS (
                                SELECT
                                    id_module,
@@ -280,7 +280,7 @@ WITH latest_data AS (
 
     @Query(
             value =
-                    """
+"""
 WITH latest_data AS (
                                SELECT
                                    id_module,
@@ -310,7 +310,7 @@ WITH latest_data AS (
 
     @Query(
             value =
-                    """
+"""
 select count(tf) from TableFaits tf where tf.idIndicateur = :idIndicateur and tf.date = :dateIn
 """)
     Integer countGreenItValuesByDate(

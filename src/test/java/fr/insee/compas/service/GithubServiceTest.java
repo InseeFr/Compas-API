@@ -55,7 +55,7 @@ class GithubServiceTest {
     void testGetGithubAuthorsForRepo_returnsUniqueAuthors() throws IOException {
         // GIVEN: JSON de réponse simulée
         String jsonResponse =
-                """
+"""
 {
   "data": {
     "repository": {
