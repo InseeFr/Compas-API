@@ -163,10 +163,12 @@ public class RecupCveSecuriteService {
     private Map<String, Integer> extractCveDataFromApplication(ApplicationAnalyzer application) {
         Map<String, Integer> cveData = new HashMap<>();
 
-        cveData.put("CRITICAL", application.getNombreCveCritique());
-        cveData.put("HIGH", application.getNombreCveMajeur());
-        cveData.put("MEDIUM", application.getNombreCveMoyenne());
-        cveData.put("LOW", application.getNombreCveFaible());
+        if (application.getCveActives() != null) {
+            cveData.put("CRITICAL", application.getCveActives().getNombreCveCritique());
+            cveData.put("HIGH", application.getCveActives().getNombreCveMajeur());
+            cveData.put("MEDIUM", application.getCveActives().getNombreCveMoyenne());
+            cveData.put("LOW", application.getCveActives().getNombreCveFaible());
+        }
 
         return cveData;
     }
@@ -175,10 +177,12 @@ public class RecupCveSecuriteService {
     private Map<String, Integer> extractCveDataFromModule(ModuleAnalyzer module) {
         Map<String, Integer> cveData = new HashMap<>();
 
-        cveData.put("CRITICAL", module.getNombreCveCritique());
-        cveData.put("HIGH", module.getNombreCveMajeur());
-        cveData.put("MEDIUM", module.getNombreCveMoyenne());
-        cveData.put("LOW", module.getNombreCveFaible());
+        if (module.getCveActives() != null) {
+            cveData.put("CRITICAL", module.getCveActives().getNombreCveCritique());
+            cveData.put("HIGH", module.getCveActives().getNombreCveMajeur());
+            cveData.put("MEDIUM", module.getCveActives().getNombreCveMoyenne());
+            cveData.put("LOW", module.getCveActives().getNombreCveFaible());
+        }
 
         return cveData;
     }

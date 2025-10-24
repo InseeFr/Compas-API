@@ -14,9 +14,6 @@ public class ModuleAnalyzer {
     private String nom;
     private String sndi;
     private String domaine;
-    private Integer nombreCveCritique;
-    private Integer nombreCveMajeur;
-    private Integer nombreCveMoyenne;
-    private Integer nombreCveFaible;
+    private CveActivesAnalyzer cveActives;
     private Date dateDernierScanCve;
 }
