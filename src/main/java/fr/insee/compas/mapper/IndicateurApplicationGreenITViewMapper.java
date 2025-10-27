@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import fr.insee.compas.logic.GreenItScoreCalculator;
 import fr.insee.compas.model.greenit.GreenItScore;
 import fr.insee.compas.model.greenit.IndicateurApplicationGreenIT;
+import fr.insee.compas.util.GreenITutils;
 import fr.insee.compas.view.IndicateurApplicationGreenITView;
 
 @Component
@@ -29,14 +30,14 @@ public class IndicateurApplicationGreenITViewMapper {
         return IndicateurApplicationGreenITView.builder()
                 .applicationId(indicateur.getApplicationId())
                 .applicationName(indicateur.getApplicationName())
-                .ramAllocated(indicateur.getRamAllocated() + " Go")
-                .ramMaxi(indicateur.getRamMaxi() + " %")
-                .diskAllocated(indicateur.getDiskAllocated() + " Go")
-                .diskUsed(indicateur.getDiskUsed() + " %")
-                .cpuAllocated(indicateur.getCpuAllocated() + " Mhz")
-                .cpuMaxi(indicateur.getCpuMaxi() + " %")
-                .conso(indicateur.getConso() + " Wh")
-                .nbVm(indicateur.getNbVm() + " vm")
+                .ramAllocated(GreenITutils.normalizeString(indicateur.getRamAllocated()))
+                .ramMaxi(GreenITutils.normalizeString(indicateur.getRamMaxi()))
+                .diskAllocated(GreenITutils.normalizeString(indicateur.getDiskAllocated()))
+                .diskUsed(GreenITutils.normalizeString(indicateur.getDiskUsed()))
+                .cpuAllocated(GreenITutils.normalizeString(indicateur.getCpuAllocated()))
+                .cpuMaxi(GreenITutils.normalizeString(indicateur.getCpuMaxi()))
+                .conso(GreenITutils.normalizeString(indicateur.getConso()))
+                .nbVm(GreenITutils.normalizeString(indicateur.getNbVm()))
                 .consoScore(greenItScore.getConso().setScale(3, RoundingMode.UP).toString())
                 .impactScore(greenItScore.getImpact().setScale(3, RoundingMode.UP).toString())
                 .gaspillageScore(

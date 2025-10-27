@@ -237,7 +237,10 @@ public class GreenItService {
         if (denominateur == null || BigDecimal.ZERO.equals(denominateur)) {
             return null;
         }
-        return numerateur.divide(denominateur, RoundingMode.UP).multiply(new BigDecimal(100));
+        return numerateur
+                .divide(denominateur, RoundingMode.UP)
+                .multiply(new BigDecimal(100))
+                .setScale(0);
     }
 
     public void miseAJourIndicateursGreenIT(LocalDate fileDate) {
