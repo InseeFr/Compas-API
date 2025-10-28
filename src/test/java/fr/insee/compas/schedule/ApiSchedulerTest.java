@@ -14,6 +14,7 @@ import org.mockito.MockitoAnnotations;
 
 import fr.insee.compas.model.sonar.RecuperationMeasures;
 import fr.insee.compas.service.OscarService;
+import fr.insee.compas.service.a11y.A11yMajService;
 import fr.insee.compas.service.devops.UpdateIndicatorDevopsService;
 import fr.insee.compas.service.qualite.RecuperationIndicateurSonarService;
 import fr.insee.compas.service.securite.RecupCveSecuriteService;
@@ -27,6 +28,8 @@ class ApiSchedulerTest {
     @Mock private RecupCveSecuriteService cveService;
 
     @Mock private UpdateIndicatorDevopsService updateIndicatorDevopsService;
+
+    @Mock private A11yMajService a11yMajService;
 
     @InjectMocks private ApiScheduler apiScheduler;
 

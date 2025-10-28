@@ -10,7 +10,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-import fr.insee.compas.model.compas.Notation;
 import fr.insee.compas.model.sonar.Component;
 import fr.insee.compas.model.sonar.Measure;
 import fr.insee.compas.model.sonar.RecuperationMeasures;
@@ -34,44 +33,6 @@ class UtilsServiceTest {
     }
 
     @Test
-    void testConvertPourcentageEnNote() {
-        String result;
-        result = utilsService.convertPourcentageEnNote(95);
-        assertEquals("A", result, "La note attendu est de A");
-        result = utilsService.convertPourcentageEnNote(80);
-        assertEquals("B", result, "La note attendu est de B");
-        result = utilsService.convertPourcentageEnNote(65);
-        assertEquals("B", result, "La note attendu est de B");
-        result = utilsService.convertPourcentageEnNote(60);
-        assertEquals("C", result, "La note attendu est de C");
-        result = utilsService.convertPourcentageEnNote(50);
-        assertEquals("C", result, "La note attendu est de C");
-        result = utilsService.convertPourcentageEnNote(40);
-        assertEquals("D", result, "La note attendu est de D");
-        result = utilsService.convertPourcentageEnNote(20);
-        assertEquals("E", result, "La note attendu est de E");
-        result = utilsService.convertPourcentageEnNote(0);
-        assertEquals("X", result, "La note attendu est de X");
-        result = utilsService.convertPourcentageEnNote(-10);
-        assertEquals("NR", result, "La note attendu est de NR");
-    }
-
-    @Test
-    void testConvertNiveauCveEnLettre() {
-        String result;
-        result = utilsService.convertNiveauCveEnLettre(3.1);
-        assertEquals("E", result, "La note attendu est de E");
-        result = utilsService.convertNiveauCveEnLettre(2.1);
-        assertEquals("D", result, "La note attendu est de D");
-        result = utilsService.convertNiveauCveEnLettre(1.1);
-        assertEquals("C", result, "La note attendu est de C");
-        result = utilsService.convertNiveauCveEnLettre(0.9);
-        assertEquals("B", result, "La note attendu est de B");
-        result = utilsService.convertNiveauCveEnLettre(0);
-        assertEquals("A", result, "La note attendu est de A");
-    }
-
-    @Test
     void testGetCalcul() {
         // Calcul attendu : (2 * 1000) + (3 * 100) + (4 * 10) + (5 * 1) + 1 = 2346
         final BigDecimal expected = BigDecimal.valueOf(Math.log10(2346));
@@ -84,31 +45,6 @@ class UtilsServiceTest {
 
         // Vérification avec une tolérance pour éviter les erreurs de précision
         assertEquals(expected, actual);
-    }
-
-    @Test
-    void testGetLettreDetteTechnique() {
-
-        assertEquals(
-                Notation.A.getGrade(),
-                utilsService.getLettreDetteTechnique("2000"),
-                "Valeur inférieure à 2100 doit retourner A");
-        assertEquals(
-                Notation.B.getGrade(),
-                utilsService.getLettreDetteTechnique("5000"),
-                "Valeur entre 2100 et 8400 doit retourner B");
-        assertEquals(
-                Notation.C.getGrade(),
-                utilsService.getLettreDetteTechnique("10000"),
-                "Valeur entre 8400 et 25200 doit retourner C");
-        assertEquals(
-                Notation.D.getGrade(),
-                utilsService.getLettreDetteTechnique("30000"),
-                "Valeur entre 25200 et 50400 doit retourner D");
-        assertEquals(
-                Notation.E.getGrade(),
-                utilsService.getLettreDetteTechnique("60000"),
-                "Valeur supérieure ou égale à 50400 doit retourner E");
     }
 
     @Test

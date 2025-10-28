@@ -23,10 +23,16 @@ public class A11yController {
     private A11yAffichageService a11yAffichageService;
     private A11yMajService a11yMajService;
 
-    @GetMapping
+    @GetMapping("/modules")
     @Operation(summary = "Lister tous les modules et informations accessibilité")
     public List<IndicateursModuleA11Y> listerModulesA11y() {
         return a11yAffichageService.listerModulesA11y();
+    }
+
+    @GetMapping("/applications")
+    @Operation(summary = "Lister tous les modules et informations accessibilité")
+    public List<IndicateursModuleA11Y> listerApplicationA11y() {
+        return a11yAffichageService.listerApplicationsA11y();
     }
 
     @PostMapping
@@ -38,5 +44,11 @@ public class A11yController {
             @RequestBody InfosSaisiesA11yToSaveDTO infosSaisiesA11yToSaveDTO) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(a11yMajService.majInfosSaisiesA11y(infosSaisiesA11yToSaveDTO));
+    }
+
+    @PutMapping("/issues-accessibility")
+    @Operation(summary = "Insertion des AA11y de sonar dans la bdd" + " infosSaisies ")
+    public void majNbIssueSonarAccessibitlite() {
+        a11yMajService.getNbIssueSonarAccessibility();
     }
 }

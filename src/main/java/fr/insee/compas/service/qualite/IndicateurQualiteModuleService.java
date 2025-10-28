@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import fr.insee.compas.model.compas.Notation;
 import fr.insee.compas.model.oscar.Module;
+import fr.insee.compas.service.ConvertirValeurEnLettreService;
 import fr.insee.compas.service.OscarService;
 import fr.insee.compas.service.TableFaitsService;
 import fr.insee.compas.service.UtilsService;
@@ -23,13 +24,17 @@ public class IndicateurQualiteModuleService {
 
     private final UtilsService utilsService;
 
+    private final ConvertirValeurEnLettreService convertirValeurEnLettreService;
+
     public IndicateurQualiteModuleService(
             OscarService oscarService,
             TableFaitsService tableFaitsService,
-            UtilsService utilsService) {
+            UtilsService utilsService,
+            ConvertirValeurEnLettreService convertirValeurEnLettreService) {
         this.oscarService = oscarService;
         this.tableFaitsService = tableFaitsService;
         this.utilsService = utilsService;
+        this.convertirValeurEnLettreService = convertirValeurEnLettreService;
     }
 
     /**
@@ -76,7 +81,8 @@ public class IndicateurQualiteModuleService {
     private void calculIndicateurDetteTechnique(Module module, IndicateurQualiteView viewModule) {
         if (StringUtils.isNotEmpty(viewModule.getDetteTechnique())) {
             viewModule.setLettreDetteTechnique(
-                    utilsService.getLettreDetteTechnique(viewModule.getDetteTechnique()));
+                    convertirValeurEnLettreService.getLettreDetteTechnique(
+                            viewModule.getDetteTechnique()));
         } else {
             if ("Sans objet".equals(module.getKeySonar().trim())) {
                 viewModule.setDetteTechnique(Notation.SO.getGrade());
@@ -119,7 +125,7 @@ public class IndicateurQualiteModuleService {
             String pourcentage = (int) percentage + " %";
 
             // Obtenir la note
-            String lettre = utilsService.convertPourcentageEnNote(percentage);
+            String lettre = convertirValeurEnLettreService.convertPourcentageEnNote(percentage);
 
             // Ajouter le module avec le grade calculé
             viewModule.setPourcentageCouvertureTestUniaire(pourcentage);

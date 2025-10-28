@@ -16,6 +16,9 @@ public class IndicateursModuleA11Y {
     private Integer idModule;
     private String modName;
 
+    private Integer idApplication;
+    private String nameApplication;
+
     /** Service dev. */
     private String sndi;
 
@@ -24,9 +27,12 @@ public class IndicateursModuleA11Y {
 
     private LocalDate dateMajInfosSaisie;
     private boolean isDeclaration; // presence d'une declaration d'accessibilite
-    private int TypeAuditId;
-    private String TypeAuditLibelle;
-    private float ScoreAudit;
-    private LocalDate DateAudit;
+    private int typeAuditId;
+    private String typeAuditLibelle;
+    private float scoreAudit;
+    private LocalDate dateAudit;
     private Notation notation;
+
+    private String nbIssueAccessibilite;
+    private String lettreIssueAccessibilite;
 }

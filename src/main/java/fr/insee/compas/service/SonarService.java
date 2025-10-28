@@ -26,22 +26,19 @@ import okhttp3.Response;
 @Service
 public class SonarService {
 
+    public static final String GITLAB_INTERNE = "gitlab";
+
     @Value("${fr.insee.compas.sonar.token:}")
     private String tokenGitlab;
 
     @Value("${fr.insee.compas.github.sonar.token:}")
-    private String tokenGithubSonar;
+    private String tokenGithub;
 
     @Value("${fr.insee.compas.proxy.name:}")
     private String proxyName;
 
     @Value("${fr.insee.compas.proxy.port:}")
     private int proxyPort;
-
-    private String urlGitlab =
-            "http://sonar.insee.fr/api/measures/component?component=%s&metricKeys=%s";
-    private String urlGithub =
-            "https://sonarcloud.io/api/measures/component?component=%s&metricKeys=%s";
 
     private final ObjectMapper objectMapper;
 
@@ -52,58 +49,86 @@ public class SonarService {
         this.objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
     }
 
+    public String getNbIssueSonarAccessibility(String projetSonar, String source) {
+        OkHttpClient client =
+                GITLAB_INTERNE.equals(source)
+                        ? new OkHttpClient.Builder().build()
+                        : new OkHttpClient.Builder()
+                                .proxy(
+                                        new Proxy(
+                                                Proxy.Type.HTTP,
+                                                new InetSocketAddress(proxyName, proxyPort)))
+                                .connectTimeout(30, TimeUnit.SECONDS)
+                                .readTimeout(30, TimeUnit.SECONDS)
+                                .writeTimeout(30, TimeUnit.SECONDS)
+                                .build();
+
+        String urlTemplate =
+                GITLAB_INTERNE.equals(source)
+                        ? "http://sonar.insee.fr/api/issues/search?componentKeys=%s&tags=%s"
+                        : "https://sonarcloud.io/api/issues/search?componentKeys=%s&tags=%s";
+
+        String url = String.format(urlTemplate, projetSonar, "accessibility");
+        String token = GITLAB_INTERNE.equals(source) ? tokenGitlab : tokenGithub;
+
+        Request request =
+                new Request.Builder()
+                        .url(url)
+                        .addHeader("Authorization", "Bearer " + token)
+                        .build();
+        try (Response response = client.newCall(request).execute()) {
+            if (response.body() == null || !response.isSuccessful()) {
+                return null;
+            }
+            String jsonString = response.body().string();
+            Paging jsonMap = objectMapper.readValue(jsonString, Paging.class);
+            return String.valueOf(jsonMap.getTotal());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public RecuperationMeasures getDataFromSonarAPIMeasures(String projetSonar, String source)
             throws IOException {
-        Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyName, proxyPort));
-        OkHttpClient clientExterne =
-                new OkHttpClient.Builder()
-                        .proxy(proxy)
-                        .connectTimeout(30, TimeUnit.SECONDS) // Timeout pour la connexion
-                        .readTimeout(30, TimeUnit.SECONDS) // Timeout pour la lecture des données
-                        .writeTimeout(30, TimeUnit.SECONDS) // Timeout pour l'écriture des données
-                        .build();
-        OkHttpClient clientInterne = new OkHttpClient.Builder().build();
 
-        String url;
-        String token;
-        Request request;
+        OkHttpClient client =
+                GITLAB_INTERNE.equals(source)
+                        ? new OkHttpClient.Builder().build()
+                        : new OkHttpClient.Builder()
+                                .proxy(
+                                        new Proxy(
+                                                Proxy.Type.HTTP,
+                                                new InetSocketAddress(proxyName, proxyPort)))
+                                .connectTimeout(30, TimeUnit.SECONDS)
+                                .readTimeout(30, TimeUnit.SECONDS)
+                                .writeTimeout(30, TimeUnit.SECONDS)
+                                .build();
 
         String metrics =
                 Arrays.stream(IndicateurSonar.values())
                         .map(IndicateurSonar::getKey)
                         .collect(Collectors.joining(","));
 
-        if ("gitlab".equals(source)) {
-            url = String.format(urlGitlab, projetSonar, metrics);
-            token = tokenGitlab;
-            request =
-                    new Request.Builder()
-                            .url(url)
-                            .addHeader("Authorization", "Bearer " + token)
-                            .build();
-            try (Response response = clientInterne.newCall(request).execute()) {
-                if (response.body() == null || !response.isSuccessful()) {
-                    return null;
-                }
-                String jsonString = response.body().string();
-                return objectMapper.readValue(jsonString, RecuperationMeasures.class);
-            }
+        String urlTemplate =
+                "gitlab".equals(source)
+                        ? "http://sonar.insee.fr/api/measures/component?component=%s&metricKeys=%s"
+                        : "https://sonarcloud.io/api/measures/component?component=%s&metricKeys=%s";
 
-        } else {
-            url = String.format(urlGithub, projetSonar, metrics);
-            token = tokenGithubSonar;
-            request =
-                    new Request.Builder()
-                            .url(url)
-                            .addHeader("Authorization", "Bearer " + token)
-                            .build();
-            try (Response response = clientExterne.newCall(request).execute()) {
-                if (response.body() == null || !response.isSuccessful()) {
-                    return null;
-                }
-                String jsonString = response.body().string();
-                return objectMapper.readValue(jsonString, RecuperationMeasures.class);
+        String url = String.format(urlTemplate, projetSonar, metrics);
+        String token = "gitlab".equals(source) ? tokenGitlab : tokenGithub;
+
+        Request request =
+                new Request.Builder()
+                        .url(url)
+                        .addHeader("Authorization", "Bearer " + token)
+                        .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            if (response.body() == null || !response.isSuccessful()) {
+                return null;
             }
+            String jsonString = response.body().string();
+            return objectMapper.readValue(jsonString, RecuperationMeasures.class);
         }
     }
 }

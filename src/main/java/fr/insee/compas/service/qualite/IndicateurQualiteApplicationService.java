@@ -8,6 +8,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import fr.insee.compas.model.oscar.Application;
+import fr.insee.compas.service.ConvertirValeurEnLettreService;
 import fr.insee.compas.service.OscarService;
 import fr.insee.compas.service.TableFaitsService;
 import fr.insee.compas.service.UtilsService;
@@ -25,13 +26,17 @@ public class IndicateurQualiteApplicationService {
 
     private final UtilsService utilsService;
 
+    private final ConvertirValeurEnLettreService convertirValeurEnLettreService;
+
     public IndicateurQualiteApplicationService(
             OscarService oscarService,
             TableFaitsService tableFaitsService,
-            UtilsService utilsService) {
+            UtilsService utilsService,
+            ConvertirValeurEnLettreService convertirValeurEnLettreService) {
         this.oscarService = oscarService;
         this.tableFaitsService = tableFaitsService;
         this.utilsService = utilsService;
+        this.convertirValeurEnLettreService = convertirValeurEnLettreService;
     }
 
     public List<IndicateurQualiteView> getIndicateurNiveauApplication() {
@@ -78,7 +83,7 @@ public class IndicateurQualiteApplicationService {
 
                 String pourcentage = (int) percentage + " %";
                 // Obtenir la note
-                String lettre = utilsService.convertPourcentageEnNote(percentage);
+                String lettre = convertirValeurEnLettreService.convertPourcentageEnNote(percentage);
                 viewApplication.setPourcentageCouvertureTestUniaire(pourcentage);
                 viewApplication.setLettreCouvertureTestUniaire(lettre);
             } else {
@@ -100,7 +105,8 @@ public class IndicateurQualiteApplicationService {
     private void calculLettreDetteTechnique(IndicateurQualiteView viewApplication) {
         if (StringUtils.isNotEmpty(viewApplication.getDetteTechnique())) {
             viewApplication.setLettreDetteTechnique(
-                    utilsService.getLettreDetteTechnique(viewApplication.getDetteTechnique()));
+                    convertirValeurEnLettreService.getLettreDetteTechnique(
+                            viewApplication.getDetteTechnique()));
         }
     }
 

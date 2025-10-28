@@ -2,8 +2,6 @@ package fr.insee.compas.model.a11y;
 
 import java.time.LocalDate;
 
-import jakarta.persistence.*;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,9 +20,4 @@ public class InfosSaisiesA11yToSaveDTO {
     private LocalDate dateAudit;
 
     private Integer idModule;
-
-    /*  @ManyToOne(optional = false)
-    @JoinColumn(name = "id_module", nullable = false, unique = true)
-    private ModuleOscar moduleOscar;*/
-
 }

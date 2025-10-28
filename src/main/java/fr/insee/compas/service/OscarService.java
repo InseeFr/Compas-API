@@ -158,4 +158,24 @@ public class OscarService {
             moduleOscarRepo.upsertProduct(module.getId());
         }
     }
+
+    public Map<Application, Set<Integer>> mapApplicationsWithModules() {
+        List<Module> modules = getModules();
+        Map<Application, Set<Integer>> appWithModules = new HashMap<>();
+
+        for (Module module : modules) {
+            Application app =
+                    Application.builder()
+                            .idApplication(module.getIdApplication())
+                            .appName(module.getAppName())
+                            .domaineSndi(module.getDomaineSndi())
+                            .domaineFonctionnel(module.getDomaineFonctionnel())
+                            .sndi(module.getSndi())
+                            .build();
+
+            appWithModules.computeIfAbsent(app, k -> new HashSet<>()).add(module.getId());
+        }
+
+        return appWithModules;
+    }
 }

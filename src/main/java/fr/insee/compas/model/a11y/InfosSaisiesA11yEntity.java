@@ -20,13 +20,8 @@ public class InfosSaisiesA11yEntity {
     private LocalDate dateMajInfosSaisies;
     private boolean isDeclaration; // presence d'une declaration d'accessibilite
     private int idIndicateurTypeAudit; // nomenclature A11Y dans indicateur (51x)
-    private float ScoreAudit;
-    private LocalDate DateAudit;
+    private float scoreAudit;
+    private LocalDate dateAudit;
 
     private Integer idModule;
-
-    /*  @ManyToOne(optional = false)
-    @JoinColumn(name = "id_module", nullable = false, unique = true)
-    private ModuleOscar moduleOscar;*/
-
 }
