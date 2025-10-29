@@ -1,5 +1,7 @@
 package fr.insee.compas.service.devops;
 
+import static fr.insee.compas.util.DevopsConstantes.DUPLICATE_OFFSET;
+
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URLEncoder;
@@ -8,7 +10,12 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
@@ -82,6 +89,7 @@ public class UpdateIndicatorDevopsService {
      */
     public void miseAJourIndicateursDevopsEnBaseDeDonnes(
             LocalDateTime startDate, LocalDateTime endDate) {
+
         log.info("****** Début mise à jour NBR_JOUR_MEP ********");
         updateNbrJourMep();
         log.info("****** Fin mise à jour NBR_JOUR_MEP ********");
@@ -96,17 +104,30 @@ public class UpdateIndicatorDevopsService {
     }
 
     /**
-     * Met à jour l’indicateur {@link IndicateurType#NBR_JOUR_MEP} : nombre de jours depuis la
-     * dernière mise en production (ou valeur spéciale {@link IndicatorSpecialValue} si non
-     * applicable).
+     * Met à jour l’indicateur {@link IndicateurType#NBR_JOUR_MEP}, représentant le nombre de jours
+     * écoulés depuis la dernière mise en production d’un module.
+     *
+     * <p>Si aucune mise en production n’a été effectuée ou si le module n’est pas concerné, une
+     * valeur spéciale de {@link IndicatorSpecialValue} est utilisée :
+     *
+     * <ul>
+     *   <li>{@link IndicatorSpecialValue#NR} — si la source de création est manuelle ou si aucune
+     *       date de mise en production n’est disponible.
+     *   <li>{@link IndicatorSpecialValue#SO} — si le module est encore en développement.
+     * </ul>
      */
     private void updateNbrJourMep() {
         updateIndicatorsForModulesAndOptionallyApplications(
                 IndicateurType.NBR_JOUR_MEP,
                 (module, unused) -> {
-                    if (!DevopsConstantes.EN_PRODUCTION.equals(module.getStatut())) {
+                    if (DevopsConstantes.SAISIE_MANUELLE.equals(module.getSourceCreation())) {
                         return IndicatorSpecialValue.NR.getCode();
                     }
+
+                    if (DevopsConstantes.EN_DEVELOPPEMENT.equals(module.getStatut())) {
+                        return IndicatorSpecialValue.SO.getCode();
+                    }
+
                     LocalDate dateLivraison = module.getDateDerniereLivraisonEnProduction();
                     return (dateLivraison == null)
                             ? IndicatorSpecialValue.NR.getCode()
@@ -116,11 +137,23 @@ public class UpdateIndicatorDevopsService {
     }
 
     /**
-     * Met à jour l’indicateur {@link IndicateurType#DEPLOYMENT_COUNT} : nombre de déploiements
-     * effectués entre deux dates.
+     * Met à jour l’indicateur {@link IndicateurType#DEPLOYMENT_COUNT} correspondant au nombre de
+     * déploiements effectués pour chaque module entre deux dates.
      *
-     * @param startDate borne de début
-     * @param endDate borne de fin
+     * <p>Règles spécifiques :
+     *
+     * <ul>
+     *   <li>Si le module a été créé manuellement ({@link DevopsConstantes#SAISIE_MANUELLE}),
+     *       l’indicateur retourne {@link IndicatorSpecialValue#NR}.
+     *   <li>Si le module est en développement ({@link DevopsConstantes#EN_DEVELOPPEMENT}),
+     *       l’indicateur retourne {@link IndicatorSpecialValue#SO}.
+     *   <li>Si l’historique des déploiements est absent pour le module, retourne {@link
+     *       IndicatorSpecialValue#NR}.
+     *   <li>Sinon, retourne le nombre de déploiements valides dans la période spécifiée.
+     * </ul>
+     *
+     * @param startDate borne de début pour le calcul des déploiements
+     * @param endDate borne de fin pour le calcul des déploiements
      */
     private void updateDeploymentCount(LocalDateTime startDate, LocalDateTime endDate) {
         LocalDateTime[] dates = normalizeDates(startDate, endDate);
@@ -132,40 +165,50 @@ public class UpdateIndicatorDevopsService {
                     List<ModuleHistorique> historique =
                             allHistoriqueMap.get(String.valueOf(module.getId()));
 
-                    if (historique == null) return IndicatorSpecialValue.NR.getCode();
-                    if (!DevopsConstantes.EN_PRODUCTION.equals(module.getStatut())
-                            || module.getDateDerniereLivraisonEnProduction() == null) {
+                    if (DevopsConstantes.SAISIE_MANUELLE.equals(module.getSourceCreation())) {
+                        return IndicatorSpecialValue.NR.getCode();
+                    }
+
+                    if (DevopsConstantes.EN_DEVELOPPEMENT.equals(module.getStatut())) {
                         return IndicatorSpecialValue.SO.getCode();
                     }
 
-                    return (int)
-                            historique.stream()
-                                    .filter(h -> isValidDeployment(h, dates[0], dates[1]))
-                                    .count();
+                    return (historique == null)
+                            ? IndicatorSpecialValue.NR.getCode()
+                            : (int)
+                                    historique.stream()
+                                            .filter(h -> isValidDeployment(h, dates[0], dates[1]))
+                                            .count();
                 },
                 true);
     }
 
     /**
-     * Met à jour l’indicateur {@link IndicateurType#NBR_CONTRIBUTIONS_PROJET} : nombre de
-     * contributeurs uniques ayant effectué des commits sur la période.
+     * Met à jour l’indicateur {@link IndicateurType#NBR_CONTRIBUTIONS_PROJET}, représentant le
+     * nombre de contributeurs uniques ayant effectué des commits sur la période spécifiée.
      *
-     * <p>La méthode :
+     * <p>Cette méthode calcule, pour chaque module, le nombre de contributeurs uniques de son
+     * dépôt. Elle applique ensuite une valeur spéciale ou un décalage (offset) dans les cas
+     * particuliers :
      *
      * <ul>
-     *   <li>Calcule pour chaque module le nombre de contributeurs uniques de son dépôt.
-     *   <li>Si plusieurs modules partagent le même dépôt, un indicateur spécial {@link
-     *       IndicatorSpecialValue#SO} est utilisé pour le module.
-     *   <li>Calcule ensuite la valeur moyenne par application sur les dépôts uniques et la
-     *       sauvegarde.
+     *   <li>Si le module n’a pas d’URL de dépôt, la valeur {@link IndicatorSpecialValue#NR} est
+     *       utilisée.
+     *   <li>Si l’URL est marquée comme "sans objet", la valeur {@link IndicatorSpecialValue#SO} est
+     *       utilisée.
+     *   <li>Si plusieurs modules partagent le même dépôt, un offset est ajouté pour signaler un
+     *       doublon.
      * </ul>
+     *
+     * <p>Après la mise à jour des indicateurs pour chaque module, la méthode appelle {@link
+     * #updateContributorAverageByApplication(Map)} pour calculer et enregistrer la valeur moyenne
+     * des contributeurs uniques par application.
      *
      * @param startDate borne de début pour le calcul des contributions
      * @param endDate borne de fin pour le calcul des contributions
      */
     private void updateContributorCount(LocalDateTime startDate, LocalDateTime endDate) {
         LocalDateTime[] dates = normalizeDates(startDate, endDate);
-
         List<Module> modules = oscarService.getModules();
         if (modules == null || modules.isEmpty()) return;
 
@@ -186,7 +229,9 @@ public class UpdateIndicatorDevopsService {
         BiFunction<Module, Void, Integer> valueProvider =
                 (module, unused) -> {
                     String url = module.getUrlCodeSource();
-                    if (url == null) return IndicatorSpecialValue.SO.getCode();
+                    if (url == null) return IndicatorSpecialValue.NR.getCode();
+                    if (DevopsConstantes.SANS_OBJET.equals(url))
+                        return IndicatorSpecialValue.SO.getCode();
 
                     long occurrences =
                             urlCountParApplication
@@ -202,7 +247,11 @@ public class UpdateIndicatorDevopsService {
                             .computeIfAbsent(module.getIdApplication(), k -> new HashSet<>())
                             .add(uniqueAuthors);
 
-                    return (occurrences >= 2) ? IndicatorSpecialValue.SO.getCode() : uniqueAuthors;
+                    if (occurrences >= 2 && uniqueAuthors >= 0) {
+                        return uniqueAuthors + DUPLICATE_OFFSET;
+                    } else {
+                        return uniqueAuthors;
+                    }
                 };
 
         // Mise à jour des modules
@@ -210,17 +259,85 @@ public class UpdateIndicatorDevopsService {
                 IndicateurType.NBR_CONTRIBUTIONS_PROJET, valueProvider, false);
 
         // Calcul et sauvegarde de la moyenne par application
+        updateContributorAverageByApplication(appUniqueRepoValues);
+    }
+
+    /**
+     * Calcule et enregistre la valeur moyenne du nombre de contributeurs uniques pour chaque
+     * application, à partir des valeurs uniques des modules précédemment calculées.
+     *
+     * <p>Pour chaque application :
+     *
+     * <ul>
+     *   <li>Les valeurs des modules sont nettoyées pour retirer les offsets liés aux dépôts
+     *       partagés,
+     *   <li>La moyenne est calculée selon des règles de gestion spécifiques (NR, SO ou moyenne
+     *       arrondie),
+     *   <li>Le résultat est ensuite enregistré via {@link #saveIndicator(Integer, Integer,
+     *       IndicateurType, BigDecimal)}.
+     * </ul>
+     *
+     * @param appUniqueRepoValues mapping associant l’identifiant d’une application à l’ensemble de
+     *     ses valeurs uniques (avec ou sans offset)
+     */
+    private void updateContributorAverageByApplication(
+            Map<Integer, Set<Integer>> appUniqueRepoValues) {
         for (Application app : oscarService.getApplications()) {
             Set<Integer> uniqueValues = appUniqueRepoValues.get(app.getIdApplication());
-            int avg =
-                    calculateRoundedAverage(
-                            uniqueValues == null ? null : new ArrayList<>(uniqueValues));
+            int avg = computeAverage(uniqueValues);
             saveIndicator(
                     null,
                     app.getIdApplication(),
                     IndicateurType.NBR_CONTRIBUTIONS_PROJET,
                     BigDecimal.valueOf(avg));
         }
+    }
+
+    /**
+     * Calcule la valeur moyenne du nombre de contributeurs uniques pour une application donnée.
+     *
+     * <p>Règles de calcul :
+     *
+     * <ul>
+     *   <li>Si la liste est vide ou nulle → renvoie {@link IndicatorSpecialValue#SO},
+     *   <li>Si toutes les valeurs sont {@link IndicatorSpecialValue#NR} → renvoie NR,
+     *   <li>Si toutes les valeurs sont NR ou SO, et qu’au moins une est SO → renvoie SO,
+     *   <li>Sinon, calcule la moyenne arrondie via {@link #calculateRoundedAverage(List)}.
+     * </ul>
+     *
+     * <p>Avant le calcul, les offsets liés aux doublons sont retirés.
+     *
+     * @param uniqueValues ensemble des valeurs uniques (avec ou sans offset)
+     * @return la valeur moyenne ou un code spécial (NR ou SO)
+     */
+    private int computeAverage(Set<Integer> uniqueValues) {
+        if (uniqueValues == null || uniqueValues.isEmpty()) {
+            return IndicatorSpecialValue.SO.getCode();
+        }
+
+        // Retire les offsets pour les doublons
+        List<Integer> values =
+                uniqueValues.stream()
+                        .map(v -> (v >= DUPLICATE_OFFSET ? v - DUPLICATE_OFFSET : v))
+                        .toList();
+
+        boolean allNR = values.stream().allMatch(v -> v == IndicatorSpecialValue.NR.getCode());
+        boolean containsSO = values.stream().anyMatch(v -> v == IndicatorSpecialValue.SO.getCode());
+        boolean allNRorSO =
+                values.stream()
+                        .allMatch(
+                                v ->
+                                        v == IndicatorSpecialValue.NR.getCode()
+                                                || v == IndicatorSpecialValue.SO.getCode());
+
+        if (allNR) {
+            return IndicatorSpecialValue.NR.getCode();
+        }
+        if (allNRorSO && containsSO) {
+            return IndicatorSpecialValue.SO.getCode();
+        }
+
+        return calculateRoundedAverage(values);
     }
 
     /**
@@ -315,11 +432,11 @@ public class UpdateIndicatorDevopsService {
                         .getGithubAuthorsForRepo(parts[0], parts[1], startDate, endDate)
                         .size();
             } else {
-                return IndicatorSpecialValue.NR.getCode();
+                return IndicatorSpecialValue.SO.getCode();
             }
         } catch (IOException e) {
             log.error("Erreur réseau lors récupération auteurs: {}", sourceUrl, e);
-            return IndicatorSpecialValue.SO.getCode();
+            return IndicatorSpecialValue.NR.getCode();
         }
     }
 
@@ -346,15 +463,52 @@ public class UpdateIndicatorDevopsService {
     }
 
     /**
-     * Calcule la moyenne arrondie d’une liste de valeurs positives ou nulles.
+     * Calcule la moyenne arrondie d'une liste de valeurs.
      *
-     * @param values valeurs à moyenner
-     * @return moyenne arrondie, ou {@link IndicatorSpecialValue#SO} si liste vide/invalide
+     * <p>Règles spécifiques :
+     *
+     * <ul>
+     *   <li>Si la liste est {@code null} ou vide, retourne {@link IndicatorSpecialValue#SO}.
+     *   <li>Si toutes les valeurs sont {@link IndicatorSpecialValue#NR}, retourne {@link
+     *       IndicatorSpecialValue#SO}.
+     *   <li>Si toutes les valeurs sont {@link IndicatorSpecialValue#NR} ou {@link
+     *       IndicatorSpecialValue#SO} et qu'il y a au moins un {@link IndicatorSpecialValue#SO},
+     *       retourne {@link IndicatorSpecialValue#NR}.
+     *   <li>Sinon, calcule la moyenne des valeurs >= 0 et retourne le résultat arrondi à l'entier
+     *       le plus proche.
+     * </ul>
+     *
+     * @param values la liste de valeurs à moyenner, peut contenir des codes spéciaux NR/SO
+     * @return moyenne arrondie des valeurs valides, ou un code spécial SO/NR selon les règles
      */
     private int calculateRoundedAverage(List<Integer> values) {
-        if (values == null || values.isEmpty()) return IndicatorSpecialValue.SO.getCode();
+        if (values == null || values.isEmpty()) {
+            return IndicatorSpecialValue.SO.getCode();
+        }
+
+        boolean allNR = values.stream().allMatch(v -> v == IndicatorSpecialValue.NR.getCode());
+        boolean containsSO = values.stream().anyMatch(v -> v == IndicatorSpecialValue.SO.getCode());
+        boolean allNRorSO =
+                values.stream()
+                        .allMatch(
+                                v ->
+                                        v == IndicatorSpecialValue.NR.getCode()
+                                                || v == IndicatorSpecialValue.SO.getCode());
+
+        if (allNR) {
+            return IndicatorSpecialValue.NR.getCode();
+        }
+
+        if (allNRorSO && containsSO) {
+            return IndicatorSpecialValue.SO.getCode();
+        }
+
         List<Integer> filtered = values.stream().filter(v -> v >= 0).toList();
-        if (filtered.isEmpty()) return IndicatorSpecialValue.SO.getCode();
+
+        if (filtered.isEmpty()) {
+            return IndicatorSpecialValue.SO.getCode();
+        }
+
         return (int) Math.round(filtered.stream().mapToInt(Integer::intValue).average().orElse(0));
     }
 

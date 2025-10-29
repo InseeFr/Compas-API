@@ -199,4 +199,35 @@ class IndicateurDevopsLetterUtilsTest {
                 Notation.NR.getGrade(),
                 IndicateurDevopsLetterUtils.calculLettreContributorCount(""));
     }
+
+    @Test
+    void testCalculLettreContributorCount_ValeursNegativesNonGerees() {
+        // Cas de valeurs négatives non prévues (-3, -10, etc.)
+        assertEquals(
+                Notation.NR.getGrade(),
+                IndicateurDevopsLetterUtils.calculLettreContributorCount("-3"));
+        assertEquals(
+                Notation.NR.getGrade(),
+                IndicateurDevopsLetterUtils.calculLettreContributorCount("-10"));
+    }
+
+    @Test
+    void testCalculLettreContributorCount_DuplicateOffset_Normal() {
+        // Valeurs valides avec offset (1000 + valeur)
+        assertEquals(
+                Notation.E.getGrade() + " d",
+                IndicateurDevopsLetterUtils.calculLettreContributorCount("1000")); // 0 + offset
+        assertEquals(
+                Notation.D.getGrade() + " d",
+                IndicateurDevopsLetterUtils.calculLettreContributorCount("1001")); // 1 + offset
+        assertEquals(
+                Notation.C.getGrade() + " d",
+                IndicateurDevopsLetterUtils.calculLettreContributorCount("1002")); // 2 + offset
+        assertEquals(
+                Notation.B.getGrade() + " d",
+                IndicateurDevopsLetterUtils.calculLettreContributorCount("1003")); // 3 + offset
+        assertEquals(
+                Notation.A.getGrade() + " d",
+                IndicateurDevopsLetterUtils.calculLettreContributorCount("1004")); // 4 + offset
+    }
 }

@@ -1,5 +1,7 @@
 package fr.insee.compas.service.devops;
 
+import static fr.insee.compas.util.DevopsConstantes.DUPLICATE_OFFSET;
+
 import fr.insee.compas.model.compas.Notation;
 
 import lombok.experimental.UtilityClass;
@@ -87,22 +89,23 @@ public class IndicateurDevopsLetterUtils {
             return Notation.NR.getGrade();
         }
 
-        if (nbContributorCount == -1) {
-            return Notation.SO.getGrade();
-        } else if (nbContributorCount == -2) {
-            return Notation.NR.getGrade();
-        } else if (nbContributorCount == 0) {
-            return Notation.E.getGrade();
-        } else if (nbContributorCount == 1) {
-            return Notation.D.getGrade();
-        } else if (nbContributorCount == 2) {
-            return Notation.C.getGrade();
-        } else if (nbContributorCount == 3) {
-            return Notation.B.getGrade();
-        } else if (nbContributorCount >= 4) {
-            return Notation.A.getGrade();
-        } else {
-            return Notation.NR.getGrade();
+        boolean isDuplicate = false;
+
+        if (nbContributorCount >= DUPLICATE_OFFSET) {
+            isDuplicate = true;
+            nbContributorCount -= DUPLICATE_OFFSET;
         }
+
+        String grade = Notation.NR.getGrade();
+
+        if (nbContributorCount == -1) grade = Notation.SO.getGrade();
+        if (nbContributorCount == -2) grade = Notation.NR.getGrade();
+        if (nbContributorCount == 0) grade = Notation.E.getGrade();
+        if (nbContributorCount == 1) grade = Notation.D.getGrade();
+        if (nbContributorCount == 2) grade = Notation.C.getGrade();
+        if (nbContributorCount == 3) grade = Notation.B.getGrade();
+        if (nbContributorCount >= 4) grade = Notation.A.getGrade();
+
+        return isDuplicate ? grade + " d" : grade;
     }
 }
