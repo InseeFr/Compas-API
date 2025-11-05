@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 import fr.insee.compas.client.OscarClient;
@@ -49,5 +50,10 @@ public class OscarController {
     @Operation(summary = "liste des applications d'oscar sans feign ")
     public List<Application> getApplications() {
         return oscarService.getApplications();
+    }
+
+    @GetMapping("/application/{id}/rga")
+    public String getRgaByApplicationId(@PathVariable Integer id) {
+        return oscarService.getRgaById(id);
     }
 }

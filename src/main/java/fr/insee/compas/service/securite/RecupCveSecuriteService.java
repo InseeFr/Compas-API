@@ -16,6 +16,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import fr.insee.compas.client.configuration.oauth.AnalyzerAuthentification;
+import fr.insee.compas.exception.AnalyzerApiException;
 import fr.insee.compas.model.analyzer.ApplicationAnalyzer;
 import fr.insee.compas.model.analyzer.ModuleAnalyzer;
 import fr.insee.compas.model.compas.SourceType;
@@ -114,7 +115,8 @@ public class RecupCveSecuriteService {
 
         } catch (RestClientException e) {
             log.error("Erreur lors de l'appel à l'API applications : {}", e.getMessage());
-            throw new RuntimeException("Impossible de récupérer les applications depuis l'API", e);
+            throw new AnalyzerApiException(
+                    "Impossible de récupérer les applications depuis l'API", e);
         }
     }
 

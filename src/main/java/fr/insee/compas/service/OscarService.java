@@ -149,6 +149,25 @@ public class OscarService {
         return appToKeySonars;
     }
 
+    /** Récupère le RGA de l'application à partir de son id Oscar */
+    public String getRgaById(Integer idApplication) {
+        try {
+            var response = oscarClient.getApplicationOscar(idApplication);
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                return response.getBody().getRga();
+            } else {
+                log.warn("Impossible de récupérer le RGA (code HTTP {})", response.getStatusCode());
+                return null;
+            }
+        } catch (Exception e) {
+            log.error(
+                    "Erreur lors de la récupération du RGA pour l'application {}",
+                    idApplication,
+                    e);
+            return null;
+        }
+    }
+
     @Transactional
     public void miseAjourModuleOscarEnBaseDeDonnees() {
         List<Module> modules = getModules();

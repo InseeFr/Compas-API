@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import fr.insee.compas.model.meteo.DemandeCreationMeteo;
 import fr.insee.compas.model.meteo.Meteo;
 import fr.insee.compas.service.meteo.MeteoAffichageService;
+import fr.insee.compas.service.meteo.MeteoAlerteService;
 import fr.insee.compas.service.meteo.MeteoCreationService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,12 +24,13 @@ public class MeteoController {
 
     private MeteoCreationService meteoCreationService;
     private MeteoAffichageService meteoAffichageService;
+    private final MeteoAlerteService meteoAlerteService;
 
     @PostMapping
     @Operation(
             summary =
                     "Création d'une météo pour une application. Renvoie les ids des TableFaits"
-                            + " créés. ")
+                            + " créés.")
     public ResponseEntity<List<Long>> creerMeteo(
             @RequestBody DemandeCreationMeteo demandeCreationMeteo) {
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -39,5 +41,27 @@ public class MeteoController {
     @Operation(summary = "Lister toutes les applications et leur éventuelle météo")
     public List<Meteo> listerApplicationsMeteo() {
         return meteoAffichageService.listerApplicationsMeteo();
+    }
+
+    // 🆕 Nouveau GET : renvoie uniquement les applis dont la dernière météo a au moins 23 jours
+    @GetMapping("/anciennes")
+    @Operation(summary = "Lister les applications dont la dernière météo date d'au moins 23 jours")
+    public List<Meteo> listerApplicationsMeteoAnciennes() {
+        return meteoAffichageService.listerApplicationsMeteoAncienne();
+    }
+
+    // (optionnel) GET paramétrable : si tu veux choisir le nombre de jours via query param
+    @GetMapping("/anciennes/{jours}")
+    @Operation(summary = "Lister les applications dont la dernière météo date d'au moins X jours")
+    public List<Meteo> listerApplicationsMeteoAnciennesParam(@PathVariable int jours) {
+        return meteoAffichageService.listerApplicationsMeteoAvecAgeMin(jours);
+    }
+
+    @PostMapping("/alertes")
+    public ResponseEntity<Void> envoyerAlertes(
+            @RequestParam(defaultValue = "160") int jours,
+            @RequestParam(defaultValue = "false") boolean test) {
+        meteoAlerteService.envoyerAlertesRga(jours, test);
+        return ResponseEntity.accepted().build();
     }
 }

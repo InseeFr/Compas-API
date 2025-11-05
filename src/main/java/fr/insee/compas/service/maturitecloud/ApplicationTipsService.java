@@ -1,6 +1,7 @@
 package fr.insee.compas.service.maturitecloud;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.math.BigDecimal;
@@ -21,6 +22,7 @@ import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 
+import fr.insee.compas.exception.CsvSeparatorDetectionException;
 import fr.insee.compas.model.compas.ApplicationTip;
 import fr.insee.compas.repository.ApplicationTipsRepository;
 
@@ -39,7 +41,8 @@ public class ApplicationTipsService {
             throw new IllegalArgumentException("sourceId doit être 1 (technique) ou 2 (orga)");
         }
 
-        final LocalDate today = LocalDate.now(ZoneId.of("Europe/Paris"));
+        final ZoneId paris = ZoneId.of("Europe/Paris");
+        final LocalDate today = LocalDate.now(paris);
         final List<ApplicationTip> toSave = new ArrayList<>();
 
         // 1) Détection du séparateur
@@ -60,37 +63,39 @@ public class ApplicationTipsService {
 
             String[] row;
             while ((row = reader.readNext()) != null) {
-                if (isRowEmpty(row)) continue;
+                if (isRowEmpty(row)) continue; // <-- unique continue
 
                 String nomOscar =
                         firstNonBlank(row, idx, "nom_oscar", "nomoscar", "application", "appli");
                 String conseil = firstNonBlank(row, idx, "conseil", "tip");
 
-                if (isBlank(nomOscar) || isBlank(conseil)) {
-                    // ligne incomplète → on ignore
-                    continue;
+                if (!isBlank(nomOscar) && !isBlank(conseil)) {
+                    ApplicationTip tip = new ApplicationTip();
+                    tip.setNomOscar(nomOscar.trim());
+                    tip.setDate(today);
+                    tip.setSourceId((short) sourceId);
+                    tip.setConseil(conseil.trim());
+
+                    tip.setPriorite(
+                            blankToNull(firstNonBlank(row, idx, "priorite", "priorité", "prio")));
+                    tip.setVariable(blankToNull(firstNonBlank(row, idx, "variable")));
+                    tip.setModalite(blankToNull(firstNonBlank(row, idx, "modalite", "modalité")));
+                    tip.setContrib(parseBigDecimal(firstNonBlank(row, idx, "contrib")));
+                    tip.setAnswer(
+                            blankToNull(firstNonBlank(row, idx, "answer", "reponse", "réponse")));
+                    tip.setPointsAppli(
+                            parseBigDecimal(
+                                    firstNonBlank(
+                                            row,
+                                            idx,
+                                            "points_appli",
+                                            "pointsappli",
+                                            "points appli")));
+                    tip.setDelta(parseBigDecimal(firstNonBlank(row, idx, "delta")));
+                    tip.setCreatedAt(OffsetDateTime.now(paris));
+
+                    toSave.add(tip);
                 }
-
-                ApplicationTip tip = new ApplicationTip();
-                tip.setNomOscar(nomOscar.trim());
-                tip.setDate(today); // 👈 date du jour (Europe/Paris)
-                tip.setSourceId((short) sourceId);
-                tip.setConseil(conseil.trim());
-
-                tip.setPriorite(
-                        blankToNull(firstNonBlank(row, idx, "priorite", "priorité", "prio")));
-                tip.setVariable(blankToNull(firstNonBlank(row, idx, "variable")));
-                tip.setModalite(blankToNull(firstNonBlank(row, idx, "modalite", "modalité")));
-                tip.setContrib(parseBigDecimal(firstNonBlank(row, idx, "contrib")));
-                tip.setAnswer(blankToNull(firstNonBlank(row, idx, "answer", "reponse", "réponse")));
-                tip.setPointsAppli(
-                        parseBigDecimal(
-                                firstNonBlank(
-                                        row, idx, "points_appli", "pointsappli", "points appli")));
-                tip.setDelta(parseBigDecimal(firstNonBlank(row, idx, "delta")));
-                tip.setCreatedAt(OffsetDateTime.now(ZoneId.of("Europe/Paris")));
-
-                toSave.add(tip);
             }
         }
 
@@ -155,19 +160,25 @@ public class ApplicationTipsService {
         }
     }
 
-    private static char detectSeparator(MultipartFile file) throws Exception {
+    private static char detectSeparator(MultipartFile file) throws CsvSeparatorDetectionException {
         try (BufferedReader br =
                 new BufferedReader(
                         new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
-            String first = br.readLine();
-            if (first == null) return ',';
-            // priorité au ; s'il est présent et plus fréquent
-            long sc = first.chars().filter(c -> c == ';').count();
-            long cc = first.chars().filter(c -> c == ',').count();
-            long tc = first.chars().filter(c -> c == '\t').count();
-            if (tc > sc && tc > cc) return '\t';
-            if (sc > cc) return ';';
-            return ',';
+
+            String firstLine = br.readLine();
+            if (firstLine == null) {
+                throw new CsvSeparatorDetectionException(
+                        "Le fichier est vide, impossible de détecter le séparateur.");
+            }
+
+            if (firstLine.contains(";")) return ';';
+            if (firstLine.contains(",")) return ',';
+            if (firstLine.contains("\t")) return '\t';
+
+            throw new CsvSeparatorDetectionException(
+                    "Impossible de détecter le séparateur dans la ligne : " + firstLine);
+        } catch (IOException e) {
+            throw new CsvSeparatorDetectionException("Erreur lors de la lecture du fichier CSV", e);
         }
     }
 }

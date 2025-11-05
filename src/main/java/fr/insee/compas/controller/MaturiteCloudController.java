@@ -44,22 +44,21 @@ public class MaturiteCloudController {
         List<Object[]> rows = repo.findAllLatestMatRobAndScores();
         List<IndicateurApplicationMaturiteCloud> out = new ArrayList<>(rows.size());
         for (Object[] r : rows) {
-            int i = 0;
-            Integer idApp = (Integer) r[i++]; // 0
-            String maturite = (String) r[i++]; // 1
+            Integer idApp = (Integer) r[0];
+            String maturite = (String) r[1];
 
-            BigDecimal rob = (BigDecimal) r[i++]; // 2
-            BigDecimal benef = (BigDecimal) r[i++]; // 3
-            BigDecimal orga = (BigDecimal) r[i++]; // 4
-            BigDecimal complex = (BigDecimal) r[i++]; // 5
-            BigDecimal tech = (BigDecimal) r[i++]; // 6
+            BigDecimal rob = (BigDecimal) r[2];
+            BigDecimal benef = (BigDecimal) r[3];
+            BigDecimal orga = (BigDecimal) r[4];
+            BigDecimal complex = (BigDecimal) r[5];
+            BigDecimal tech = (BigDecimal) r[6];
 
-            BigDecimal progDep = (BigDecimal) r[i++]; // 7
-            BigDecimal progTechs = (BigDecimal) r[i++]; // 8
-            BigDecimal progArchi = (BigDecimal) r[i++]; // 9
-            BigDecimal progMatEq = (BigDecimal) r[i++]; // 10
-            BigDecimal progDev = (BigDecimal) r[i++]; // 11
-            BigDecimal progCloud = (BigDecimal) r[i++]; // 12
+            BigDecimal progDep = (BigDecimal) r[7];
+            BigDecimal progTechs = (BigDecimal) r[8];
+            BigDecimal progArchi = (BigDecimal) r[9];
+            BigDecimal progMatEq = (BigDecimal) r[10];
+            BigDecimal progDev = (BigDecimal) r[11];
+            BigDecimal progCloud = (BigDecimal) r[12];
 
             String robustesse = (rob == null) ? null : Integer.toString(rob.intValue()); // "x"
             String scoreBenefice = to2d(benef);
@@ -99,9 +98,9 @@ public class MaturiteCloudController {
     }
 
     @PostMapping(path = "/maturite-cloud/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> importFaitsMaturiteCloud(@RequestPart("file") MultipartFile file)
-            throws Exception {
-        int inserted = service.importCsv(file, true, true);
+    public ResponseEntity<Map<String, Integer>> importFaitsMaturiteCloud(
+            @RequestPart("file") MultipartFile file) throws Exception {
+        int inserted = service.importCsv(file);
         return ResponseEntity.ok(Map.of("insertedCount", inserted));
     }
 
@@ -112,7 +111,7 @@ public class MaturiteCloudController {
     }
 
     @PostMapping(path = "/conseils/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> importApplicationTips(
+    public ResponseEntity<Map<String, Object>> importApplicationTips(
             @RequestPart("file") MultipartFile file,
             @RequestParam int sourceId // 1 = technique, 2 = orga
             ) throws Exception {

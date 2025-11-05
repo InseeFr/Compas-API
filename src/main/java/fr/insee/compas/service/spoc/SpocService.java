@@ -1,0 +1,192 @@
+package fr.insee.compas.service.spoc;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpClient.Redirect;
+import java.net.http.HttpRequest;
+import java.net.http.HttpRequest.BodyPublishers;
+import java.net.http.HttpResponse.BodyHandlers;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.*;
+import java.util.Base64;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import fr.insee.compas.model.mail.Mail;
+
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * Service d'envoi d'emails via l'API SPOC.
+ *
+ * <p>Corps attendu par SPOC : { "MessageTemplate": { "Sender": "expediteur@insee.fr", "Subject":
+ * "Objet", "Content": "Contenu texte", "ContentReference": "null" }, "Recipients": { "Recipient": [
+ * {"Address": "dest1@insee.fr","Attachements":[]}, {"Address": "dest2@insee.fr","Attachements":[]}
+ * ] } }
+ */
+@Service
+@Slf4j
+public class SpocService {
+
+    private final String spocUsername;
+    private final String spocPassword;
+    private final String spocApiUrl;
+    private final String senderMail;
+    private final List<String> defaultReceiverMail;
+    private final boolean addBalfOscar;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final HttpClient httpClient;
+
+    public SpocService(
+            @Value("${spoc.username}") String spocUsername,
+            @Value("${compas.service.spoc.password}") String spocPassword,
+            @Value("${spoc.url}") String spocApiUrl,
+            @Value("${sender.mail}") String senderMail,
+            @Value("${default.receiver.mail}") String[] defaultReceiverMail,
+            @Value("${receiver.mail.add.balf.oscar}") boolean addBalfOscar) {
+
+        this.spocUsername = Objects.requireNonNull(spocUsername, "spoc.username manquant");
+        this.spocPassword = Objects.requireNonNull(spocPassword, "spoc.password manquant");
+        this.spocApiUrl = Objects.requireNonNull(spocApiUrl, "spoc.url manquant");
+        this.senderMail = Objects.requireNonNull(senderMail, "sender.mail manquant");
+        this.defaultReceiverMail =
+                Arrays.stream(Optional.ofNullable(defaultReceiverMail).orElse(new String[0]))
+                        .filter(s -> s != null && !s.isBlank())
+                        .toList();
+        this.addBalfOscar = addBalfOscar;
+
+        this.httpClient =
+                HttpClient.newBuilder()
+                        .connectTimeout(Duration.ofSeconds(10))
+                        .followRedirects(Redirect.NORMAL)
+                        .build();
+    }
+
+    /**
+     * Envoie un mail en complétant/écrasant les destinataires avec ceux par défaut selon la conf.
+     *
+     * @param mail objet mail (doit contenir subject, message, receivers éventuellement)
+     */
+    public void sendMail(Mail mail) {
+        if (mail == null) {
+            log.warn("Mail null : envoi annulé");
+            return;
+        }
+
+        // Gestion des destinataires par défaut
+        if (addBalfOscar) {
+            mail.addReceiver(defaultReceiverMail);
+        } else {
+            mail.setReceiver(new ArrayList<>(defaultReceiverMail));
+        }
+
+        // Nettoyage basique
+        mail.setReceiver(
+                mail.getReceiver().stream()
+                        .filter(Objects::nonNull)
+                        .map(String::trim)
+                        .filter(s -> !s.isBlank())
+                        .distinct()
+                        .collect(Collectors.toCollection(ArrayList::new)));
+
+        if (mail.getReceiver().isEmpty()) {
+            log.warn("Aucun destinataire après application des règles -> envoi annulé");
+            return;
+        }
+
+        // Construction du corps JSON attendu par SPOC
+        Map<String, Object> payload =
+                buildSpocPayload(
+                        senderMail, mail.getObject(), mail.getMessage(), mail.getReceiver());
+        String bodyJson;
+        try {
+            bodyJson = objectMapper.writeValueAsString(payload);
+        } catch (Exception e) {
+            log.error("Erreur de sérialisation JSON pour le corps SPOC", e);
+            return;
+        }
+
+        var request =
+                HttpRequest.newBuilder()
+                        .uri(URI.create(spocApiUrl))
+                        .timeout(Duration.ofSeconds(20))
+                        .header("Accept", "application/json")
+                        .header("Content-Type", "application/json")
+                        .header("Authorization", basicAuth(spocUsername, spocPassword))
+                        .POST(BodyPublishers.ofString(bodyJson, StandardCharsets.UTF_8))
+                        .build();
+
+        try {
+            var response = httpClient.send(request, BodyHandlers.ofString());
+            log.info("SPOC -> HTTP {}", response.statusCode());
+            log.debug("Réponse SPOC : {}", response.body());
+
+            if (response.statusCode() >= 400) {
+                log.warn(
+                        "Echec envoi SPOC (HTTP {}). Corps: {}",
+                        response.statusCode(),
+                        response.body());
+            }
+        } catch (IOException e) {
+            log.error("Erreur IO lors de l'envoi SPOC", e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error("Envoi SPOC interrompu", e);
+        }
+    }
+
+    /**
+     * Variante pratique : envoie directement à une liste de destinataires (en plus/de remplacement
+     * des défauts selon conf).
+     */
+    public void sendMailTo(List<String> receivers, String subject, String content) {
+        Mail mail = new Mail(subject, content, receivers == null ? List.of() : receivers);
+        sendMail(mail);
+    }
+
+    private String basicAuth(String username, String password) {
+        var token = (username + ":" + password).getBytes(StandardCharsets.UTF_8);
+        return "Basic " + Base64.getEncoder().encodeToString(token);
+    }
+
+    private Map<String, Object> buildSpocPayload(
+            String sender, String subject, String content, Collection<String> receivers) {
+        Map<String, Object> root = new LinkedHashMap<>();
+
+        Map<String, Object> messageTemplate = new LinkedHashMap<>();
+        messageTemplate.put("Sender", Optional.ofNullable(sender).orElse(""));
+        messageTemplate.put("Subject", Optional.ofNullable(subject).orElse(""));
+        messageTemplate.put("Content", Optional.ofNullable(content).orElse(""));
+        messageTemplate.put("ContentReference", "null");
+
+        List<Map<String, Object>> recipientList =
+                receivers.stream()
+                        .map(
+                                addr -> {
+                                    Map<String, Object> r = new LinkedHashMap<>();
+                                    r.put("Address", addr);
+                                    r.put("Attachements", List.of());
+                                    return r;
+                                })
+                        .toList();
+
+        Map<String, Object> recipients = new LinkedHashMap<>();
+        recipients.put("Recipient", recipientList);
+
+        root.put("MessageTemplate", messageTemplate);
+        root.put("Recipients", recipients);
+
+        return root;
+    }
+
+    public List<String> getDefaultReceivers() {
+        return new ArrayList<>(defaultReceiverMail);
+    }
+}

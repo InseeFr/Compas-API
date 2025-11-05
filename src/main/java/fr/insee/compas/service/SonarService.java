@@ -84,7 +84,8 @@ public class SonarService {
             Paging jsonMap = objectMapper.readValue(jsonString, Paging.class);
             return String.valueOf(jsonMap.getTotal());
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new SonarApiException(
+                    "Erreur lors de l'appel à l'API Sonar pour le projet " + projetSonar, e);
         }
     }
 
@@ -110,12 +111,12 @@ public class SonarService {
                         .collect(Collectors.joining(","));
 
         String urlTemplate =
-                "gitlab".equals(source)
+                GITLAB_INTERNE.equals(source)
                         ? "http://sonar.insee.fr/api/measures/component?component=%s&metricKeys=%s"
                         : "https://sonarcloud.io/api/measures/component?component=%s&metricKeys=%s";
 
         String url = String.format(urlTemplate, projetSonar, metrics);
-        String token = "gitlab".equals(source) ? tokenGitlab : tokenGithub;
+        String token = GITLAB_INTERNE.equals(source) ? tokenGitlab : tokenGithub;
 
         Request request =
                 new Request.Builder()
@@ -129,6 +130,12 @@ public class SonarService {
             }
             String jsonString = response.body().string();
             return objectMapper.readValue(jsonString, RecuperationMeasures.class);
+        }
+    }
+
+    private static class SonarApiException extends RuntimeException {
+        public SonarApiException(String message, Throwable cause) {
+            super(message, cause);
         }
     }
 }

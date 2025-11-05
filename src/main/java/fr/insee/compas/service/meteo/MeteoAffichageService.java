@@ -1,6 +1,11 @@
 package fr.insee.compas.service.meteo;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Objects;
 
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Sort;
@@ -17,9 +22,12 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class MeteoAffichageService {
 
+    private static final ZoneId TZ_PARIS = ZoneId.of("Europe/Paris");
+
     private OscarService oscarService;
     private TableFaitsRepository tableFaitsRepository;
 
+    /** Version existante : liste toutes les applis avec leur dernière météo si dispo */
     public List<Meteo> listerApplicationsMeteo() {
         return oscarService.getApplications().stream()
                 .map(
@@ -31,16 +39,18 @@ public class MeteoAffichageService {
                                             .domaineSndi(application.getDomaineSndi())
                                             .sndi(application.getSndi())
                                             .build();
-                            TableFaits tableFaitsExample =
+
+                            TableFaits example =
                                     TableFaits.builder()
                                             .idApplication(application.getIdApplication())
                                             .idIndicateur(MeteoCreationService.ID_INDICATEUR_METEO)
                                             .idSource(
                                                     MeteoCreationService.ID_SOURCE_SAISIE_MANUELLE)
                                             .build();
+
                             tableFaitsRepository
                                     .findBy(
-                                            Example.of(tableFaitsExample),
+                                            Example.of(example),
                                             q ->
                                                     q.sortBy(Sort.by("date", "id").descending())
                                                             .first())
@@ -50,8 +60,76 @@ public class MeteoAffichageService {
                                                 meteo.setValeurMeteo(tableFait.getValeur());
                                                 meteo.setCommentaire(tableFait.getCommentaire());
                                             });
+
                             return meteo;
                         })
                 .toList();
+    }
+
+    /** ne sortir que les applis dont la dernière météo a >= 23 jours */
+    public List<Meteo> listerApplicationsMeteoAncienne() {
+        return listerApplicationsMeteoAvecAgeMin(23);
+    }
+
+    /** Variante paramétrable (au cas où tu veuilles 15, 30 jours, etc.) */
+    public List<Meteo> listerApplicationsMeteoAvecAgeMin(int ageMinJours) {
+        LocalDate today = LocalDate.now(TZ_PARIS);
+
+        return oscarService.getApplications().stream()
+                .map(
+                        application -> {
+                            TableFaits example =
+                                    TableFaits.builder()
+                                            .idApplication(application.getIdApplication())
+                                            .idIndicateur(MeteoCreationService.ID_INDICATEUR_METEO)
+                                            .idSource(
+                                                    MeteoCreationService.ID_SOURCE_SAISIE_MANUELLE)
+                                            .build();
+
+                            // on récupère la DERNIÈRE météo
+                            return tableFaitsRepository
+                                    .findBy(
+                                            Example.of(example),
+                                            q ->
+                                                    q.sortBy(Sort.by("date", "id").descending())
+                                                            .first())
+                                    .map(
+                                            tableFait -> {
+                                                LocalDate dateMeteo =
+                                                        toLocalDate(tableFait.getDate());
+                                                if (dateMeteo == null) return null;
+
+                                                long age =
+                                                        ChronoUnit.DAYS.between(dateMeteo, today);
+                                                if (age >= ageMinJours) {
+                                                    // construire l'objet Meteo pour l’appli
+                                                    return Meteo.builder()
+                                                            .idApplication(
+                                                                    application.getIdApplication())
+                                                            .appName(application.getAppName())
+                                                            .domaineSndi(
+                                                                    application.getDomaineSndi())
+                                                            .sndi(application.getSndi())
+                                                            .date(tableFait.getDate())
+                                                            .valeurMeteo(tableFait.getValeur())
+                                                            .commentaire(tableFait.getCommentaire())
+                                                            .build();
+                                                }
+                                                return null; // trop récent -> on filtre
+                                            })
+                                    .orElse(null); // pas de météo -> on filtre aussi
+                        })
+                .filter(Objects::nonNull)
+                .toList();
+    }
+
+    /** Convertit la date du TableFaits vers LocalDate, quel que soit son type courant. */
+    private static LocalDate toLocalDate(Object date) {
+        if (date == null) return null;
+        if (date instanceof LocalDate ld) return ld;
+        if (date instanceof LocalDateTime ldt) return ldt.toLocalDate();
+        if (date instanceof java.util.Date d) return d.toInstant().atZone(TZ_PARIS).toLocalDate();
+
+        return null;
     }
 }

@@ -9,7 +9,7 @@ import lombok.Setter;
 @Setter
 @Getter
 public class ApplicationOscarView implements Serializable {
-    /** */
+
     private static final long serialVersionUID = 1L;
 
     private Integer id;
@@ -17,4 +17,6 @@ public class ApplicationOscarView implements Serializable {
     private String nom;
     private String description;
     private LocalDate dateDerniereLivraisonEnProduction;
+    private String rga;
+    private String balfMetier;
 }

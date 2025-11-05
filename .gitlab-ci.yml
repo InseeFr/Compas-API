@@ -58,7 +58,7 @@ build-docker:
   variables:
     PATH_TO_DOCKERFILE: Dockerfile
   only:
-  - tags
+    - tags
 
 build-docker-dev:
   stage: docker 👾
@@ -79,8 +79,8 @@ test-docker:
     REPORT_NAME: gl-container-scanning-report-${CI_PROJECT_NAME}-${CI_COMMIT_REF_SLUG}.xml
   allow_failure: true
   only:
-  - tags
-  
+    - tags
+
 release-docker:
   stage: release ⭐
   tags:
@@ -89,7 +89,7 @@ release-docker:
   variables:
     IMAGE_TAG: ${CI_COMMIT_REF_NAME}
   only:
-  - tags
+    - tags
 
 release-docker-dev1:
   extends: .template:release-docker-dev
@@ -141,7 +141,7 @@ sonarqube_mr:
   rules:
     - if: '$CI_MERGE_REQUEST_IID'
   allow_failure: true
-  
+
 gitleaks:
   image:
     name: $GITLEAKS_IMAGE

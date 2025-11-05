@@ -1,11 +1,11 @@
 package fr.insee.compas.service.maturitecloud;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
-import java.sql.Date;
 import java.text.Normalizer;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
@@ -26,6 +26,7 @@ public class MaturiteCloudCsvService {
     private final JdbcTemplate jdbc;
 
     private static final int SOURCE_ID = 2;
+    private static final int BATCH_SIZE = 1000;
 
     // SQL d'insert
     private static final String INSERT_SQL =
@@ -39,12 +40,8 @@ public class MaturiteCloudCsvService {
     private static final Map<String, Integer> HEADER_TO_INDICATEUR =
             Map.ofEntries(
                     Map.entry("maturite", 601),
-                    Map.entry("maturitecloud", 601),
-                    Map.entry("maturite_cloud", 601),
                     Map.entry("robustesse", 602),
-                    Map.entry("scorebenefice", 603),
                     Map.entry("score_benefice", 603),
-                    Map.entry("score benefice", 603),
                     Map.entry("scoreorga", 604),
                     Map.entry("score_orga", 604),
                     Map.entry("score orga", 604),
@@ -73,99 +70,136 @@ public class MaturiteCloudCsvService {
                     Map.entry("progression_cloud", 612),
                     Map.entry("progression cloud", 612));
 
-    /** Les flags maturite/robustesse sont ignorés : on insère toutes les colonnes présentes. */
-    public int importCsv(MultipartFile file, boolean maturiteFlag, boolean robustesseFlag)
-            throws Exception {
-        int inserted = 0;
+    // en haut de la classe
+    private static final Map<String, Integer> NORM_HEADER_TO_INDICATEUR;
 
+    static {
+        Map<String, Integer> tmp = new HashMap<>();
+        for (Map.Entry<String, Integer> e : HEADER_TO_INDICATEUR.entrySet()) {
+            tmp.put(normalize(e.getKey()), e.getValue());
+        }
+        NORM_HEADER_TO_INDICATEUR = Collections.unmodifiableMap(tmp);
+    }
+
+    /** Les flags maturite/robustesse sont ignorés : on insère toutes les colonnes présentes. */
+    public int importCsv(MultipartFile file) throws Exception {
         try (BufferedReader br =
                 new BufferedReader(
                         new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
 
-            // 1) Lire l'en-tête et détecter le séparateur
-            String headerLine;
-            do {
-                headerLine = br.readLine();
-            } while (headerLine != null && headerLine.isBlank());
+            HeaderInfo header = readHeader(br);
+            validateMandatoryColumns(header.headerIndex());
 
-            if (headerLine == null) {
-                throw new IllegalArgumentException("CSV vide.");
-            }
-
-            char delimiter = detectDelimiter(headerLine);
-            List<String> headers = parseCsvLine(headerLine, delimiter);
-            Map<String, Integer> headerIndex = buildHeaderIndex(headers);
-
-            if (!headerIndex.containsKey("id")) {
-                throw new IllegalArgumentException(
-                        "Colonne obligatoire manquante : 'id' (id_application).");
-            }
-
-            // 2) Parcourir les lignes de données
             List<Object[]> batch = new ArrayList<>(1024);
-            String line;
             LocalDate today = LocalDate.now();
+            int inserted = 0;
 
+            String line;
             while ((line = br.readLine()) != null) {
                 if (line.isBlank()) continue;
-
-                List<String> cols = parseCsvLine(line, delimiter);
-                // Normaliser (taille de la ligne) en cas de colonnes manquantes
-                if (cols.size() < headers.size()) {
-                    // compléter avec vides
-                    for (int i = cols.size(); i < headers.size(); i++) cols.add("");
-                }
-
-                Integer idApp = parseIdApplication(get(cols, headerIndex, "id"));
-                if (idApp == null) {
-                    // ligne ignorée si pas d'id application
-                    continue;
-                }
-
-                LocalDate date = parseDate(getOpt(cols, headerIndex, "date"));
-                if (date == null) date = today;
-
-                String commentaire = getOpt(cols, headerIndex, "commentaire");
-
-                // Pour chaque indicateur connu, si la colonne correspondante est présente on insère
-                for (Map.Entry<String, Integer> e : HEADER_TO_INDICATEUR.entrySet()) {
-                    String logicalHeader = e.getKey();
-                    Integer indicateurId = e.getValue();
-
-                    String rawVal = getOpt(cols, headerIndex, logicalHeader);
-                    if (rawVal == null || rawVal.isBlank()) continue;
-
-                    BigDecimal val = parseToDecimal(logicalHeader, rawVal);
-                    if (val == null) continue;
-
-                    batch.add(
-                            new Object[] {
-                                indicateurId,
-                                Date.valueOf(date),
-                                val.setScale(2, RoundingMode.HALF_UP),
-                                SOURCE_ID,
-                                idApp,
-                                (commentaire == null || commentaire.isBlank()) ? null : commentaire
-                            });
-                }
-
-                // Flush périodique
-                if (batch.size() >= 1000) {
-                    inserted += flushBatch(batch);
-                }
+                addRowToBatch(line, header, today, batch);
+                inserted += flushIfNeeded(batch);
             }
+            inserted += flushIfRemaining(batch);
 
-            // Flush final
-            if (!batch.isEmpty()) {
-                inserted += flushBatch(batch);
-            }
+            log.info("Import CSV maturité cloud : {} lignes insérées dans table_faits.", inserted);
+            return inserted;
         }
-
-        log.info("Import CSV maturité cloud : {} lignes insérées dans table_faits.", inserted);
-        return inserted;
     }
 
-    /* =================== Helpers =================== */
+    /* =================== Refactored helpers =================== */
+
+    private record HeaderInfo(
+            char delimiter, List<String> headers, Map<String, Integer> headerIndex) {}
+
+    private HeaderInfo readHeader(BufferedReader br) throws EmptyCsvException, IOException {
+        String headerLine = readFirstNonBlankLine(br);
+        if (headerLine == null) {
+            throw new EmptyCsvException("CSV vide.");
+        }
+
+        char delimiter = detectDelimiter(headerLine);
+        List<String> headers = parseCsvLine(headerLine, delimiter);
+        Map<String, Integer> headerIndex = buildHeaderIndex(headers);
+        return new HeaderInfo(delimiter, headers, headerIndex);
+    }
+
+    private String readFirstNonBlankLine(BufferedReader br) throws IOException {
+        String line;
+        do {
+            line = br.readLine();
+        } while (line != null && line.isBlank());
+        return line;
+    }
+
+    private void validateMandatoryColumns(Map<String, Integer> headerIndex) {
+        if (!headerIndex.containsKey(normalize("id"))) {
+            throw new IllegalArgumentException(
+                    "Colonne obligatoire manquante : 'id' (id_application).");
+        }
+    }
+
+    private void addRowToBatch(
+            String line, HeaderInfo header, LocalDate today, List<Object[]> batch) {
+        List<String> cols = parseCsvLine(line, header.delimiter());
+        padToHeaderSize(cols, header.headers().size());
+
+        Integer idApp = parseIdApplication(get(cols, header.headerIndex()));
+        if (idApp == null) return;
+
+        LocalDate date =
+                Optional.ofNullable(parseDate(getOpt(cols, header.headerIndex(), "date")))
+                        .orElse(today);
+        String commentaire = getOpt(cols, header.headerIndex(), "commentaire");
+        addIndicatorsToBatch(cols, header.headerIndex(), date, idApp, commentaire, batch);
+    }
+
+    private void padToHeaderSize(List<String> cols, int headersSize) {
+        for (int i = cols.size(); i < headersSize; i++) cols.add("");
+    }
+
+    private void addIndicatorsToBatch(
+            List<String> cols,
+            Map<String, Integer> headerIndex,
+            LocalDate date,
+            Integer idApp,
+            String commentaire,
+            List<Object[]> batch) {
+
+        for (String presentNormHeader : headerIndex.keySet()) {
+            Integer indicId = NORM_HEADER_TO_INDICATEUR.get(presentNormHeader);
+            String rawVal = (indicId != null) ? getOpt(cols, headerIndex, presentNormHeader) : null;
+            BigDecimal val =
+                    (rawVal != null && !rawVal.isBlank())
+                            ? parseToDecimal(presentNormHeader, rawVal)
+                            : null;
+
+            if (indicId == null || rawVal == null || rawVal.isBlank() || val == null) {
+                continue;
+            }
+
+            batch.add(
+                    new Object[] {
+                        indicId,
+                        java.sql.Date.valueOf(date),
+                        val.setScale(2, RoundingMode.HALF_UP),
+                        SOURCE_ID,
+                        idApp,
+                        (commentaire == null || commentaire.isBlank()) ? null : commentaire
+                    });
+        }
+    }
+
+    private int flushIfNeeded(List<Object[]> batch) {
+        if (batch.size() < BATCH_SIZE) return 0;
+        return flushBatch(batch);
+    }
+
+    private int flushIfRemaining(List<Object[]> batch) {
+        return batch.isEmpty() ? 0 : flushBatch(batch);
+    }
+
+    /* =================== Existing helpers (unchanged) =================== */
 
     private int flushBatch(List<Object[]> batch) {
         int[] res = jdbc.batchUpdate(INSERT_SQL, batch);
@@ -183,10 +217,10 @@ public class MaturiteCloudCsvService {
         return map;
     }
 
-    private static String get(List<String> row, Map<String, Integer> h, String logical) {
-        Integer idx = h.get(normalize(logical));
+    private static String get(List<String> row, Map<String, Integer> h) {
+        Integer idx = h.get(normalize("id"));
         if (idx == null || idx >= row.size()) {
-            throw new IllegalArgumentException("Colonne obligatoire manquante : " + logical);
+            throw new IllegalArgumentException("Colonne obligatoire manquante : " + "id");
         }
         return row.get(idx);
     }
@@ -223,7 +257,8 @@ public class MaturiteCloudCsvService {
                     int y = Integer.parseInt(p[2]);
                     return LocalDate.of(y, m, d);
                 }
-            } catch (Exception ignored2) {
+            } catch (Exception e) {
+                return null; // parsing échoué
             }
             return null;
         }
@@ -260,20 +295,14 @@ public class MaturiteCloudCsvService {
 
     private static BigDecimal mapMaturiteAlpha(String v) {
         String s = v.trim().toUpperCase(Locale.ROOT);
-        switch (s) {
-            case "A":
-                return BigDecimal.valueOf(5);
-            case "B":
-                return BigDecimal.valueOf(4);
-            case "C":
-                return BigDecimal.valueOf(3);
-            case "D":
-                return BigDecimal.valueOf(2);
-            case "E":
-                return BigDecimal.valueOf(1);
-            default:
-                return null;
-        }
+        return switch (s) {
+            case "A" -> BigDecimal.valueOf(5);
+            case "B" -> BigDecimal.valueOf(4);
+            case "C" -> BigDecimal.valueOf(3);
+            case "D" -> BigDecimal.valueOf(2);
+            case "E" -> BigDecimal.valueOf(1);
+            default -> null;
+        };
     }
 
     private static char detectDelimiter(String headerLine) {
@@ -291,14 +320,17 @@ public class MaturiteCloudCsvService {
         StringBuilder cur = new StringBuilder();
         boolean inQuotes = false;
 
-        for (int i = 0; i < line.length(); i++) {
+        int i = 0;
+        while (i < line.length()) {
             char ch = line.charAt(i);
 
             if (ch == '"') {
+                // Si on est dans des guillemets et que le prochain caractère est aussi un guillemet
+                // → guillemet échappé
                 if (inQuotes && i + 1 < line.length() && line.charAt(i + 1) == '"') {
-                    // guillemet échappé
                     cur.append('"');
-                    i++; // skip second quote
+                    i += 2; // on saute les deux guillemets
+                    continue;
                 } else {
                     inQuotes = !inQuotes;
                 }
@@ -308,7 +340,9 @@ public class MaturiteCloudCsvService {
             } else {
                 cur.append(ch);
             }
+            i++;
         }
+
         out.add(cur.toString());
         return out;
     }
@@ -318,5 +352,15 @@ public class MaturiteCloudCsvService {
         String t = s.trim().toLowerCase(Locale.ROOT);
         t = Normalizer.normalize(t, Normalizer.Form.NFD).replaceAll("\\p{M}", "");
         return t.replaceAll("[\\s_\\-./\\\\'’\"()\\[\\]]", "");
+    }
+
+    public class EmptyCsvException extends RuntimeException {
+        public EmptyCsvException(String message) {
+            super(message);
+        }
+
+        public EmptyCsvException(String message, Throwable cause) {
+            super(message, cause);
+        }
     }
 }
