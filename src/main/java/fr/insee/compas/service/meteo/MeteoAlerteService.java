@@ -32,6 +32,9 @@ public class MeteoAlerteService {
     private final SpocService spocService;
     private final ApiRhAuthentification apiRhAuthentification;
 
+    /** Clé de regroupement : un couple (RGA, BALF métier). */
+    private record Dest(String rgaEmail, String balfMetier) {}
+
     private enum AlerteType {
         NONE,
         RAPPEL,
@@ -39,33 +42,47 @@ public class MeteoAlerteService {
     }
 
     /**
-     * Envoie des mails par RGA : - RAPPEL : dernière météo >= 23 jours et < 1 mois - RETARD :
-     * dernière météo >= 1 mois (ou absente) Le paramètre ageMinJours sert à préfiltrer (ex. 23).
+     * Envoie des mails par couple (RGA, BALF métier) : - RAPPEL : dernière météo >= 23 jours et < 1
+     * mois - RETARD : dernière météo >= 1 mois (ou absente) Le paramètre ageMinJours sert à
+     * préfiltrer (ex. 23).
      */
     public void envoyerAlertesRga(int ageMinJours, boolean test) {
         List<Meteo> toutes = meteoAffichageService.listerApplicationsMeteoAvecAgeMin(ageMinJours);
-        Map<String, List<Meteo>> parEmailRga = groupByRgaEmail(toutes);
+        Map<Dest, List<Meteo>> parDest = groupByDest(toutes);
 
-        if (parEmailRga.isEmpty()) {
-            log.info("Aucune alerte à envoyer (0 RGA concernés).");
+        if (parDest.isEmpty()) {
+            log.info("Aucune alerte à envoyer (0 couple RGA/BALF concerné).");
             return;
         }
 
         LocalDate today = LocalDate.now(TZ_PARIS);
-        parEmailRga.forEach((emailRga, apps) -> processRga(emailRga, apps, today, test));
+        parDest.forEach((dest, apps) -> processDest(dest, apps, today, test));
     }
 
-    private Map<String, List<Meteo>> groupByRgaEmail(List<Meteo> meteo) {
+    /** Regroupe les applis par couple (RGA, BALF métier). */
+    private Map<Dest, List<Meteo>> groupByDest(List<Meteo> meteo) {
         return meteo.stream()
-                .map(m -> new AbstractMap.SimpleEntry<>(resolveRgaEmail(m.getIdApplication()), m))
-                .filter(e -> isValidEmail(e.getKey()))
+                .map(
+                        m -> {
+                            String rga = resolveRgaEmail(m.getIdApplication());
+                            String balf =
+                                    rgaResolverService.resolveBalfMetierByApplicationId(
+                                            m.getIdApplication());
+                            // On garde le couple même si la BALF est invalide/null (mail partira au
+                            // RGA seul)
+                            return new AbstractMap.SimpleEntry<>(new Dest(rga, balf), m);
+                        })
+                .filter(e -> isValidEmail(e.getKey().rgaEmail())) // RGA obligatoire et valide
                 .collect(
                         Collectors.groupingBy(
                                 Map.Entry::getKey,
                                 Collectors.mapping(Map.Entry::getValue, Collectors.toList())));
     }
 
-    private void processRga(String emailRga, List<Meteo> apps, LocalDate today, boolean test) {
+    /**
+     * Traite un couple (RGA, BALF) : classe en RAPPEL/RETARD et envoie les mails correspondants.
+     */
+    private void processDest(Dest dest, List<Meteo> apps, LocalDate today, boolean test) {
         Map<AlerteType, List<Meteo>> parType =
                 apps.stream().collect(Collectors.groupingBy(m -> classify(m.getDate(), today)));
 
@@ -76,46 +93,33 @@ public class MeteoAlerteService {
 
         Optional<String> responsableEmailOpt = findResponsableEmailForApps(apps);
 
-        sendIfNotEmpty(test, emailRga, responsableEmailOpt, rappelApps, AlerteType.RAPPEL);
-        sendIfNotEmpty(test, emailRga, responsableEmailOpt, retardApps, AlerteType.RETARD);
-    }
-
-    private Optional<String> findResponsableEmailForApps(List<Meteo> apps) {
-        String sndiNom = apps.getFirst().getSndi();
-        String hie = mapSndiToHieCode(sndiNom);
-        return (hie == null || apiRhAuthentification == null)
-                ? Optional.empty()
-                : apiRhAuthentification.findResponsableEmailByUnite(hie);
+        sendIfNotEmpty(test, dest, responsableEmailOpt, rappelApps, AlerteType.RAPPEL);
+        sendIfNotEmpty(test, dest, responsableEmailOpt, retardApps, AlerteType.RETARD);
     }
 
     private void sendIfNotEmpty(
             boolean test,
-            String emailRga,
+            Dest dest,
             Optional<String> responsableEmailOpt,
             List<Meteo> apps,
             AlerteType type) {
         if (!apps.isEmpty()) {
-            sendOne(test, emailRga, responsableEmailOpt, apps, type);
+            sendOne(test, dest, responsableEmailOpt, apps, type);
         }
     }
 
-    /** Envoie un mail (rappel ou retard) pour un sous-ensemble d’apps d’un même RGA. */
+    /**
+     * Envoie un mail (rappel ou retard) pour un sous-ensemble d’apps d’un même couple (RGA, BALF).
+     */
     private void sendOne(
             boolean test,
-            String emailRga,
+            Dest dest,
             Optional<String> responsableEmailOpt,
             List<Meteo> subsetApps,
             AlerteType type) {
 
-        // Agrège toutes les BALF métier des applis concernées
-        Set<String> balfsMetier =
-                subsetApps.stream()
-                        .map(
-                                m ->
-                                        rgaResolverService.resolveBalfMetierByApplicationId(
-                                                m.getIdApplication()))
-                        .filter(this::isValidEmail)
-                        .collect(Collectors.toSet());
+        String emailRga = dest.rgaEmail();
+        String balfMetier = dest.balfMetier(); // peut être null / invalide
 
         String subject = buildSubject(subsetApps, type);
         String body =
@@ -124,7 +128,7 @@ public class MeteoAlerteService {
                         subsetApps,
                         test,
                         responsableEmailOpt.orElse(null),
-                        balfsMetier,
+                        balfMetier,
                         type);
 
         // Destinataires
@@ -136,7 +140,9 @@ public class MeteoAlerteService {
             responsableEmailOpt
                     .filter(this::isValidEmail)
                     .ifPresent(receivers::add); // CC responsable
-            receivers.addAll(balfsMetier); // CC BALF(s)
+            if (isValidEmail(balfMetier)) {
+                receivers.add(balfMetier); // CC BALF du couple
+            }
         }
         // dédoublonnage
         receivers = receivers.stream().distinct().toList();
@@ -153,6 +159,14 @@ public class MeteoAlerteService {
         LocalDate oneMonthAgo = today.minusMonths(1);
         if (!dateMeteo.isAfter(oneMonthAgo)) return AlerteType.RETARD; // date <= today-1mois
         return AlerteType.RAPPEL;
+    }
+
+    private Optional<String> findResponsableEmailForApps(List<Meteo> apps) {
+        String sndiNom = apps.getFirst().getSndi();
+        String hie = mapSndiToHieCode(sndiNom);
+        return (hie == null || apiRhAuthentification == null)
+                ? Optional.empty()
+                : apiRhAuthentification.findResponsableEmailByUnite(hie);
     }
 
     private String mapSndiToHieCode(String sndiNom) {
@@ -187,7 +201,7 @@ public class MeteoAlerteService {
             List<Meteo> apps,
             boolean test,
             String emailResponsable,
-            Set<String> balfsMetier,
+            String balfMetier, // une seule BALF (celle du couple)
             AlerteType type) {
 
         LocalDate today = LocalDate.now(TZ_PARIS);
@@ -203,21 +217,23 @@ public class MeteoAlerteService {
                         .append(escape(emailResponsable))
                         .append(BR);
             }
-            if (!balfsMetier.isEmpty()) {
-                sb.append("BALF(s) métier (non destinataire(s) en test) : ")
-                        .append(escape(String.join(", ", balfsMetier)))
+            if (balfMetier != null && !balfMetier.isBlank()) {
+                sb.append("BALF métier (non destinataire en test) : ")
+                        .append(escape(balfMetier))
                         .append(BR);
             }
             sb.append(BR);
         }
 
         if (type == AlerteType.RETARD) {
-            sb.append("<b>Vos applications ci-dessous ont une météo en RETARD (≥ 1 mois).</b>")
+            sb.append(
+                            "<b>La saisie de la météo de vos applications ci-dessous est en retard"
+                                    + " (≥ 1 mois).</b>")
                     .append(BR)
                     .append(BR);
         } else {
             sb.append(
-                            "<b>RAPPEL : vos applications ci-dessous ont une météo à mettre à jour"
+                            "<b> Vos applications ci-dessous ont une météo à bientôt mettre à jour"
                                     + " (≥ 23 jours).</b>")
                     .append(BR)
                     .append(BR);

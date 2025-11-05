@@ -68,7 +68,7 @@ public class ApiScheduler {
         log.info("fin des mises à jour ");
     }
 
-    @Scheduled(cron = "0 30 6 * * TUE")
+    @Scheduled(cron = "0 00 8 * * THU")
     public void envoyerAlertesMeteoHebdo() {
         log.info("Début de l’envoi hebdomadaire des alertes météo (lundi {})", LocalDate.now());
         try {
