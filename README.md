@@ -14,3 +14,16 @@ Utilisation de [Spotless](https://github.com/diffplug/spotless/tree/main/plugin-
 - plugin Maven qui s'assure que le code respecte des règles de formatage et fait échouer la compilation sinon
 - possibilité de vérifier si les règles sont respectées avec la commande `mvn spotless:check`
 - possibilité d'appliquer les règles de formatage avec la commande `mvn spotless:apply`
+
+## Rafraichissement schema dv par prod 
+
+Dans ut-pd-rundeck.insee.fr, dans les jobs COMMUN, lancer le job sauvegarde_schema_api en renseignant :
+- bdd : pdcompaslg001 
+- schema : compas 
+
+Dans ut-hp-rundeck.insee.fr, dans les jobs COMMUN, lancer le job sauvegarde_schema_api en renseignant :
+- bdd : dvcompaslg001
+- empalcement_dump : récupérer le lien du job précédent Attention ajouter prod dans archive-full dans le nom récupérer
+- schema : compas
+- schema_renomme : là ou on veut copier le dump 
+- stop_cluster : true coupe les connexions ce qui n'est pas forcément nécessaire mais peut etre utile
