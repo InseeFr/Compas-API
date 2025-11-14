@@ -59,8 +59,8 @@ public class MeteoController {
 
     @PostMapping("/alertes")
     public ResponseEntity<Void> envoyerAlertes(
-            @RequestParam(defaultValue = "160") int jours,
-            @RequestParam(defaultValue = "false") boolean test) {
+            @RequestParam(defaultValue = "23") int jours,
+            @RequestParam(defaultValue = "true") boolean test) {
         meteoAlerteService.envoyerAlertesRga(jours, test);
         return ResponseEntity.accepted().build();
     }

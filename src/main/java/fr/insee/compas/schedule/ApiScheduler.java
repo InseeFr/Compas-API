@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -26,6 +27,9 @@ public class ApiScheduler {
     private final UpdateIndicatorDevopsService updateIndicatorDevopsService;
     private final A11yMajService a11yMajService;
     private final MeteoAlerteService meteoAlerteService;
+
+    @Value("${compas.alertes.enabled:false}")
+    private boolean alertesEnabled;
 
     public ApiScheduler(
             OscarService oscarService,
@@ -68,11 +72,16 @@ public class ApiScheduler {
         log.info("fin des mises à jour ");
     }
 
-    @Scheduled(cron = "0 00 8 * * THU")
+    @Scheduled(cron = "0 0 7 * * MON")
     public void envoyerAlertesMeteoHebdo() {
+        if (!alertesEnabled) {
+            log.info("Alertes météo désactivées sur cet environnement.");
+            return;
+        }
+
         log.info("Début de l’envoi hebdomadaire des alertes météo (lundi {})", LocalDate.now());
         try {
-            meteoAlerteService.envoyerAlertesRga(23, true);
+            meteoAlerteService.envoyerAlertesRga(23, false);
             log.info("Fin de l’envoi hebdomadaire des alertes météo.");
         } catch (Exception e) {
             log.error("Erreur lors de l’envoi des alertes météo : ", e);

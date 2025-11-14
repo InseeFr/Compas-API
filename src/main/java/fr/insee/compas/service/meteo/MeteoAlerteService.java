@@ -132,22 +132,31 @@ public class MeteoAlerteService {
                         type);
 
         // Destinataires
-        List<String> receivers = new ArrayList<>();
+        List<String> to = new ArrayList<>();
+        List<String> cc = new ArrayList<>();
+
         if (test) {
-            receivers.addAll(spocService.getDefaultReceivers()); // redirection test
+            to.addAll(spocService.getDefaultReceivers());
         } else {
-            receivers.add(emailRga); // RGA
+            // TO = RGA uniquement
+            to.add(emailRga);
+
+            // CC = responsable
             responsableEmailOpt
                     .filter(this::isValidEmail)
-                    .ifPresent(receivers::add); // CC responsable
+                    .ifPresent(cc::add);
+
+            // CC = BALF métier
             if (isValidEmail(balfMetier)) {
-                receivers.add(balfMetier); // CC BALF du couple
+                cc.add(balfMetier);
             }
         }
-        // dédoublonnage
-        receivers = receivers.stream().distinct().toList();
 
-        Mail mail = new Mail(subject, body, receivers);
+
+        to = to.stream().distinct().toList();
+        cc = cc.stream().distinct().toList();
+
+        Mail mail = new Mail(subject, body, to, cc);
         spocService.sendMail(mail);
     }
 
@@ -201,7 +210,7 @@ public class MeteoAlerteService {
             List<Meteo> apps,
             boolean test,
             String emailResponsable,
-            String balfMetier, // une seule BALF (celle du couple)
+            String balfMetier,
             AlerteType type) {
 
         LocalDate today = LocalDate.now(TZ_PARIS);
@@ -227,14 +236,14 @@ public class MeteoAlerteService {
 
         if (type == AlerteType.RETARD) {
             sb.append(
-                            "<b>La saisie de la météo de vos applications ci-dessous est en retard"
-                                    + " (≥ 1 mois).</b>")
+                            "La saisie de la météo de vos applications ci-dessous est en retard"
+                                    + " (≥ 1 mois).")
                     .append(BR)
                     .append(BR);
         } else {
             sb.append(
-                            "<b> Vos applications ci-dessous ont une météo à bientôt mettre à jour"
-                                    + " (≥ 23 jours).</b>")
+                            "Vos applications ci-dessous ont une météo à bientôt mettre à jour"
+                                    + " (≥ 23 jours).")
                     .append(BR)
                     .append(BR);
         }
@@ -256,7 +265,7 @@ public class MeteoAlerteService {
                         });
 
         sb.append(BR)
-                .append("Merci de mettre à jour la météo dans Compas.")
+                .append("Merci de mettre à jour la météo dans Compas à cette adresse : https://tableau-de-bord-applications.insee.fr.")
                 .append(BR)
                 .append(BR)
                 .append("Cordialement,")

@@ -72,7 +72,7 @@ public class SpocService {
     /**
      * Envoie un mail en complétant/écrasant les destinataires avec ceux par défaut selon la conf.
      *
-     * @param mail objet mail (doit contenir subject, message, receivers éventuellement)
+     * @param mail objet mail (doit contenir subject, message, to/cc éventuellement)
      */
     public void sendMail(Mail mail) {
         if (mail == null) {
@@ -80,31 +80,48 @@ public class SpocService {
             return;
         }
 
-        // Gestion des destinataires par défaut
+        // Récupération TO / CC depuis l'objet Mail
+        List<String> to = new ArrayList<>(Optional.ofNullable(mail.getTo()).orElse(List.of()));
+        List<String> cc = new ArrayList<>(Optional.ofNullable(mail.getCc()).orElse(List.of()));
+
         if (addBalfOscar) {
-            mail.addReceiver(defaultReceiverMail);
-        } else {
-            mail.setReceiver(new ArrayList<>(defaultReceiverMail));
+            cc.addAll(defaultReceiverMail);
+        } else if (to.isEmpty()) {
+            to.addAll(defaultReceiverMail);
         }
 
-        // Nettoyage basique
-        mail.setReceiver(
-                mail.getReceiver().stream()
+        // Nettoyage basique TO/CC
+        to = to.stream()
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .filter(s -> !s.isBlank())
+                .distinct()
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        cc = cc.stream()
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .filter(s -> !s.isBlank())
+                .distinct()
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        // Vérification qu'il reste au moins un destinataire (TO ou CC)
+        List<String> allRecipientsForCheck =
+                java.util.stream.Stream.concat(to.stream(), cc.stream())
                         .filter(Objects::nonNull)
                         .map(String::trim)
                         .filter(s -> !s.isBlank())
                         .distinct()
-                        .collect(Collectors.toCollection(ArrayList::new)));
+                        .toList();
 
-        if (mail.getReceiver().isEmpty()) {
+        if (allRecipientsForCheck.isEmpty()) {
             log.warn("Aucun destinataire après application des règles -> envoi annulé");
             return;
         }
 
-        // Construction du corps JSON attendu par SPOC
         Map<String, Object> payload =
-                buildSpocPayload(
-                        senderMail, mail.getObject(), mail.getMessage(), mail.getReceiver());
+                buildSpocPayload(senderMail, mail.getObject(), mail.getMessage(), to, cc);
+
         String bodyJson;
         try {
             bodyJson = objectMapper.writeValueAsString(payload);
@@ -143,11 +160,15 @@ public class SpocService {
     }
 
     /**
-     * Variante pratique : envoie directement à une liste de destinataires (en plus/de remplacement
-     * des défauts selon conf).
+     * Variante pratique : envoie directement à une liste de destinataires en TO
+     * (les défauts seront ajoutés selon la conf).
      */
     public void sendMailTo(List<String> receivers, String subject, String content) {
-        Mail mail = new Mail(subject, content, receivers == null ? List.of() : receivers);
+        Mail mail = new Mail();
+        mail.setObject(subject);
+        mail.setMessage(content);
+        mail.setTo(receivers == null ? List.of() : receivers);
+        mail.setCc(List.of()); // pas de CC explicite dans cette variante
         sendMail(mail);
     }
 
@@ -157,24 +178,54 @@ public class SpocService {
     }
 
     private Map<String, Object> buildSpocPayload(
-            String sender, String subject, String content, Collection<String> receivers) {
+            String sender,
+            String subject,
+            String content,
+            Collection<String> to,
+            Collection<String> cc) {
+
         Map<String, Object> root = new LinkedHashMap<>();
 
+        // ---------- MessageTemplate ----------
         Map<String, Object> messageTemplate = new LinkedHashMap<>();
         messageTemplate.put("Sender", Optional.ofNullable(sender).orElse(""));
         messageTemplate.put("Subject", Optional.ofNullable(subject).orElse(""));
         messageTemplate.put("Content", Optional.ofNullable(content).orElse(""));
+        messageTemplate.put("PlainTextContent", "");
         messageTemplate.put("ContentReference", "null");
 
+        // Headers (pour le Cc)
+        List<Map<String, Object>> headers = new ArrayList<>();
+        if (cc != null && !cc.isEmpty()) {
+            Map<String, Object> ccHeader = new LinkedHashMap<>();
+            ccHeader.put("Name", "Cc");
+            ccHeader.put("Value", String.join(";", cc)); // séparateur à adapter si besoin
+            headers.add(ccHeader);
+        }
+        if (!headers.isEmpty()) {
+            messageTemplate.put("Header", headers);
+        }
+
+        // ---------- Recipients ----------
+        List<String> allRecipients =
+                (to == null
+                        ? List.<String>of()
+                        : to.stream()
+                        .filter(Objects::nonNull)
+                        .map(String::trim)
+                        .filter(s -> !s.isBlank())
+                        .distinct()
+                        .toList());
+
         List<Map<String, Object>> recipientList =
-                receivers.stream()
-                        .map(
-                                addr -> {
-                                    Map<String, Object> r = new LinkedHashMap<>();
-                                    r.put("Address", addr);
-                                    r.put("Attachements", List.of());
-                                    return r;
-                                })
+                allRecipients.stream()
+                        .map(addr -> {
+                            Map<String, Object> r = new LinkedHashMap<>();
+                            r.put("Address", addr);
+                            r.put("Properties", List.of());
+                            r.put("Attachments", List.of());
+                            return r;
+                        })
                         .toList();
 
         Map<String, Object> recipients = new LinkedHashMap<>();

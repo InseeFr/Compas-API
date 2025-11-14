@@ -56,7 +56,7 @@ class MeteoAlerteServiceTest {
         when(spocService.getDefaultReceivers()).thenReturn(defaults);
 
         try (MockedStatic<LocalDate> mocked =
-                Mockito.mockStatic(LocalDate.class, Mockito.CALLS_REAL_METHODS)) {
+                     Mockito.mockStatic(LocalDate.class, Mockito.CALLS_REAL_METHODS)) {
             mocked.when(() -> LocalDate.now(TZ_PARIS)).thenReturn(today);
             service.envoyerAlertesRga(30, true);
         }
@@ -81,14 +81,16 @@ class MeteoAlerteServiceTest {
 
         // RGA1 : 2 applis -> pluriel
         assertThat(mailRga1.getObject()).isEqualTo("[COMPAS] Météo en retard — 2 applications");
-        assertThat(mailRga1.getReceiver()).isEqualTo(defaults);
+        assertThat(mailRga1.getTo()).isEqualTo(defaults);
+        assertThat(mailRga1.getCc()).isEmpty();
         String b1 = mailRga1.getMessage();
         assertThat(b1).contains("App A").contains("App C");
         assertThat(b1.indexOf("App A")).isLessThan(b1.indexOf("App C")); // plus ancienne d'abord
 
         // RGA2 : 1 appli -> singulier
         assertThat(mailRga2.getObject()).isEqualTo("[COMPAS] Météo en retard — 1 application");
-        assertThat(mailRga2.getReceiver()).isEqualTo(defaults);
+        assertThat(mailRga2.getTo()).isEqualTo(defaults);
+        assertThat(mailRga2.getCc()).isEmpty();
         assertThat(mailRga2.getMessage())
                 .contains("App D")
                 .doesNotContain("App A")
@@ -105,7 +107,7 @@ class MeteoAlerteServiceTest {
         when(rgaResolverService.resolveRgaEmailByApplicationId(10)).thenReturn("rga1@insee.fr");
 
         try (MockedStatic<LocalDate> mocked =
-                Mockito.mockStatic(LocalDate.class, Mockito.CALLS_REAL_METHODS)) {
+                     Mockito.mockStatic(LocalDate.class, Mockito.CALLS_REAL_METHODS)) {
             mocked.when(() -> LocalDate.now(TZ_PARIS)).thenReturn(today);
             service.envoyerAlertesRga(45, false);
         }
@@ -115,7 +117,8 @@ class MeteoAlerteServiceTest {
         verify(spocService, never()).getDefaultReceivers();
 
         Mail sent = mailCaptor.getValue();
-        assertThat(sent.getReceiver()).isEqualTo(List.of("rga1@insee.fr"));
+        assertThat(sent.getTo()).isEqualTo(List.of("rga1@insee.fr"));
+        assertThat(sent.getCc()).isEmpty(); // pas de responsable / BALF mockés ici
         assertThat(sent.getObject()).isEqualTo("[COMPAS] Météo en retard — 1 application");
         assertThat(sent.getMessage()).doesNotContain("MODE TEST");
         assertThat(sent.getMessage()).contains("App A");
@@ -145,7 +148,7 @@ class MeteoAlerteServiceTest {
                 .thenReturn("also@bad"); // pas de TLD -> invalide
 
         try (MockedStatic<LocalDate> mocked =
-                Mockito.mockStatic(LocalDate.class, Mockito.CALLS_REAL_METHODS)) {
+                     Mockito.mockStatic(LocalDate.class, Mockito.CALLS_REAL_METHODS)) {
             mocked.when(() -> LocalDate.now(TZ_PARIS)).thenReturn(today);
             service.envoyerAlertesRga(30, true);
         }

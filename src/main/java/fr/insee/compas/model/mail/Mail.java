@@ -10,19 +10,30 @@ import lombok.Setter;
 @Getter
 @Setter
 public class Mail {
+
     private String object;
     private String message;
-    private List<String> receiver = new ArrayList<>();
+
+    /** Destinataires principaux (To) */
+    private List<String> to = new ArrayList<>();
+
+    /** Copie carbone (Cc) */
+    private List<String> cc = new ArrayList<>();
 
     public Mail() {}
 
-    public Mail(String object, String message, Collection<String> receivers) {
+    public Mail(String object, String message, Collection<String> to, Collection<String> cc) {
         this.object = object;
         this.message = message;
-        this.receiver = new ArrayList<>(receivers);
+        this.to = new ArrayList<>(to);
+        this.cc = new ArrayList<>(cc);
     }
 
-    public void addReceiver(Collection<String> emails) {
-        this.receiver.addAll(emails);
+    public void addTo(Collection<String> emails) {
+        this.to.addAll(emails);
+    }
+
+    public void addCc(Collection<String> emails) {
+        this.cc.addAll(emails);
     }
 }
