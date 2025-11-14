@@ -91,19 +91,21 @@ public class SpocService {
         }
 
         // Nettoyage basique TO/CC
-        to = to.stream()
-                .filter(Objects::nonNull)
-                .map(String::trim)
-                .filter(s -> !s.isBlank())
-                .distinct()
-                .collect(Collectors.toCollection(ArrayList::new));
+        to =
+                to.stream()
+                        .filter(Objects::nonNull)
+                        .map(String::trim)
+                        .filter(s -> !s.isBlank())
+                        .distinct()
+                        .collect(Collectors.toCollection(ArrayList::new));
 
-        cc = cc.stream()
-                .filter(Objects::nonNull)
-                .map(String::trim)
-                .filter(s -> !s.isBlank())
-                .distinct()
-                .collect(Collectors.toCollection(ArrayList::new));
+        cc =
+                cc.stream()
+                        .filter(Objects::nonNull)
+                        .map(String::trim)
+                        .filter(s -> !s.isBlank())
+                        .distinct()
+                        .collect(Collectors.toCollection(ArrayList::new));
 
         // Vérification qu'il reste au moins un destinataire (TO ou CC)
         List<String> allRecipientsForCheck =
@@ -160,8 +162,8 @@ public class SpocService {
     }
 
     /**
-     * Variante pratique : envoie directement à une liste de destinataires en TO
-     * (les défauts seront ajoutés selon la conf).
+     * Variante pratique : envoie directement à une liste de destinataires en TO (les défauts seront
+     * ajoutés selon la conf).
      */
     public void sendMailTo(List<String> receivers, String subject, String content) {
         Mail mail = new Mail();
@@ -211,21 +213,22 @@ public class SpocService {
                 (to == null
                         ? List.<String>of()
                         : to.stream()
-                        .filter(Objects::nonNull)
-                        .map(String::trim)
-                        .filter(s -> !s.isBlank())
-                        .distinct()
-                        .toList());
+                                .filter(Objects::nonNull)
+                                .map(String::trim)
+                                .filter(s -> !s.isBlank())
+                                .distinct()
+                                .toList());
 
         List<Map<String, Object>> recipientList =
                 allRecipients.stream()
-                        .map(addr -> {
-                            Map<String, Object> r = new LinkedHashMap<>();
-                            r.put("Address", addr);
-                            r.put("Properties", List.of());
-                            r.put("Attachments", List.of());
-                            return r;
-                        })
+                        .map(
+                                addr -> {
+                                    Map<String, Object> r = new LinkedHashMap<>();
+                                    r.put("Address", addr);
+                                    r.put("Properties", List.of());
+                                    r.put("Attachments", List.of());
+                                    return r;
+                                })
                         .toList();
 
         Map<String, Object> recipients = new LinkedHashMap<>();

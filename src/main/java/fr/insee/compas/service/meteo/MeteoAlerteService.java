@@ -142,16 +142,13 @@ public class MeteoAlerteService {
             to.add(emailRga);
 
             // CC = responsable
-            responsableEmailOpt
-                    .filter(this::isValidEmail)
-                    .ifPresent(cc::add);
+            responsableEmailOpt.filter(this::isValidEmail).ifPresent(cc::add);
 
             // CC = BALF métier
             if (isValidEmail(balfMetier)) {
                 cc.add(balfMetier);
             }
         }
-
 
         to = to.stream().distinct().toList();
         cc = cc.stream().distinct().toList();
@@ -265,7 +262,9 @@ public class MeteoAlerteService {
                         });
 
         sb.append(BR)
-                .append("Merci de mettre à jour la météo dans Compas à cette adresse : https://tableau-de-bord-applications.insee.fr.")
+                .append(
+                        "Merci de mettre à jour la météo dans Compas à cette adresse :"
+                                + " https://tableau-de-bord-applications.insee.fr.")
                 .append(BR)
                 .append(BR)
                 .append("Cordialement,")

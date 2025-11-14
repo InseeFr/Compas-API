@@ -56,7 +56,7 @@ class MeteoAlerteServiceTest {
         when(spocService.getDefaultReceivers()).thenReturn(defaults);
 
         try (MockedStatic<LocalDate> mocked =
-                     Mockito.mockStatic(LocalDate.class, Mockito.CALLS_REAL_METHODS)) {
+                Mockito.mockStatic(LocalDate.class, Mockito.CALLS_REAL_METHODS)) {
             mocked.when(() -> LocalDate.now(TZ_PARIS)).thenReturn(today);
             service.envoyerAlertesRga(30, true);
         }
@@ -107,7 +107,7 @@ class MeteoAlerteServiceTest {
         when(rgaResolverService.resolveRgaEmailByApplicationId(10)).thenReturn("rga1@insee.fr");
 
         try (MockedStatic<LocalDate> mocked =
-                     Mockito.mockStatic(LocalDate.class, Mockito.CALLS_REAL_METHODS)) {
+                Mockito.mockStatic(LocalDate.class, Mockito.CALLS_REAL_METHODS)) {
             mocked.when(() -> LocalDate.now(TZ_PARIS)).thenReturn(today);
             service.envoyerAlertesRga(45, false);
         }
@@ -148,7 +148,7 @@ class MeteoAlerteServiceTest {
                 .thenReturn("also@bad"); // pas de TLD -> invalide
 
         try (MockedStatic<LocalDate> mocked =
-                     Mockito.mockStatic(LocalDate.class, Mockito.CALLS_REAL_METHODS)) {
+                Mockito.mockStatic(LocalDate.class, Mockito.CALLS_REAL_METHODS)) {
             mocked.when(() -> LocalDate.now(TZ_PARIS)).thenReturn(today);
             service.envoyerAlertesRga(30, true);
         }

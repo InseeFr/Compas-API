@@ -40,7 +40,7 @@ class SpocServiceTest {
                 "sender@insee.fr", // sender.mail
                 defaultReceivers, // default.receiver.mail
                 addBalfOscar // receiver.mail.add.balf.oscar
-        );
+                );
     }
 
     @SuppressWarnings("unchecked")
@@ -88,8 +88,8 @@ class SpocServiceTest {
         // TO = RGA (+ blancs / null / doublon)
         mail.setTo(
                 Arrays.asList(
-                        "rga@insee.fr", "  ", null, "rga@insee.fr"  // doublon + blancs
-                ));
+                        "rga@insee.fr", "  ", null, "rga@insee.fr" // doublon + blancs
+                        ));
         // CC vide au départ
         mail.setCc(List.of());
 
@@ -156,7 +156,6 @@ class SpocServiceTest {
         String ccValue = getCcHeaderValueFrom(body);
         assertThat(ccValue).isNull();
     }
-
 
     // --- 3) Aucun destinataire après règles -> pas d’appel HTTP
     @Test
