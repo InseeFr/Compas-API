@@ -40,6 +40,7 @@ import fr.insee.compas.model.greenit.IndicateurModuleGreenIT;
 import fr.insee.compas.model.greenit.MetriqueVm;
 import fr.insee.compas.model.greenit.MetriqueVmCsvRead;
 import fr.insee.compas.repository.TableFaitsRepository;
+import fr.insee.compas.util.ScoreUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -197,6 +198,47 @@ public class GreenItService {
                 tableFaitsRepository.findSumByDateAndIdIndicateurAndIdApplication(
                         lastDay, IndicateurType.NBR_VM.getValue(), applicationId);
         greenIt.setNbVm(nbVm != null ? nbVm.intValue() : 0);
+        final BigDecimal ramAlloueeProd =
+                tableFaitsRepository.findSumByDateAndIdIndicateurAndIdApplication(
+                        lastDay, IndicateurType.RAM_ALLOUEE_PD.getValue(), applicationId);
+        greenIt.setRamAllocatedProd(ramAlloueeProd != null ? ramAlloueeProd.intValue() : 0);
+        greenIt.setRamMaxiProd(
+                calculateMetricPercentApplication(
+                        IndicateurType.RAM_MAXI_PD.getValue(),
+                        greenIt.getRamAllocatedProd(),
+                        applicationId,
+                        lastDay));
+
+        final BigDecimal disqueAlloueProd =
+                tableFaitsRepository.findSumByDateAndIdIndicateurAndIdApplication(
+                        lastDay, IndicateurType.DISQUE_ALLOUE_PD.getValue(), applicationId);
+        greenIt.setDiskAllocatedProd(disqueAlloueProd != null ? disqueAlloueProd.intValue() : 0);
+        greenIt.setDiskUsedProd(
+                calculateMetricPercentApplication(
+                        IndicateurType.DISQUE_CONSOMME_PD.getValue(),
+                        greenIt.getDiskAllocatedProd(),
+                        applicationId,
+                        lastDay));
+
+        final BigDecimal cpuAlloueeProd =
+                tableFaitsRepository.findSumByDateAndIdIndicateurAndIdApplication(
+                        lastDay, IndicateurType.CPU_ALLOUEE_PD.getValue(), applicationId);
+        greenIt.setCpuAllocatedProd(cpuAlloueeProd != null ? cpuAlloueeProd.intValue() : 0);
+        greenIt.setCpuMaxiProd(
+                calculateMetricPercentApplication(
+                        IndicateurType.CPU_MAXI_PD.getValue(),
+                        greenIt.getCpuAllocatedProd(),
+                        applicationId,
+                        lastDay));
+
+        final BigDecimal consoProd =
+                tableFaitsRepository.findSumByDateAndIdIndicateurAndIdApplication(
+                        lastDay, IndicateurType.CONSO_ELEC_PD.getValue(), applicationId);
+        greenIt.setConsoProd(consoProd != null ? consoProd.intValue() : 0);
+        final BigDecimal nbVmProd =
+                tableFaitsRepository.findSumByDateAndIdIndicateurAndIdApplication(
+                        lastDay, IndicateurType.NBR_VM_PD.getValue(), applicationId);
+        greenIt.setNbVmProd(nbVmProd != null ? nbVmProd.intValue() : 0);
         return greenIt;
     }
 
@@ -263,13 +305,22 @@ public class GreenItService {
         vmApplis.entrySet()
                 .forEach(
                         e -> {
+                            final List<String> vmsPd =
+                                    e.getValue().stream()
+                                            .filter(
+                                                    p ->
+                                                            ScoreUtils.isPlateformeProd(
+                                                                    p.getPlateforme()))
+                                            .map(VmOscarView::getNom)
+                                            .toList();
                             final List<String> vms =
                                     e.getValue().stream().map(m -> m.getNom()).toList();
                             log.debug(
                                     String.format(
-                                            "taille de la vm applis %d et id %d ",
-                                            vms.size(), e.getKey()));
-                            peuplerIndicateurs(null, e.getKey(), vms, fileDate);
+                                            "taille de la vmPd applis %d et id %d ",
+                                            vmsPd.size(), e.getKey()));
+                            peuplerIndicateurs(null, e.getKey(), vmsPd, fileDate, true);
+                            peuplerIndicateurs(null, e.getKey(), vms, fileDate, false);
                         });
     }
 
@@ -284,14 +335,32 @@ public class GreenItService {
                         e -> {
                             final Optional<VmOscarView> vmFirst =
                                     e.getValue().stream().filter(Objects::nonNull).findFirst();
+                            final List<String> vmsPd =
+                                    e.getValue().stream()
+                                            .filter(
+                                                    p ->
+                                                            ScoreUtils.isPlateformeProd(
+                                                                    p.getPlateforme()))
+                                            .map(VmOscarView::getNom)
+                                            .toList();
                             final List<String> vms =
                                     e.getValue().stream().map(m -> m.getNom()).toList();
                             log.debug(
                                     String.format(
-                                            "taille de la vm modules %d et moduleId %d ",
-                                            +vms.size(), e.getKey()));
+                                            "taille de la vmPd modules %d et moduleId %d ",
+                                            +vmsPd.size(), e.getKey()));
                             peuplerIndicateurs(
-                                    e.getKey(), vmFirst.get().getIdApplication(), vms, fileDate);
+                                    e.getKey(),
+                                    vmFirst.get().getIdApplication(),
+                                    vmsPd,
+                                    fileDate,
+                                    true);
+                            peuplerIndicateurs(
+                                    e.getKey(),
+                                    vmFirst.get().getIdApplication(),
+                                    vms,
+                                    fileDate,
+                                    false);
                         });
     }
 
@@ -324,42 +393,69 @@ public class GreenItService {
         return metriqueVmCsvReads;
     }
 
+    private static final Map<IndicateurType, IndicateurType> MAP_IND_GLOBAUX_VS_PD =
+            Map.of(
+                    IndicateurType.RAM_ALLOUEE, IndicateurType.RAM_ALLOUEE_PD,
+                    IndicateurType.RAM_MAXI, IndicateurType.RAM_MAXI_PD,
+                    IndicateurType.DISQUE_ALLOUE, IndicateurType.DISQUE_ALLOUE_PD,
+                    IndicateurType.DISQUE_CONSOMME, IndicateurType.DISQUE_CONSOMME_PD,
+                    IndicateurType.CPU_ALLOUEE, IndicateurType.CPU_ALLOUEE_PD,
+                    IndicateurType.CPU_MAXI, IndicateurType.CPU_MAXI_PD,
+                    IndicateurType.CONSO_ELEC, IndicateurType.CONSO_ELEC_PD,
+                    IndicateurType.NBR_VM, IndicateurType.NBR_VM_PD);
+
+    private static IndicateurType indicateurGlobalOuProd(
+            IndicateurType base, boolean isPlateformeProd) {
+        return isPlateformeProd ? MAP_IND_GLOBAUX_VS_PD.getOrDefault(base, base) : base;
+    }
+
     private void peuplerIndicateurs(
-            Integer modId, Integer appId, List<String> vms, LocalDate fileDate) {
+            Integer modId,
+            Integer appId,
+            List<String> vms,
+            LocalDate fileDate,
+            boolean isPlateformeProd) {
         final TableFaits indRamAllocated = buildGreen(modId, appId, fileDate);
-        indRamAllocated.setIdIndicateur(IndicateurType.RAM_ALLOUEE.getValue());
+        indRamAllocated.setIdIndicateur(
+                indicateurGlobalOuProd(IndicateurType.RAM_ALLOUEE, isPlateformeProd).getValue());
         indRamAllocated.setValeur(calculAgregatValeur(vms, MetriqueVm::getRamAllocated));
         tableFaitsRepository.save(indRamAllocated);
         final TableFaits indRamMaxi = buildGreen(modId, appId, fileDate);
-        indRamMaxi.setIdIndicateur(IndicateurType.RAM_MAXI.getValue());
+        indRamMaxi.setIdIndicateur(
+                indicateurGlobalOuProd(IndicateurType.RAM_MAXI, isPlateformeProd).getValue());
         indRamMaxi.setValeur(calculAgregatValeur(vms, MetriqueVm::getRamMaxi));
         tableFaitsRepository.save(indRamMaxi);
         final TableFaits indDiskAllocated = buildGreen(modId, appId, fileDate);
-        indDiskAllocated.setIdIndicateur(IndicateurType.DISQUE_ALLOUE.getValue());
+        indDiskAllocated.setIdIndicateur(
+                indicateurGlobalOuProd(IndicateurType.DISQUE_ALLOUE, isPlateformeProd).getValue());
         indDiskAllocated.setValeur(calculAgregatValeur(vms, MetriqueVm::getDiskAllocated));
         tableFaitsRepository.save(indDiskAllocated);
         final TableFaits indDiskUsed = buildGreen(modId, appId, fileDate);
-        indDiskUsed.setIdIndicateur(IndicateurType.DISQUE_CONSOMME.getValue());
+        indDiskUsed.setIdIndicateur(
+                indicateurGlobalOuProd(IndicateurType.DISQUE_CONSOMME, isPlateformeProd)
+                        .getValue());
         indDiskUsed.setValeur(calculAgregatValeur(vms, MetriqueVm::getDiskUsed));
         tableFaitsRepository.save(indDiskUsed);
         final TableFaits indCpuAllocated = buildGreen(modId, appId, fileDate);
-        indCpuAllocated.setIdIndicateur(IndicateurType.CPU_ALLOUEE.getValue());
+        indCpuAllocated.setIdIndicateur(
+                indicateurGlobalOuProd(IndicateurType.CPU_ALLOUEE, isPlateformeProd).getValue());
         indCpuAllocated.setValeur(calculAgregatValeur(vms, MetriqueVm::getCpuAllocated));
         tableFaitsRepository.save(indCpuAllocated);
         final TableFaits indCpuMaxi = buildGreen(modId, appId, fileDate);
-        indCpuMaxi.setIdIndicateur(IndicateurType.CPU_MAXI.getValue());
+        indCpuMaxi.setIdIndicateur(
+                indicateurGlobalOuProd(IndicateurType.CPU_MAXI, isPlateformeProd).getValue());
         indCpuMaxi.setValeur(calculAgregatValeur(vms, MetriqueVm::getCpuMaxi));
         tableFaitsRepository.save(indCpuMaxi);
         final TableFaits indConso = buildGreen(modId, appId, fileDate);
-        indConso.setIdIndicateur(IndicateurType.CONSO_ELEC.getValue());
+        indConso.setIdIndicateur(
+                indicateurGlobalOuProd(IndicateurType.CONSO_ELEC, isPlateformeProd).getValue());
         indConso.setValeur(calculAgregatValeur(vms, m -> calculConsoElectrique(m.getConso())));
         tableFaitsRepository.save(indConso);
         final TableFaits indNbVm = buildGreen(modId, appId, fileDate);
-        indNbVm.setIdIndicateur(IndicateurType.NBR_VM.getValue());
+        indNbVm.setIdIndicateur(
+                indicateurGlobalOuProd(IndicateurType.NBR_VM, isPlateformeProd).getValue());
         indNbVm.setValeur(
                 BigDecimal.valueOf(metrics.stream().filter(m -> vms.contains(m.getVm())).count()));
-        log.info("nb de vm : " + indNbVm);
-        log.info("appId : " + appId);
         tableFaitsRepository.save(indNbVm);
     }
 
@@ -395,7 +491,7 @@ public class GreenItService {
         this.metrics = metrics;
     }
 
-    public List<MetriqueApplicationDTO> getApplicationConsommationElectrique() {
+    public List<MetriqueApplicationDTO> getApplicationMetriques() {
         final List<Object[]> results =
                 tableFaitsRepository.findLatestSummedValuesByIndicateurForAllApplications(
                         IndicateurType.CONSO_ELEC.getValue());
@@ -409,7 +505,7 @@ public class GreenItService {
                 .toList();
     }
 
-    public List<MetriqueModuleDTO> getModuleConsommationElectrique() {
+    public List<MetriqueModuleDTO> getModuleMetriques() {
         final List<Object[]> results =
                 tableFaitsRepository.findLatestSummedValuesByIndicateurForAllModules(
                         IndicateurType.CONSO_ELEC.getValue());

@@ -129,7 +129,7 @@ class GreenItControllerTest {
         final IndicateurModuleGreenITView view = new IndicateurModuleGreenITView();
         view.setImpactScore("0,911");
         // Mocks
-        when(greenItService.getModuleConsommationElectrique()).thenReturn(List.of(dto1));
+        when(greenItService.getModuleMetriques()).thenReturn(List.of(dto1));
         when(greenItService.getIndicateursModuleGreenIT(dto1.getIdModule(), dto1.getDate()))
                 .thenReturn(kpi);
         when(indicateurModuleGreenITViewMapper.toView(kpi)).thenReturn(Optional.of(view));
@@ -173,7 +173,7 @@ class GreenItControllerTest {
         kpi.setApplicationId(1);
         final IndicateurApplicationGreenITView view = new IndicateurApplicationGreenITView();
         view.setImpactScore("0,911");
-        when(greenItService.getApplicationConsommationElectrique()).thenReturn(List.of(dto1));
+        when(greenItService.getApplicationMetriques()).thenReturn(List.of(dto1));
         when(greenItService.getIndicateursApplicationGreenIT(
                         dto1.getIdApplication(), dto1.getDate()))
                 .thenReturn(kpi);

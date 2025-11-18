@@ -50,51 +50,52 @@ class UtilsServiceTest {
     @Test
     void testConcatenationMeasures() {
         // Création du premier ensemble de mesures
-        Measure m1 = new Measure();
+        final Measure m1 = new Measure();
         m1.setMetric("lines_to_cover");
         m1.setValue("100");
 
-        Measure m2 = new Measure();
+        final Measure m2 = new Measure();
         m2.setMetric("uncovered_lines");
         m2.setValue("20");
 
-        Measure m3 = new Measure();
+        final Measure m3 = new Measure();
         m3.setMetric("sqale_index");
         m3.setValue("300");
 
-        Measure m4 = new Measure();
+        final Measure m4 = new Measure();
         m4.setMetric("reliability_rating");
         m4.setValue("A");
 
-        Component c1 = new Component();
+        final Component c1 = new Component();
         c1.setMeasures(Arrays.asList(m1, m2, m3, m4));
-        RecuperationMeasures measures1 = new RecuperationMeasures();
+        final RecuperationMeasures measures1 = new RecuperationMeasures();
         measures1.setComponent(c1);
 
         // Création du deuxième ensemble de mesures
-        Measure m5 = new Measure();
+        final Measure m5 = new Measure();
         m5.setMetric("lines_to_cover");
         m5.setValue("150");
 
-        Measure m6 = new Measure();
+        final Measure m6 = new Measure();
         m6.setMetric("uncovered_lines");
         m6.setValue("30");
 
-        Measure m7 = new Measure();
+        final Measure m7 = new Measure();
         m7.setMetric("sqale_index");
         m7.setValue("200");
 
-        Measure m8 = new Measure();
+        final Measure m8 = new Measure();
         m8.setMetric("reliability_rating");
         m8.setValue("B");
 
-        Component c2 = new Component();
+        final Component c2 = new Component();
         c2.setMeasures(Arrays.asList(m5, m6, m7, m8));
-        RecuperationMeasures measures2 = new RecuperationMeasures();
+        final RecuperationMeasures measures2 = new RecuperationMeasures();
         measures2.setComponent(c2);
 
         // Appel à la méthode à tester
-        RecuperationMeasures result = UtilsService.concatenationMeasures(measures1, measures2);
+        final RecuperationMeasures result =
+                UtilsService.concatenationMeasures(measures1, measures2);
 
         // Vérifications
         assertEquals("250.0", getValueByMetric(result, "lines_to_cover"));

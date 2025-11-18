@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import fr.insee.compas.model.compas.IndicateurSonar;
@@ -15,6 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @Slf4j
 public class UtilsService {
+
+    private static final Logger log = LoggerFactory.getLogger(UtilsService.class);
 
     public double calculPourcentageCouvertureTest(Integer ligneCode, Integer ligneCodeNonTeste) {
         return ligneCode > 0

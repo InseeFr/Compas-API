@@ -65,7 +65,7 @@ public class GreenItController {
     @GetMapping("/applications")
     public ResponseEntity<List<IndicateurApplicationGreenITView>> getApplications() {
         final List<MetriqueApplicationDTO> consommationsDTO =
-                greenItService.getApplicationConsommationElectrique();
+                greenItService.getApplicationMetriques();
         log.info("consommationsDTO : {}", consommationsDTO.size());
         final List<IndicateurApplicationGreenIT> kpisGreen =
                 consommationsDTO.stream()
@@ -83,8 +83,7 @@ public class GreenItController {
 
     @GetMapping("/modules")
     public ResponseEntity<List<IndicateurModuleGreenITView>> getModules() {
-        final List<MetriqueModuleDTO> consommationsDTO =
-                greenItService.getModuleConsommationElectrique();
+        final List<MetriqueModuleDTO> consommationsDTO = greenItService.getModuleMetriques();
         final List<IndicateurModuleGreenIT> kpisGreen =
                 consommationsDTO.stream()
                         .map(

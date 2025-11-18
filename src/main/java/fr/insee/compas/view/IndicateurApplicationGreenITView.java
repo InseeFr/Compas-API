@@ -20,6 +20,14 @@ public class IndicateurApplicationGreenITView {
     private String cpuMaxi;
     private String conso;
     private String nbVm;
+    private String ramAllocatedProd;
+    private String ramMaxiProd;
+    private String diskAllocatedProd;
+    private String diskUsedProd;
+    private String cpuAllocatedProd;
+    private String cpuMaxiProd;
+    private String consoProd;
+    private String nbVmProd;
     private String consoScore;
     private String impactScore;
     private String gaspillageScore;

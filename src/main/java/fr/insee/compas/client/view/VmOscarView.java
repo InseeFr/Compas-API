@@ -11,4 +11,5 @@ public class VmOscarView {
     private Integer idApplication;
     private String nom;
     private Integer idModule;
+    private String plateforme;
 }

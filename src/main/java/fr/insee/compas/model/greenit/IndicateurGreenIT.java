@@ -18,6 +18,14 @@ public abstract class IndicateurGreenIT {
     private BigDecimal diskUsed;
     private Integer conso;
     private Integer nbVm;
+    private Integer ramAllocatedProd;
+    private BigDecimal ramMaxiProd;
+    private Integer cpuAllocatedProd;
+    private BigDecimal cpuMaxiProd;
+    private Integer diskAllocatedProd;
+    private BigDecimal diskUsedProd;
+    private Integer consoProd;
+    private Integer nbVmProd;
 
     public abstract GreenItScore toGreenItScore(
             BigDecimal score,

@@ -25,4 +25,9 @@ public class ScoreUtils {
     public static boolean isCloseToZero(double value) {
         return Math.abs(value) < EPSILON;
     }
+
+    public static boolean isPlateformeProd(String plateforme) {
+
+        return (plateforme != null && plateforme.startsWith("pd"));
+    }
 }

@@ -33,7 +33,7 @@ public class RecupCveSecuriteService {
     private final UtilsCveService utilService;
     private final RestTemplate restTemplate;
 
-    @Value("${api.analyzer.base-url}")
+    @Value("${api.analyzer.base-url:#{'https://api-analyzer.developpement.insee.fr'}}")
     private String apiBaseUrl;
 
     private final AnalyzerAuthentification analyzerAuthentification;
@@ -52,13 +52,13 @@ public class RecupCveSecuriteService {
     /** Méthode principale pour récupérer et sauvegarder les CVE depuis l'API */
     public void recupereCve() {
         try {
-            List<ApplicationAnalyzer> applications = getApplicationsFromApi();
+            final List<ApplicationAnalyzer> applications = getApplicationsFromApi();
 
-            for (ApplicationAnalyzer application : applications) {
-                List<ModuleAnalyzer> modules = application.getModules();
+            for (final ApplicationAnalyzer application : applications) {
+                final List<ModuleAnalyzer> modules = application.getModules();
 
                 // Filtrer uniquement les modules avec une date de scan valide
-                List<ModuleAnalyzer> modulesWithScanDate =
+                final List<ModuleAnalyzer> modulesWithScanDate =
                         modules == null
                                 ? List.of()
                                 : modules.stream()
@@ -70,7 +70,7 @@ public class RecupCveSecuriteService {
                     saveCveApplication(application);
 
                     // Puis sauvegarder uniquement les modules valides
-                    for (ModuleAnalyzer module : modulesWithScanDate) {
+                    for (final ModuleAnalyzer module : modulesWithScanDate) {
                         saveCveModule(module, application.getId());
                     }
                 } else {
@@ -83,7 +83,7 @@ public class RecupCveSecuriteService {
                     "Récupération des CVE terminée avec succès pour {} applications",
                     applications.size());
 
-        } catch (Exception e) {
+        } catch (final Exception e) {
             log.error(
                     "Erreur lors de la récupération des CVE depuis l'API : {}", e.getMessage(), e);
         }
@@ -92,18 +92,18 @@ public class RecupCveSecuriteService {
     /** Récupère la liste des applications depuis l'API */
     private List<ApplicationAnalyzer> getApplicationsFromApi() {
         try {
-            String url = apiBaseUrl + "/applications";
+            final String url = apiBaseUrl + "/applications";
 
-            HttpHeaders headers = new HttpHeaders();
+            final HttpHeaders headers = new HttpHeaders();
             headers.setBearerAuth(analyzerAuthentification.execute());
 
-            HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
+            final HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
 
-            ResponseEntity<ApplicationAnalyzer[]> response =
+            final ResponseEntity<ApplicationAnalyzer[]> response =
                     restTemplate.exchange(
                             url, HttpMethod.GET, requestEntity, ApplicationAnalyzer[].class);
 
-            ApplicationAnalyzer[] applicationsArray = response.getBody();
+            final ApplicationAnalyzer[] applicationsArray = response.getBody();
 
             if (applicationsArray == null) {
                 log.warn("Aucune application récupérée depuis l'API");
@@ -113,7 +113,7 @@ public class RecupCveSecuriteService {
             log.info("Récupération de {} applications depuis l'API", applicationsArray.length);
             return List.of(applicationsArray);
 
-        } catch (RestClientException e) {
+        } catch (final RestClientException e) {
             log.error("Erreur lors de l'appel à l'API applications : {}", e.getMessage());
             throw new AnalyzerApiException(
                     "Impossible de récupérer les applications depuis l'API", e);
@@ -128,7 +128,7 @@ public class RecupCveSecuriteService {
             boolean isApplication) {
         cveData.forEach(
                 (type, count) -> {
-                    TableFaits fait =
+                    final TableFaits fait =
                             TableFaits.builder()
                                     .idModule(moduleId)
                                     .idApplication(applicationId)

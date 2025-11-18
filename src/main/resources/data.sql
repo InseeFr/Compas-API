@@ -8,11 +8,20 @@ INSERT INTO INDICATEUR (id,nom,type,brut_final) VALUES (205,'Cpu allouée', 'num
 INSERT INTO INDICATEUR (id,nom,type,brut_final) VALUES (206,'Cpu maxi', 'numeric', 'Brut');
 INSERT INTO INDICATEUR (id,nom,type,brut_final) VALUES (207,'Conso', 'numeric', 'Brut');
 INSERT INTO INDICATEUR (id,nom,type,brut_final) VALUES (208,'Nombre de Vm', 'numeric', 'Brut');
+INSERT INTO INDICATEUR (id,nom,type,brut_final) VALUES (211,'RAM allouée PD', 'numeric', 'Brut');
+INSERT INTO INDICATEUR (id,nom,type,brut_final) VALUES (212,'RAM maxi PD', 'numeric', 'Brut');
+INSERT INTO INDICATEUR (id,nom,type,brut_final) VALUES (213,'Disque alloué PD', 'numeric', 'Brut');
+INSERT INTO INDICATEUR (id,nom,type,brut_final) VALUES (214,'Disque consommé PD', 'numeric', 'Brut');
+INSERT INTO INDICATEUR (id,nom,type,brut_final) VALUES (215,'Cpu allouée PD', 'numeric', 'Brut');
+INSERT INTO INDICATEUR (id,nom,type,brut_final) VALUES (216,'Cpu maxi PD', 'numeric', 'Brut');
+INSERT INTO INDICATEUR (id,nom,type,brut_final) VALUES (217,'Conso PD', 'numeric', 'Brut');
+INSERT INTO INDICATEUR (id,nom,type,brut_final) VALUES (218,'Nombre de Vm PD', 'numeric', 'Brut');
 INSERT INTO INDICATEUR (id,nom,type,brut_final) VALUES (301,'Nombre de jours depuis le dernier déploiement en production', 'numeric', 'Brut');
 INSERT INTO INDICATEUR (id,nom,type,brut_final) VALUES (302,'Nombre de déploiement en production depuis une date donnée', 'numeric', 'Brut');
 INSERT INTO INDICATEUR (id,nom,type,brut_final) VALUES (303,'Nombre de personnes ayant contribués à un projet depuis une date donnée', 'numeric', 'Brut');
 INSERT INTO INDICATEUR (id,nom,type,brut_final) VALUES (401,'Météo du dev (ressenti général)', 'numeric', 'Brut');
-	 
+
+
 INSERT INTO module_oscar (id_module,actif) VALUES (244,true);
 INSERT INTO module_oscar (id_module,actif) VALUES (243,true);
 
