@@ -3,6 +3,7 @@ package fr.insee.compas.mapper;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Optional;
 
 import org.assertj.core.api.SoftAssertions;
@@ -40,6 +41,15 @@ class IndicateurApplicationGreenITViewTest {
         indicateur.setCpuMaxi(new BigDecimal(90));
         indicateur.setConso(150);
         indicateur.setNbVm(10);
+        indicateur.setRamAllocatedProd(2);
+        indicateur.setRamMaxiProd(new BigDecimal(2));
+        indicateur.setDiskAllocatedProd(80);
+        indicateur.setDiskUsedProd(new BigDecimal(20));
+        indicateur.setCpuAllocatedProd(800);
+        indicateur.setCpuMaxiProd(new BigDecimal(60));
+        indicateur.setConsoProd(100);
+        indicateur.setNbVmProd(5);
+        indicateur.setDateMaj(LocalDate.of(2025, 11, 24));
 
         final GreenItScore score = new GreenItScore();
         score.setConso(BigDecimal.valueOf(12.3456));
@@ -66,7 +76,17 @@ class IndicateurApplicationGreenITViewTest {
         softAssertions.assertThat(view.getConsoScore()).isEqualTo("12.346");
         softAssertions.assertThat(view.getImpactScore()).isEqualTo("20.112");
         softAssertions.assertThat(view.getGaspillageScore()).isEqualTo("2.000");
+        softAssertions.assertThat(view.getRamAllocatedProd()).isEqualTo("2");
+        softAssertions.assertThat(view.getRamMaxiProd()).isEqualTo("2");
+        softAssertions.assertThat(view.getDiskAllocatedProd()).isEqualTo("80");
+        softAssertions.assertThat(view.getDiskUsedProd()).isEqualTo("20");
+        softAssertions.assertThat(view.getCpuAllocatedProd()).isEqualTo("800");
+        softAssertions.assertThat(view.getCpuMaxiProd()).isEqualTo("60");
+        softAssertions.assertThat(view.getConsoProd()).isEqualTo("100");
+        softAssertions.assertThat(view.getNbVmProd()).isEqualTo("5");
+        softAssertions.assertThat(view.getDateMaj()).isEqualTo("2025-11-24");
         softAssertions.assertThat(view.getLettreGreen()).isEqualTo("B");
+
         softAssertions.assertAll();
     }
 

@@ -43,6 +43,7 @@ public class IndicateurModuleGreenITViewMapper {
                 .gaspillageScore(
                         greenItScore.getGaspillage().setScale(3, RoundingMode.UP).toString())
                 .lettreGreen(greenItScoreCalculator.compute(ind).getGrade())
+                .dateMaj(ind.getDateMaj())
                 .build();
     }
 }

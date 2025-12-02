@@ -88,6 +88,7 @@ public class GreenItService {
         final IndicateurModuleGreenIT greenIt = new IndicateurModuleGreenIT();
         final ModuleOscarView moduleOscarView = module.getBody();
         greenIt.setModuleId(moduleId);
+        greenIt.setDateMaj(lastDay);
         greenIt.setModuleName(moduleOscarView != null ? moduleOscarView.getNom() : "anonyme");
         final List<TableFaits> ramAlloueeLatestValues =
                 tableFaitsRepository.findByDateAndIdIndicateurAndIdModule(
@@ -153,6 +154,7 @@ public class GreenItService {
         final ResponseEntity<ApplicationOscarView> application =
                 oscarClient.getApplicationOscar(applicationId);
         final IndicateurApplicationGreenIT greenIt = new IndicateurApplicationGreenIT();
+        greenIt.setDateMaj(lastDay);
         final ApplicationOscarView applicationOscarView = application.getBody();
         greenIt.setApplicationId(applicationId);
         greenIt.setApplicationName(

@@ -1,6 +1,7 @@
 package fr.insee.compas.model.greenit;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -26,6 +27,7 @@ public abstract class IndicateurGreenIT {
     private BigDecimal diskUsedProd;
     private Integer consoProd;
     private Integer nbVmProd;
+    private LocalDate dateMaj;
 
     public abstract GreenItScore toGreenItScore(
             BigDecimal score,

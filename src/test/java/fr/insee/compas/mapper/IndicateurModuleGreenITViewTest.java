@@ -3,6 +3,7 @@ package fr.insee.compas.mapper;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Optional;
 
 import org.assertj.core.api.SoftAssertions;
@@ -40,6 +41,7 @@ class IndicateurModuleGreenITViewTest {
         indicateur.setCpuMaxi(new BigDecimal(90));
         indicateur.setConso(150);
         indicateur.setNbVm(10);
+        indicateur.setDateMaj(LocalDate.of(2025, 11, 24));
 
         final GreenItScore score = new GreenItScore();
         score.setConso(BigDecimal.valueOf(12.3456));
@@ -67,6 +69,7 @@ class IndicateurModuleGreenITViewTest {
         softAssertions.assertThat(view.getImpactScore()).isEqualTo("20.112");
         softAssertions.assertThat(view.getGaspillageScore()).isEqualTo("2.000");
         softAssertions.assertThat(view.getLettreGreen()).isEqualTo("B");
+        softAssertions.assertThat(view.getDateMaj()).isEqualTo("2025-11-24");
         softAssertions.assertAll();
     }
 

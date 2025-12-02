@@ -51,6 +51,7 @@ public class IndicateurApplicationGreenITViewMapper {
                 .gaspillageScore(
                         greenItScore.getGaspillage().setScale(3, RoundingMode.UP).toString())
                 .lettreGreen(greenItScoreCalculator.compute(indicateur).getGrade())
+                .dateMaj(indicateur.getDateMaj())
                 .build();
     }
 }

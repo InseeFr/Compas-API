@@ -1,5 +1,7 @@
 package fr.insee.compas.view;
 
+import java.time.LocalDate;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,4 +26,5 @@ public class IndicateurModuleGreenITView {
     private String impactScore;
     private String gaspillageScore;
     private String lettreGreen;
+    private LocalDate dateMaj;
 }
