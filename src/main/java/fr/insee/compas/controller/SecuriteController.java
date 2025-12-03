@@ -1,6 +1,5 @@
 package fr.insee.compas.controller;
 
-import java.io.IOException;
 import java.util.List;
 
 import org.springframework.web.bind.annotation.*;
@@ -8,9 +7,9 @@ import org.springframework.web.bind.annotation.*;
 import fr.insee.compas.service.securite.CveCriticalMonthlyService;
 import fr.insee.compas.service.securite.IndicateurSecuriteService;
 import fr.insee.compas.service.securite.RecupCveSecuriteService;
+import fr.insee.compas.service.securite.RecupHyperxSecuriteService;
 import fr.insee.compas.view.IndicateurApplicationSecuriteMonthly;
-import fr.insee.compas.view.IndicateurSecuriteApplicationView;
-import fr.insee.compas.view.IndicateurSecuriteModuleView;
+import fr.insee.compas.view.IndicateurSecuriteView;
 
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.extern.slf4j.Slf4j;
@@ -23,14 +22,17 @@ public class SecuriteController {
     private final RecupCveSecuriteService cveSecuriteService;
     private final CveCriticalMonthlyService cveCriticalMonthlyService;
     private final IndicateurSecuriteService indicateurSecuriteService;
+    private final RecupHyperxSecuriteService recupHyperxSecuriteService;
 
     public SecuriteController(
             RecupCveSecuriteService cveSecuriteService,
             IndicateurSecuriteService indicateurSecuriteService,
-            CveCriticalMonthlyService cveCriticalMonthlyService) {
+            CveCriticalMonthlyService cveCriticalMonthlyService,
+            RecupHyperxSecuriteService recupHyperxSecuriteService) {
         this.cveSecuriteService = cveSecuriteService;
         this.cveCriticalMonthlyService = cveCriticalMonthlyService;
         this.indicateurSecuriteService = indicateurSecuriteService;
+        this.recupHyperxSecuriteService = recupHyperxSecuriteService;
     }
 
     @PutMapping("/indicateurs-cve")
@@ -42,22 +44,20 @@ public class SecuriteController {
     }
 
     @GetMapping("/modules")
-    public List<IndicateurSecuriteModuleView> getIndicateurQualiteByModule() throws IOException {
-        log.info("Début du endpoint  récupération indicateur Qualite par module");
-        List<IndicateurSecuriteModuleView> result =
-                indicateurSecuriteService.getIndicateursModuleView();
-        log.info("Fin du endpoint récupération indicateur Qualite par module");
+    public List<IndicateurSecuriteView> getIndicateurSecuriteByModule() {
+        log.info("Début du endpoint  récupération indicateur Securite par module");
+        List<IndicateurSecuriteView> result = indicateurSecuriteService.getIndicateursModuleView();
+        log.info("Fin du endpoint récupération indicateur Securite par module");
         return result;
     }
 
     @GetMapping("/applications")
-    public List<IndicateurSecuriteApplicationView> getIndicateurQualiteByApplication()
-            throws IOException {
-        log.info("Début du endpoint récupération indicateur Qualite par application ");
-        List<IndicateurSecuriteApplicationView> result =
+    public List<IndicateurSecuriteView> getIndicateurSecuriteByApplication() {
+        log.info("Début du endpoint récupération indicateur Securite par application ");
+        List<IndicateurSecuriteView> result =
                 indicateurSecuriteService.getIndicateursApplicationView();
 
-        log.info("Fin du endpoint récupération indicateur Qualite par application");
+        log.info("Fin du endpoint récupération indicateur Securite par application");
         return result;
     }
 
@@ -68,5 +68,12 @@ public class SecuriteController {
         List<IndicateurApplicationSecuriteMonthly> result = cveCriticalMonthlyService.getMonthly();
         log.info("Fin endpoint CVE critiques mensuel : {} lignes", result.size());
         return result;
+    }
+
+    @PutMapping("/indicateurs-delaiMajVM")
+    @Operation(summary = "mise à jour des indicateurs delaiMajVM en base de donnée")
+    public void updateIndicateurDelai() {
+
+        recupHyperxSecuriteService.updateDonneesVmNonMiseAjourDansDelaiParHyperX();
     }
 }

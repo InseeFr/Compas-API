@@ -15,6 +15,7 @@ import fr.insee.compas.service.devops.UpdateIndicatorDevopsService;
 import fr.insee.compas.service.meteo.MeteoAlerteService;
 import fr.insee.compas.service.qualite.RecuperationIndicateurSonarService;
 import fr.insee.compas.service.securite.RecupCveSecuriteService;
+import fr.insee.compas.service.securite.RecupHyperxSecuriteService;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,6 +27,7 @@ public class ApiScheduler {
     private final RecupCveSecuriteService cveService;
     private final UpdateIndicatorDevopsService updateIndicatorDevopsService;
     private final A11yMajService a11yMajService;
+    private final RecupHyperxSecuriteService recupHyperxSecuriteService;
     private final MeteoAlerteService meteoAlerteService;
 
     @Value("${compas.alertes.enabled:false}")
@@ -37,6 +39,7 @@ public class ApiScheduler {
             RecupCveSecuriteService cveService,
             UpdateIndicatorDevopsService updateIndicatorDevopsService,
             A11yMajService a11yMajService,
+            RecupHyperxSecuriteService recupHyperxSecuriteService,
             MeteoAlerteService meteoAlerteService) {
         this.oscarService = oscarService;
         this.indicateurSonar = testUnitaireService;
@@ -44,6 +47,7 @@ public class ApiScheduler {
         this.updateIndicatorDevopsService = updateIndicatorDevopsService;
         this.a11yMajService = a11yMajService;
         this.meteoAlerteService = meteoAlerteService;
+        this.recupHyperxSecuriteService = recupHyperxSecuriteService;
     }
 
     @Scheduled(cron = "0 30 6 * * *")
@@ -66,6 +70,10 @@ public class ApiScheduler {
         log.info("intégration des issues sonar accessibiliy");
         a11yMajService.getNbIssueSonarAccessibility();
         log.info("fin intégration des issues sonar accessibiliy");
+        log.info("mise à jour indicateur hyperx");
+        recupHyperxSecuriteService.updateDonneesVmNonMiseAjourDansDelaiParHyperX();
+        log.info("fin mise à jour indicateur hyperx");
+
         log.info("mise à jour des indicateurs devops");
         updateIndicatorDevopsService.miseAJourIndicateursDevopsEnBaseDeDonnes(null, null);
         log.info("fin des mises à jour des devops");

@@ -74,7 +74,12 @@ public class IndicateurQualiteApplicationService {
     }
 
     private void calculLettreCouvertureTest(IndicateurQualiteView viewApplication) {
+        log.info(viewApplication.getApplicationName());
+
         if (StringUtils.isNotEmpty(viewApplication.getNbLigneCode())) {
+            if (viewApplication.getNbLigneCodeNonTeste().isEmpty()) {
+                viewApplication.setNbLigneCodeNonTeste("0");
+            }
             if (Double.parseDouble(viewApplication.getNbLigneCode()) > 0) {
                 double percentage =
                         utilsService.calculPourcentageCouvertureTest(

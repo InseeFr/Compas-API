@@ -6,12 +6,10 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 import fr.insee.compas.model.compas.Notation;
-import fr.insee.compas.model.oscar.Application;
 import fr.insee.compas.model.oscar.Module;
 import fr.insee.compas.repository.IndicateurSecuriteRepository;
 import fr.insee.compas.service.OscarService;
-import fr.insee.compas.view.IndicateurSecuriteApplicationView;
-import fr.insee.compas.view.IndicateurSecuriteModuleView;
+import fr.insee.compas.view.IndicateurSecuriteView;
 
 import lombok.RequiredArgsConstructor;
 
@@ -22,23 +20,20 @@ public class IndicateurSecuriteService {
     private final IndicateurSecuriteRepository indicateurSecuriteRepository;
     private final OscarService oscarService;
 
-    public List<IndicateurSecuriteApplicationView> getIndicateursApplicationView() {
+    public List<IndicateurSecuriteView> getIndicateursApplicationView() {
         List<Object[]> rawData = indicateurSecuriteRepository.findValueBruteApplication();
-        List<Application> applications = oscarService.getApplications();
-        Map<Integer, Application> appMap =
-                applications.stream()
-                        .collect(Collectors.toMap(Application::getIdApplication, a -> a));
-
-        List<IndicateurSecuriteApplicationView> result = new ArrayList<>();
+        List<IndicateurSecuriteView> result = new ArrayList<>();
 
         for (Object[] row : rawData) {
             Integer idApp = toInteger(row[0]);
-            Application app = appMap.get(idApp);
 
             boolean hasCveData =
                     row[1] != null || row[2] != null || row[3] != null || row[4] != null;
 
-            String lettre = null;
+            String lettreCve = "NR";
+            String lettreVm = "NR";
+            Integer nbVmNonMaj = null;
+            Integer delaiMaj = null;
             if (hasCveData) {
                 double niveau =
                         getCalculIndicateurCve(
@@ -46,31 +41,45 @@ public class IndicateurSecuriteService {
                                 toInteger(row[2]),
                                 toInteger(row[3]),
                                 toInteger(row[4]));
-                lettre = convertNiveauCveEnLettre(niveau);
+                lettreCve = convertNiveauCveEnLettre(niveau);
+            }
+            if (row[5] != null) {
+                nbVmNonMaj = toInteger(row[5]);
+                lettreVm = convertNnVmNonMiseAjourEnLettre(nbVmNonMaj);
+            }
+            if (row[6] != null) {
+                delaiMaj = toInteger(row[6]);
             }
 
-            result.add(
-                    IndicateurSecuriteApplicationView.builder()
+            IndicateurSecuriteView view =
+                    IndicateurSecuriteView.builder()
                             .applicationId(idApp)
-                            .applicationName(app != null ? app.getAppName() : null)
+                            .moduleId(null)
                             .nbCveCritical(toString(row[1]))
                             .nbCveHigh(toString(row[2]))
                             .nbCveMedium(toString(row[3]))
                             .nbCveLow(toString(row[4]))
-                            .lettreSecurite(lettre)
-                            .build());
+                            .nbVmNonMaj(toString(row[5]))
+                            .lettreCve(lettreCve)
+                            .nbVmNonMaj(nbVmNonMaj != null ? String.valueOf(nbVmNonMaj) : "")
+                            .delaiVmNonMiseAjour(delaiMaj != null ? String.valueOf(delaiMaj) : "")
+                            .lettreMajVm(lettreVm)
+                            .build();
+            view.calculerLettreGlobaleSecurite();
+
+            result.add(view);
         }
 
         return result;
     }
 
-    public List<IndicateurSecuriteModuleView> getIndicateursModuleView() {
+    public List<IndicateurSecuriteView> getIndicateursModuleView() {
         List<Object[]> rawData = indicateurSecuriteRepository.findValueBruteModule();
         List<Module> modules = oscarService.getModules();
         Map<Integer, Module> moduleMap =
                 modules.stream().collect(Collectors.toMap(Module::getId, m -> m));
 
-        List<IndicateurSecuriteModuleView> result = new ArrayList<>();
+        List<IndicateurSecuriteView> result = new ArrayList<>();
 
         for (Object[] row : rawData) {
             Integer moduleId = toInteger(row[0]);
@@ -89,19 +98,19 @@ public class IndicateurSecuriteService {
                                 toInteger(row[4]));
                 lettre = convertNiveauCveEnLettre(niveau);
             }
-
-            result.add(
-                    IndicateurSecuriteModuleView.builder()
+            IndicateurSecuriteView view =
+                    IndicateurSecuriteView.builder()
                             .moduleId(moduleId)
                             .applicationId(mod != null ? mod.getIdApplication() : null)
-                            .moduleName(mod != null ? mod.getModName() : null)
-                            .applicationName(mod != null ? mod.getAppName() : null)
                             .nbCveCritical(toString(row[1]))
                             .nbCveHigh(toString(row[2]))
                             .nbCveMedium(toString(row[3]))
                             .nbCveLow(toString(row[4]))
-                            .lettreSecurite(lettre)
-                            .build());
+                            .lettreCve(lettre)
+                            .lettreMajVm("NR")
+                            .build();
+            view.calculerLettreGlobaleSecurite();
+            result.add(view);
         }
 
         return result;
@@ -124,6 +133,14 @@ public class IndicateurSecuriteService {
         if (niveau >= 3) return Notation.E.getGrade();
         else if (niveau >= 2) return Notation.D.getGrade();
         else if (niveau >= 1) return Notation.C.getGrade();
+        else if (niveau > 0) return Notation.B.getGrade();
+        else return Notation.A.getGrade();
+    }
+
+    public String convertNnVmNonMiseAjourEnLettre(double niveau) {
+        if (niveau >= 20) return Notation.E.getGrade();
+        else if (niveau >= 12) return Notation.D.getGrade();
+        else if (niveau >= 5) return Notation.C.getGrade();
         else if (niveau > 0) return Notation.B.getGrade();
         else return Notation.A.getGrade();
     }

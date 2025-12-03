@@ -34,8 +34,10 @@ public enum IndicateurType {
     DEPLOYMENT_COUNT(302),
     NBR_CONTRIBUTIONS_PROJET(303),
     DETTE_TECH(11),
-    ISSUE_ACCESSIBILITY(501),
-    FIABILITE(12);
+    FIABILITE(12),
+    DELAI_MAJ_VM(101),
+    NB_VM_NON_MISES_A_JOUR(102),
+    ISSUE_ACCESSIBILITY(501);
 
     private final int value;
 

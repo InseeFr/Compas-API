@@ -57,7 +57,9 @@ GROUP BY
         MAX(CASE WHEN id_indicateur = 7 THEN valeur END) AS nbCveCritical,
         MAX(CASE WHEN id_indicateur = 8 THEN valeur END) AS nbCveHigh,
         MAX(CASE WHEN id_indicateur = 9 THEN valeur END) AS nbCveMedium,
-        MAX(CASE WHEN id_indicateur = 10 THEN valeur END) AS nbCveLow
+        MAX(CASE WHEN id_indicateur = 10 THEN valeur END) AS nbCveLow,
+        MAX(CASE WHEN id_indicateur = 102 THEN valeur END) AS nbCveLow,
+        MAX(CASE WHEN id_indicateur = 101 THEN valeur END) AS delai
     FROM
         latest_data
     WHERE
