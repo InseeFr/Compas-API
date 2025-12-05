@@ -44,20 +44,26 @@ public class DevopsController {
     }
 
     @GetMapping("/applications")
-    public List<IndicateurDevopsView> getApplications() {
-        log.info("****** Début du endpoint  getApplications ********");
+    public List<IndicateurDevopsView> getApplications(
+            @RequestParam(name = "isSynthetique", required = false, defaultValue = "false")
+                    boolean isSynthetique) {
+        log.info(
+                "****** Début du endpoint getApplications (isSynthetique={}) ********",
+                isSynthetique);
         List<IndicateurDevopsView> result =
-                indicatorDevopsApplicationService.getIndicateurNiveauApplication();
-        log.info("****** fin du endpoint    getApplications ********");
+                indicatorDevopsApplicationService.getIndicateurNiveauApplication(isSynthetique);
+        log.info("****** fin du endpoint getApplications ********");
         return result;
     }
 
     @GetMapping("/modules")
-    public List<IndicateurDevopsView> getModules() {
-        log.info("****** Début du endpoint  getModules ********");
+    public List<IndicateurDevopsView> getModules(
+            @RequestParam(name = "isSynthetique", required = false, defaultValue = "false")
+                    boolean isSynthetique) {
+        log.info("****** Début du endpoint getModules (isSynthetique={}) ********");
         List<IndicateurDevopsView> result =
-                indicatorDevopsModuleService.getIndicateurNiveauModule();
-        log.info("****** fin du endpoint    getModules********");
+                indicatorDevopsModuleService.getIndicateurNiveauModule(isSynthetique);
+        log.info("****** fin du endpoint getModules********");
         return result;
     }
 }

@@ -63,7 +63,7 @@ class IndicatorDevopsApplicationServiceTest {
         when(tableFaitsService.getIndicateurApplicationDevops()).thenReturn(mapQualite);
 
         // Appel du service
-        List<IndicateurDevopsView> resultat = service.getIndicateurNiveauApplication();
+        List<IndicateurDevopsView> resultat = service.getIndicateurNiveauApplication(false);
 
         // Vérifications sur app1
         Optional<IndicateurDevopsView> r1 =
@@ -99,7 +99,7 @@ class IndicatorDevopsApplicationServiceTest {
         when(oscarService.getApplications()).thenReturn(List.of(app1));
         when(tableFaitsService.getIndicateurApplicationDevops()).thenReturn(new HashMap<>());
 
-        List<IndicateurDevopsView> resultat = service.getIndicateurNiveauApplication();
+        List<IndicateurDevopsView> resultat = service.getIndicateurNiveauApplication(false);
 
         assertEquals(1, resultat.size());
         IndicateurDevopsView view = resultat.getFirst();

@@ -68,7 +68,7 @@ class IndicatorDevopsModuleServiceTest {
         when(tableFaitsService.getIndicateurModuleDevops()).thenReturn(mapDevops);
 
         // Appel du service
-        List<IndicateurDevopsView> resultat = service.getIndicateurNiveauModule();
+        List<IndicateurDevopsView> resultat = service.getIndicateurNiveauModule(false);
 
         // Vérifications sur module1
         Optional<IndicateurDevopsView> r1 =
@@ -108,7 +108,7 @@ class IndicatorDevopsModuleServiceTest {
         when(oscarService.getModules()).thenReturn(List.of(module));
         when(tableFaitsService.getIndicateurModuleDevops()).thenReturn(new HashMap<>());
 
-        List<IndicateurDevopsView> resultat = service.getIndicateurNiveauModule();
+        List<IndicateurDevopsView> resultat = service.getIndicateurNiveauModule(false);
 
         assertEquals(1, resultat.size());
         IndicateurDevopsView view = resultat.get(0);

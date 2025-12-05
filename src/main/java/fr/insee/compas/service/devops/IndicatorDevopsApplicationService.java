@@ -29,7 +29,7 @@ public class IndicatorDevopsApplicationService {
         this.tableFaitsService = tableFaitsService;
     }
 
-    public List<IndicateurDevopsView> getIndicateurNiveauApplication() {
+    public List<IndicateurDevopsView> getIndicateurNiveauApplication(boolean isSynthetique) {
 
         Map<Integer, IndicateurDevopsView> mapQualite =
                 tableFaitsService.getIndicateurApplicationDevops();
@@ -59,7 +59,7 @@ public class IndicatorDevopsApplicationService {
             viewApplication.setLettreContributorCount(
                     IndicateurDevopsLetterUtils.calculLettreContributorCount(
                             viewApplication.getNbContributorCount()));
-            viewApplication.calculerLettreGlobalDevops();
+            viewApplication.calculerLettreGlobalDevops(isSynthetique);
             resultat.add(viewApplication);
         }
 

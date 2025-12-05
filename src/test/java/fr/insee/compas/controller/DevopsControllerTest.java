@@ -60,19 +60,19 @@ class DevopsControllerTest {
                 List.of(
                         new IndicateurDevopsView(
                                 1, 100, "MOD1", "APP1", null, null, null, "1", "2", "3", "A", "B",
-                                "C", null),
+                                "C", null, false),
                         new IndicateurDevopsView(
                                 2, 101, "MOD2", "APP2", null, null, null, "4", "5", "6", "D", "E",
-                                "X", null));
-        when(indicatorDevopsApplicationService.getIndicateurNiveauApplication())
+                                "X", null, false));
+        when(indicatorDevopsApplicationService.getIndicateurNiveauApplication(false))
                 .thenReturn(expected);
 
         // When
-        List<IndicateurDevopsView> result = controller.getApplications();
+        List<IndicateurDevopsView> result = controller.getApplications(false);
 
         // Then
         assertThat(result).isEqualTo(expected);
-        verify(indicatorDevopsApplicationService, times(1)).getIndicateurNiveauApplication();
+        verify(indicatorDevopsApplicationService, times(1)).getIndicateurNiveauApplication(false);
     }
 
     @Test
@@ -82,17 +82,17 @@ class DevopsControllerTest {
                 List.of(
                         new IndicateurDevopsView(
                                 1, 100, "MOD1", "APP1", null, null, null, "1", "2", "3", "A", "B",
-                                "C", null),
+                                "C", null, false),
                         new IndicateurDevopsView(
                                 2, 101, "MOD2", "APP2", null, null, null, "4", "5", "6", "D", "E",
-                                "X", null));
-        when(indicatorDevopsModuleService.getIndicateurNiveauModule()).thenReturn(expected);
+                                "X", null, false));
+        when(indicatorDevopsModuleService.getIndicateurNiveauModule(false)).thenReturn(expected);
 
         // When
-        List<IndicateurDevopsView> result = controller.getModules();
+        List<IndicateurDevopsView> result = controller.getModules(false);
 
         // Then
         assertThat(result).isEqualTo(expected);
-        verify(indicatorDevopsModuleService, times(1)).getIndicateurNiveauModule();
+        verify(indicatorDevopsModuleService, times(1)).getIndicateurNiveauModule(false);
     }
 }

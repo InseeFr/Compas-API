@@ -29,7 +29,7 @@ public class IndicatorDevopsModuleService {
         this.tableFaitsService = tableFaitsService;
     }
 
-    public List<IndicateurDevopsView> getIndicateurNiveauModule() {
+    public List<IndicateurDevopsView> getIndicateurNiveauModule(boolean isSynthetique) {
 
         // Récupérer les informations des modules depuis l'API
         List<Module> modules = oscarService.getModules();
@@ -62,7 +62,7 @@ public class IndicatorDevopsModuleService {
             viewModule.setLettreContributorCount(
                     IndicateurDevopsLetterUtils.calculLettreContributorCount(
                             viewModule.getNbContributorCount()));
-            viewModule.calculerLettreGlobalDevops();
+            viewModule.calculerLettreGlobalDevops(isSynthetique);
             resultat.add(viewModule);
         }
 
