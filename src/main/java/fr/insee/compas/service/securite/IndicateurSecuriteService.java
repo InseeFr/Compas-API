@@ -5,10 +5,10 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
-import fr.insee.compas.model.compas.Notation;
 import fr.insee.compas.model.oscar.Module;
 import fr.insee.compas.repository.IndicateurSecuriteRepository;
 import fr.insee.compas.service.OscarService;
+import fr.insee.compas.service.conversion.ConversionService;
 import fr.insee.compas.view.IndicateurSecuriteView;
 
 import lombok.RequiredArgsConstructor;
@@ -16,7 +16,7 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class IndicateurSecuriteService {
-
+    private final ConversionService conversionService;
     private final IndicateurSecuriteRepository indicateurSecuriteRepository;
     private final OscarService oscarService;
 
@@ -41,11 +41,11 @@ public class IndicateurSecuriteService {
                                 toInteger(row[2]),
                                 toInteger(row[3]),
                                 toInteger(row[4]));
-                lettreCve = convertNiveauCveEnLettre(niveau);
+                lettreCve = conversionService.convertNiveauCveEnLettre(niveau);
             }
             if (row[5] != null) {
                 nbVmNonMaj = toInteger(row[5]);
-                lettreVm = convertNnVmNonMiseAjourEnLettre(nbVmNonMaj);
+                lettreVm = conversionService.convertNbVmNonMiseAJour(nbVmNonMaj);
             }
             if (row[6] != null) {
                 delaiMaj = toInteger(row[6]);
@@ -96,7 +96,7 @@ public class IndicateurSecuriteService {
                                 toInteger(row[2]),
                                 toInteger(row[3]),
                                 toInteger(row[4]));
-                lettre = convertNiveauCveEnLettre(niveau);
+                lettre = conversionService.convertNiveauCveEnLettre(niveau);
             }
             IndicateurSecuriteView view =
                     IndicateurSecuriteView.builder()
@@ -127,21 +127,5 @@ public class IndicateurSecuriteService {
     public double getCalculIndicateurCve(Integer c, Integer e, Integer m, Integer f) {
         int somme = c * 1000 + e * 100 + m * 10 + f + 1;
         return Math.log10(somme);
-    }
-
-    public String convertNiveauCveEnLettre(double niveau) {
-        if (niveau >= 3) return Notation.E.getGrade();
-        else if (niveau >= 2) return Notation.D.getGrade();
-        else if (niveau >= 1) return Notation.C.getGrade();
-        else if (niveau > 0) return Notation.B.getGrade();
-        else return Notation.A.getGrade();
-    }
-
-    public String convertNnVmNonMiseAjourEnLettre(double niveau) {
-        if (niveau >= 20) return Notation.E.getGrade();
-        else if (niveau >= 12) return Notation.D.getGrade();
-        else if (niveau >= 5) return Notation.C.getGrade();
-        else if (niveau > 0) return Notation.B.getGrade();
-        else return Notation.A.getGrade();
     }
 }

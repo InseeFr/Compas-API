@@ -28,6 +28,7 @@ import fr.insee.compas.model.compas.TableFaits;
 import fr.insee.compas.model.greenit.MetriqueVm;
 import fr.insee.compas.model.greenit.util.LectureCsvUtil;
 import fr.insee.compas.repository.TableFaitsRepository;
+import fr.insee.compas.service.greenit.GreenItService;
 import fr.insee.compas.util.ScoreUtils;
 
 @ExtendWith(MockitoExtension.class)

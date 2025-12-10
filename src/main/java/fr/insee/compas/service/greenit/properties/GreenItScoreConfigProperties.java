@@ -1,4 +1,4 @@
-package fr.insee.compas.logic;
+package fr.insee.compas.service.greenit.properties;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;

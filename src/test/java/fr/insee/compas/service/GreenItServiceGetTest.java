@@ -42,6 +42,7 @@ import fr.insee.compas.model.greenit.MetriqueVm;
 import fr.insee.compas.model.greenit.MetriqueVmCsvRead;
 import fr.insee.compas.model.greenit.util.LectureCsvUtil;
 import fr.insee.compas.repository.TableFaitsRepository;
+import fr.insee.compas.service.greenit.GreenItService;
 
 @ExtendWith(MockitoExtension.class)
 class GreenItServiceGetTest {

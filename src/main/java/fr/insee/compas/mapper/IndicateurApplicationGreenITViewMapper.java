@@ -5,28 +5,33 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Component;
 
-import fr.insee.compas.logic.GreenItScoreCalculator;
 import fr.insee.compas.model.greenit.GreenItScore;
 import fr.insee.compas.model.greenit.IndicateurApplicationGreenIT;
+import fr.insee.compas.service.greenit.score.GreenItComputeScore;
 import fr.insee.compas.util.GreenITutils;
 import fr.insee.compas.view.IndicateurApplicationGreenITView;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Component
 public class IndicateurApplicationGreenITViewMapper {
 
-    private final GreenItScoreCalculator greenItScoreCalculator;
+    private final GreenItComputeScore greenItComputeScore;
 
-    public IndicateurApplicationGreenITViewMapper(GreenItScoreCalculator greenItScoreCalculator) {
+    public IndicateurApplicationGreenITViewMapper(GreenItComputeScore calculatorScoreService) {
         super();
-        this.greenItScoreCalculator = greenItScoreCalculator;
+        this.greenItComputeScore = calculatorScoreService;
     }
 
     public Optional<IndicateurApplicationGreenITView> toView(IndicateurApplicationGreenIT ind) {
+        log.info(" to view app greenIt");
+
         return Optional.ofNullable(ind).map(this::mapToView);
     }
 
     private IndicateurApplicationGreenITView mapToView(IndicateurApplicationGreenIT indicateur) {
-        final GreenItScore greenItScore = greenItScoreCalculator.compute(indicateur);
+        final GreenItScore greenItScore = greenItComputeScore.computeAppScore(indicateur);
         return IndicateurApplicationGreenITView.builder()
                 .applicationId(indicateur.getApplicationId())
                 .applicationName(indicateur.getApplicationName())
@@ -50,7 +55,7 @@ public class IndicateurApplicationGreenITViewMapper {
                 .impactScore(greenItScore.getImpact().setScale(3, RoundingMode.UP).toString())
                 .gaspillageScore(
                         greenItScore.getGaspillage().setScale(3, RoundingMode.UP).toString())
-                .lettreGreen(greenItScoreCalculator.compute(indicateur).getGrade())
+                .lettreGreen(greenItComputeScore.computeAppScore(indicateur).getGrade())
                 .dateMaj(indicateur.getDateMaj())
                 .build();
     }

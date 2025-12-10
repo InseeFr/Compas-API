@@ -14,17 +14,21 @@ public class ConversionService {
     private final IConversionStrategie<String, Double> niveauCveConversion;
     private final IConversionStrategie<String, String> detteConversion;
     private final IConversionStrategie<String, String> issueConversion;
+    private final IConversionStrategie<String, Double> vmConversion;
 
     public ConversionService(
             @Qualifier("pourcentageEnNoteConversion")
-                    PourcentageEnNoteConversion pourcentageStrategie,
-            @Qualifier("cveConversion") NiveauCveConversion niveauCveStrategie,
-            @Qualifier("detteTechniqueConversion") DetteTechniqueConversion detteStrategie,
-            @Qualifier("issueConversion") IssueAccessibiliteConversion issueStrategie) {
-        this.pourcentageConversion = pourcentageStrategie;
-        this.niveauCveConversion = niveauCveStrategie;
-        this.detteConversion = detteStrategie;
-        this.issueConversion = issueStrategie;
+                    IConversionStrategie<String, Double> pourcentageConversion,
+            @Qualifier("cveConversion") IConversionStrategie<String, Double> niveauCveConversion,
+            @Qualifier("detteTechniqueConversion")
+                    IConversionStrategie<String, String> detteConversion,
+            @Qualifier("issueConversion") IConversionStrategie<String, String> issueConversion,
+            @Qualifier("vmConversion") IConversionStrategie<String, Double> vmConversion) {
+        this.pourcentageConversion = pourcentageConversion;
+        this.niveauCveConversion = niveauCveConversion;
+        this.detteConversion = detteConversion;
+        this.issueConversion = issueConversion;
+        this.vmConversion = vmConversion;
     }
 
     public String convertPourcentageEnNote(double percentage) {
@@ -41,5 +45,9 @@ public class ConversionService {
 
     public String convertIssueAccessebilite(String nbIssues) {
         return issueConversion.conversion(nbIssues);
+    }
+
+    public String convertNbVmNonMiseAJour(double niveau) {
+        return vmConversion.conversion(niveau);
     }
 }

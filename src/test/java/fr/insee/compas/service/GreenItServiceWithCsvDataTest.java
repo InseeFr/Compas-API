@@ -20,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 import fr.insee.compas.mapper.MetriqueVmMapper;
 import fr.insee.compas.model.greenit.MetriqueVmCsvRead;
 import fr.insee.compas.repository.TableFaitsRepository;
+import fr.insee.compas.service.greenit.GreenItService;
 
 @ExtendWith(MockitoExtension.class)
 class GreenItServiceWithCsvDataTest {

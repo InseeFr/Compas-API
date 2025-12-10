@@ -11,20 +11,20 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import fr.insee.compas.logic.GreenItScoreCalculator;
 import fr.insee.compas.model.greenit.GreenItScore;
 import fr.insee.compas.model.greenit.IndicateurModuleGreenIT;
+import fr.insee.compas.service.greenit.score.GreenItComputeScore;
 import fr.insee.compas.view.IndicateurModuleGreenITView;
 
 class IndicateurModuleGreenITViewTest {
 
     private IndicateurModuleGreenITViewMapper mapper;
-    private GreenItScoreCalculator greenItScoreCalculator;
+    private GreenItComputeScore greenItComputeScore;
 
     @BeforeEach
     void setUp() {
-        greenItScoreCalculator = Mockito.mock(GreenItScoreCalculator.class);
-        mapper = new IndicateurModuleGreenITViewMapper(greenItScoreCalculator);
+        greenItComputeScore = Mockito.mock(GreenItComputeScore.class);
+        mapper = new IndicateurModuleGreenITViewMapper(greenItComputeScore);
     }
 
     @Test
@@ -49,7 +49,7 @@ class IndicateurModuleGreenITViewTest {
         score.setGaspillage(BigDecimal.valueOf(2.0));
         score.setGrade("B");
 
-        Mockito.when(greenItScoreCalculator.compute(indicateur)).thenReturn(score);
+        Mockito.when(greenItComputeScore.computeModuleScore(indicateur)).thenReturn(score);
 
         final Optional<IndicateurModuleGreenITView> optView = mapper.toView(indicateur);
         final IndicateurModuleGreenITView view = optView.get();

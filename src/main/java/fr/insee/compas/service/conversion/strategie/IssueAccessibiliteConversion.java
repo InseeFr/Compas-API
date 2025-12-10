@@ -6,6 +6,7 @@ import fr.insee.compas.model.compas.Notation;
 
 @Component("issueConversion")
 public class IssueAccessibiliteConversion implements IConversionStrategie<String, String> {
+
     @Override
     public String conversion(String nbIssues) {
         double value = Double.parseDouble(nbIssues);

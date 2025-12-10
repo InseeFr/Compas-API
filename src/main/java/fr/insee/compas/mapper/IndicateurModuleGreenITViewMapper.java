@@ -5,20 +5,20 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Component;
 
-import fr.insee.compas.logic.GreenItScoreCalculator;
 import fr.insee.compas.model.greenit.GreenItScore;
 import fr.insee.compas.model.greenit.IndicateurModuleGreenIT;
+import fr.insee.compas.service.greenit.score.GreenItComputeScore;
 import fr.insee.compas.util.GreenITutils;
 import fr.insee.compas.view.IndicateurModuleGreenITView;
 
 @Component
 public class IndicateurModuleGreenITViewMapper {
 
-    private final GreenItScoreCalculator greenItScoreCalculator;
+    private final GreenItComputeScore greenItComputeScore;
 
-    public IndicateurModuleGreenITViewMapper(GreenItScoreCalculator greenItScoreCalculator) {
+    public IndicateurModuleGreenITViewMapper(GreenItComputeScore greenItComputeScore) {
         super();
-        this.greenItScoreCalculator = greenItScoreCalculator;
+        this.greenItComputeScore = greenItComputeScore;
     }
 
     public Optional<IndicateurModuleGreenITView> toView(IndicateurModuleGreenIT ind) {
@@ -26,7 +26,7 @@ public class IndicateurModuleGreenITViewMapper {
     }
 
     private IndicateurModuleGreenITView mapToView(IndicateurModuleGreenIT ind) {
-        final GreenItScore greenItScore = greenItScoreCalculator.compute(ind);
+        final GreenItScore greenItScore = greenItComputeScore.computeModuleScore(ind);
         return IndicateurModuleGreenITView.builder()
                 .moduleId(ind.getModuleId())
                 .moduleName(ind.getModuleName())
@@ -42,7 +42,7 @@ public class IndicateurModuleGreenITViewMapper {
                 .impactScore(greenItScore.getImpact().setScale(3, RoundingMode.UP).toString())
                 .gaspillageScore(
                         greenItScore.getGaspillage().setScale(3, RoundingMode.UP).toString())
-                .lettreGreen(greenItScoreCalculator.compute(ind).getGrade())
+                .lettreGreen(greenItComputeScore.computeModuleScore(ind).getGrade())
                 .dateMaj(ind.getDateMaj())
                 .build();
     }

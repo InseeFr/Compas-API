@@ -1,58 +1,29 @@
-package fr.insee.compas.logic;
+package fr.insee.compas.service.greenit.score;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-import org.springframework.stereotype.Service;
-
 import fr.insee.compas.model.greenit.GreenItScore;
 import fr.insee.compas.model.greenit.IndicateurGreenIT;
-import fr.insee.compas.model.greenit.IndicateurModuleGreenIT;
 import fr.insee.compas.model.greenit.util.ScoreGreenUtils;
 import fr.insee.compas.util.ScoreUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
-@Service
 @Slf4j
-public class GreenItScoreCalculator {
+public abstract class GreenItAbstractScore
+        implements ICalculatorScore<IndicateurGreenIT, GreenItScore> {
 
     private static final BigDecimal POIDS_CONSO = new BigDecimal("0.4");
     private static final BigDecimal POIDS_PRESSION = new BigDecimal("0.4");
     private static final BigDecimal POIDS_GASPILLAGE = new BigDecimal("0.2");
-
     private static final BigDecimal FACTEUR_RAM = new BigDecimal("4");
     private static final BigDecimal FACTEUR_CPU = new BigDecimal("0.0125");
     private static final BigDecimal FACTEUR_DISK = new BigDecimal("0.01");
     private static final BigDecimal FACTEUR_GASPILLAGE_ALLOUE = new BigDecimal("0.7");
     private static final BigDecimal FACTEUR_GASPILLAGE_INUTILISE = new BigDecimal("0.3");
 
-    private final GreenItScoreConfigProperties config;
-
-    public GreenItScoreCalculator(GreenItScoreConfigProperties config) {
-        super();
-        this.config = config;
-    }
-
-    public GreenItScore compute(IndicateurGreenIT kpis) {
-        return computeScore(
-                kpis,
-                config.getApplication().getConsoMax(),
-                config.getApplication().getPressionMaxRam(),
-                config.getApplication().getPressionMaxCpu(),
-                config.getApplication().getPressionMaxDisk());
-    }
-
-    public GreenItScore compute(IndicateurModuleGreenIT kpis) {
-        return computeScore(
-                kpis,
-                config.getModule().getConsoMax(),
-                config.getModule().getPressionMaxRam(),
-                config.getModule().getPressionMaxCpu(),
-                config.getModule().getPressionMaxDisk());
-    }
-
-    public GreenItScore computeScore(
+    GreenItScore computeScore(
             IndicateurGreenIT kpis, double consoMax, double maxRam, double maxCpu, double maxDisk) {
 
         if (isOneDenomCloseToZero(consoMax, maxRam, maxCpu, maxDisk)) {

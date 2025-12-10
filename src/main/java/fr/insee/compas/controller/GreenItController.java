@@ -22,7 +22,7 @@ import fr.insee.compas.model.compas.dto.MetriqueModuleDTO;
 import fr.insee.compas.model.greenit.IndicateurApplicationGreenIT;
 import fr.insee.compas.model.greenit.IndicateurModuleGreenIT;
 import fr.insee.compas.service.FichierControlService;
-import fr.insee.compas.service.GreenItService;
+import fr.insee.compas.service.greenit.GreenItService;
 import fr.insee.compas.view.IndicateurApplicationGreenITView;
 import fr.insee.compas.view.IndicateurModuleGreenITView;
 

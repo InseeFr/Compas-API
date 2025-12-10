@@ -1,4 +1,4 @@
-package fr.insee.compas.service;
+package fr.insee.compas.service.greenit;
 
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -299,7 +299,8 @@ public class GreenItService {
         }
     }
 
-    void miseAJourIndicateursApplicationGreenIT(List<VmOscarView> vmOscars, LocalDate fileDate) {
+    public void miseAJourIndicateursApplicationGreenIT(
+            List<VmOscarView> vmOscars, LocalDate fileDate) {
         final Map<Integer, List<VmOscarView>> vmApplis =
                 vmOscars.stream()
                         .filter(p -> p.getIdModule() == null)
@@ -326,7 +327,7 @@ public class GreenItService {
                         });
     }
 
-    void miseAJourIndicateursModuleGreenIT(List<VmOscarView> vmOscars, LocalDate fileDate) {
+    public void miseAJourIndicateursModuleGreenIT(List<VmOscarView> vmOscars, LocalDate fileDate) {
         final Map<Integer, List<VmOscarView>> vmModules =
                 vmOscars.stream()
                         .filter(p -> p.getIdModule() != null)

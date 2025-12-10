@@ -17,21 +17,22 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
-import fr.insee.compas.logic.GreenItScoreConfigProperties.ConfigurationApplicationModule;
 import fr.insee.compas.model.greenit.GreenItScore;
 import fr.insee.compas.model.greenit.IndicateurApplicationGreenIT;
 import fr.insee.compas.model.greenit.IndicateurModuleGreenIT;
+import fr.insee.compas.service.greenit.properties.GreenItScoreConfigProperties;
+import fr.insee.compas.service.greenit.score.GreenItComputeScore;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class GreenItScoreCalculatorTest {
 
-    private GreenItScoreCalculator calculator;
+    private GreenItComputeScore calculator;
     @Mock private GreenItScoreConfigProperties config;
 
-    @Mock private ConfigurationApplicationModule application;
+    @Mock private GreenItScoreConfigProperties.ConfigurationApplicationModule application;
 
-    @Mock private ConfigurationApplicationModule module;
+    @Mock private GreenItScoreConfigProperties.ConfigurationApplicationModule module;
 
     @BeforeEach
     void setUp() {
@@ -45,7 +46,7 @@ class GreenItScoreCalculatorTest {
         Mockito.when(config.getModule().getPressionMaxRam()).thenReturn(2.0);
         Mockito.when(config.getModule().getPressionMaxCpu()).thenReturn(100.0);
         Mockito.when(config.getModule().getPressionMaxDisk()).thenReturn(10.0);
-        calculator = new GreenItScoreCalculator(config);
+        calculator = new GreenItComputeScore(config);
     }
 
     @Test
@@ -58,7 +59,7 @@ class GreenItScoreCalculatorTest {
         kpis.setDiskAllocated(50);
         kpis.setDiskUsed(new BigDecimal(80));
 
-        final GreenItScore score = calculator.compute(kpis);
+        final GreenItScore score = calculator.computeAppScore(kpis);
 
         assertNotNull(score);
         assertEquals(1, score.getIdApplication());
@@ -80,7 +81,7 @@ class GreenItScoreCalculatorTest {
         kpis.setDiskAllocated(10);
         kpis.setDiskUsed(new BigDecimal(50));
 
-        final GreenItScore score = calculator.compute(kpis);
+        final GreenItScore score = calculator.computeModuleScore(kpis);
         assertNotNull(score);
         assertNull(score.getIdApplication());
         assertEquals(1, score.getIdModule());
@@ -101,7 +102,7 @@ class GreenItScoreCalculatorTest {
         kpis.setDiskAllocated(50);
         kpis.setDiskUsed(new BigDecimal(80));
 
-        final GreenItScore score = calculator.compute(kpis);
+        final GreenItScore score = calculator.computeAppScore(kpis);
 
         assertEquals("E", score.getGrade());
         assertEquals(1.0, score.getScore().doubleValue());
@@ -111,7 +112,7 @@ class GreenItScoreCalculatorTest {
     void testNullFieldsHandledSafely() {
         final IndicateurModuleGreenIT kpis = new IndicateurModuleGreenIT();
         kpis.setDiskUsed(null);
-        final GreenItScore score = calculator.compute(kpis);
+        final GreenItScore score = calculator.computeModuleScore(kpis);
 
         assertEquals(
                 BigDecimal.valueOf(0.3),
