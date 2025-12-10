@@ -402,7 +402,10 @@ public class UpdateIndicatorDevopsService {
      * @return vrai si le déploiement est valide
      */
     private boolean isValidDeployment(ModuleHistorique h, LocalDateTime start, LocalDateTime end) {
-        return DevopsConstantes.SERVICE_ACCOUNT_OSCAR4_SERVICE.equals(h.getAuteurOperation())
+        boolean isServiceAccount =
+                h.getAuteurOperation() != null
+                        && h.getAuteurOperation().endsWith(DevopsConstantes.SERVICE);
+        return isServiceAccount
                 && !h.getDateOperation().isBefore(start)
                 && !h.getDateOperation().isAfter(end)
                 && DevopsConstantes.MODIFICATION.equals(h.getOperation());

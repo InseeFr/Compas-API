@@ -12,7 +12,7 @@ public class DevopsConstantes {
     public static final String EN_DEVELOPPEMENT = "en développement";
     public static final String EN_PRODUCTION = "en production";
     public static final String MODIFICATION = "MODIFICATION";
-    public static final String SERVICE_ACCOUNT_OSCAR4_SERVICE = "service-account-oscar4-service";
+    public static final String SERVICE = "service";
     public static final String FIELD_DATA = "data";
     public static final String FIELD_REPOSITORY = "repository";
     public static final String FIELD_REFS = "refs";

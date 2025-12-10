@@ -1,5 +1,7 @@
 package fr.insee.compas.service.devops;
 
+import static fr.insee.compas.util.DevopsConstantes.DUPLICATE_OFFSET;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -62,6 +64,17 @@ public class IndicatorDevopsModuleService {
             viewModule.setLettreContributorCount(
                     IndicateurDevopsLetterUtils.calculLettreContributorCount(
                             viewModule.getNbContributorCount()));
+
+            String rawCountContributor = viewModule.getNbContributorCount();
+
+            if (rawCountContributor != null && !rawCountContributor.isEmpty()) {
+                int rawContributorCount = Integer.parseInt(rawCountContributor);
+                if (rawContributorCount >= DUPLICATE_OFFSET) {
+                    viewModule.setNbContributorCount(
+                            String.valueOf(rawContributorCount - DUPLICATE_OFFSET));
+                }
+            }
+
             viewModule.calculerLettreGlobalDevops(isSynthetique);
             resultat.add(viewModule);
         }

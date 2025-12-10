@@ -200,7 +200,7 @@ class UpdateIndicatorDevopsServiceTest {
         moduleAvecHist.setStatut("EN_PRODUCTION");
 
         ModuleHistorique histValide = new ModuleHistorique();
-        histValide.setAuteurOperation(DevopsConstantes.SERVICE_ACCOUNT_OSCAR4_SERVICE);
+        histValide.setAuteurOperation(DevopsConstantes.SERVICE);
         histValide.setDateOperation(LocalDateTime.now().minusDays(5));
         histValide.setOperation(DevopsConstantes.MODIFICATION);
 
