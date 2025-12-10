@@ -8,10 +8,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import fr.insee.compas.model.oscar.Application;
-import fr.insee.compas.service.ConvertirValeurEnLettreService;
 import fr.insee.compas.service.OscarService;
 import fr.insee.compas.service.TableFaitsService;
 import fr.insee.compas.service.UtilsService;
+import fr.insee.compas.service.conversion.ConversionService;
 import fr.insee.compas.view.IndicateurQualiteView;
 
 import lombok.extern.slf4j.Slf4j;
@@ -26,17 +26,17 @@ public class IndicateurQualiteApplicationService {
 
     private final UtilsService utilsService;
 
-    private final ConvertirValeurEnLettreService convertirValeurEnLettreService;
+    private final ConversionService conversionService;
 
     public IndicateurQualiteApplicationService(
             OscarService oscarService,
             TableFaitsService tableFaitsService,
             UtilsService utilsService,
-            ConvertirValeurEnLettreService convertirValeurEnLettreService) {
+            ConversionService conversionService) {
         this.oscarService = oscarService;
         this.tableFaitsService = tableFaitsService;
         this.utilsService = utilsService;
-        this.convertirValeurEnLettreService = convertirValeurEnLettreService;
+        this.conversionService = conversionService;
     }
 
     public List<IndicateurQualiteView> getIndicateurNiveauApplication() {
@@ -88,7 +88,7 @@ public class IndicateurQualiteApplicationService {
 
                 String pourcentage = (int) percentage + " %";
                 // Obtenir la note
-                String lettre = convertirValeurEnLettreService.convertPourcentageEnNote(percentage);
+                String lettre = conversionService.convertPourcentageEnNote(percentage);
                 viewApplication.setPourcentageCouvertureTestUniaire(pourcentage);
                 viewApplication.setLettreCouvertureTestUniaire(lettre);
             } else {
@@ -110,8 +110,7 @@ public class IndicateurQualiteApplicationService {
     private void calculLettreDetteTechnique(IndicateurQualiteView viewApplication) {
         if (StringUtils.isNotEmpty(viewApplication.getDetteTechnique())) {
             viewApplication.setLettreDetteTechnique(
-                    convertirValeurEnLettreService.getLettreDetteTechnique(
-                            viewApplication.getDetteTechnique()));
+                    conversionService.convertDetteTechnique(viewApplication.getDetteTechnique()));
         }
     }
 

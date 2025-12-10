@@ -9,10 +9,10 @@ import org.springframework.stereotype.Service;
 
 import fr.insee.compas.model.compas.Notation;
 import fr.insee.compas.model.oscar.Module;
-import fr.insee.compas.service.ConvertirValeurEnLettreService;
 import fr.insee.compas.service.OscarService;
 import fr.insee.compas.service.TableFaitsService;
 import fr.insee.compas.service.UtilsService;
+import fr.insee.compas.service.conversion.ConversionService;
 import fr.insee.compas.view.IndicateurQualiteView;
 
 @Service
@@ -24,17 +24,17 @@ public class IndicateurQualiteModuleService {
 
     private final UtilsService utilsService;
 
-    private final ConvertirValeurEnLettreService convertirValeurEnLettreService;
+    private final ConversionService conversionService;
 
     public IndicateurQualiteModuleService(
             OscarService oscarService,
             TableFaitsService tableFaitsService,
             UtilsService utilsService,
-            ConvertirValeurEnLettreService convertirValeurEnLettreService) {
+            ConversionService conversionService) {
         this.oscarService = oscarService;
         this.tableFaitsService = tableFaitsService;
         this.utilsService = utilsService;
-        this.convertirValeurEnLettreService = convertirValeurEnLettreService;
+        this.conversionService = conversionService;
     }
 
     /**
@@ -81,8 +81,7 @@ public class IndicateurQualiteModuleService {
     private void calculIndicateurDetteTechnique(Module module, IndicateurQualiteView viewModule) {
         if (StringUtils.isNotEmpty(viewModule.getDetteTechnique())) {
             viewModule.setLettreDetteTechnique(
-                    convertirValeurEnLettreService.getLettreDetteTechnique(
-                            viewModule.getDetteTechnique()));
+                    conversionService.convertDetteTechnique(viewModule.getDetteTechnique()));
         } else {
             if ("Sans objet".equals(module.getKeySonar().trim())) {
                 viewModule.setDetteTechnique(Notation.SO.getGrade());
@@ -125,7 +124,7 @@ public class IndicateurQualiteModuleService {
             String pourcentage = (int) percentage + " %";
 
             // Obtenir la note
-            String lettre = convertirValeurEnLettreService.convertPourcentageEnNote(percentage);
+            String lettre = conversionService.convertPourcentageEnNote(percentage);
 
             // Ajouter le module avec le grade calculé
             viewModule.setPourcentageCouvertureTestUniaire(pourcentage);

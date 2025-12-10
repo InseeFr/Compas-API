@@ -17,7 +17,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import fr.insee.compas.model.a11y.IndicateursModuleA11Y;
 import fr.insee.compas.model.a11y.InfosSaisiesA11yEntity;
 import fr.insee.compas.model.compas.Notation;
-import fr.insee.compas.service.ConvertirValeurEnLettreService;
 import fr.insee.compas.service.OscarService;
 import fr.insee.compas.service.TableFaitsService;
 
@@ -27,8 +26,6 @@ class A11yAffichageServiceTest {
     @Mock OscarService oscarService;
     @Mock A11yMajService a11yMajService;
     @Mock TableFaitsService tableFaitsService;
-    @Mock ConvertirValeurEnLettreService convertService;
-
     @InjectMocks A11yAffichageService service;
 
     private fr.insee.compas.model.oscar.Module module(

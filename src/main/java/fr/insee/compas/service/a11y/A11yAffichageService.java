@@ -12,9 +12,9 @@ import fr.insee.compas.model.compas.IndicateurType;
 import fr.insee.compas.model.compas.Notation;
 import fr.insee.compas.model.compas.TableFaits;
 import fr.insee.compas.model.oscar.Application;
-import fr.insee.compas.service.ConvertirValeurEnLettreService;
 import fr.insee.compas.service.OscarService;
 import fr.insee.compas.service.TableFaitsService;
+import fr.insee.compas.service.conversion.ConversionService;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +27,7 @@ public class A11yAffichageService {
     private OscarService oscarService;
     private A11yMajService a11yMajService;
     private TableFaitsService tableFaitsService;
-    private ConvertirValeurEnLettreService convertService;
+    private ConversionService convertService;
 
     public List<IndicateursModuleA11Y> listerModulesA11y() {
         Map<Integer, InfosSaisiesA11yEntity> mapMetric = a11yMajService.getIndicateutA11y();
@@ -68,7 +68,7 @@ public class A11yAffichageService {
                                                 mapIssueSonar.get(module.getId()).getValeur());
                                 indicateursModuleA11Y.setNbIssueAccessibilite(nbIssue);
                                 indicateursModuleA11Y.setLettreIssueAccessibilite(
-                                        convertService.getLettreIssueAccessebilite(nbIssue));
+                                        convertService.convertIssueAccessebilite(nbIssue));
                             }
 
                             return indicateursModuleA11Y;

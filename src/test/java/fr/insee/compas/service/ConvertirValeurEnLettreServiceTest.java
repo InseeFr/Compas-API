@@ -2,48 +2,50 @@ package fr.insee.compas.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 
-class ConvertirValeurEnLettreServiceTest {
+import fr.insee.compas.service.conversion.ConversionService;
+import fr.insee.compas.service.conversion.strategie.NiveauCveConversion;
+import fr.insee.compas.service.conversion.strategie.PourcentageEnNoteConversion;
 
-    private final ConvertirValeurEnLettreService convertirValeurEnLettreService =
-            new ConvertirValeurEnLettreService();
+class ConversionServiceTest {
+
+    @Spy private PourcentageEnNoteConversion pourcentageConversion;
+
+    @Spy private NiveauCveConversion niveauCveConversion;
+
+    private ConversionService conversionService;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+
+        conversionService =
+                new ConversionService(pourcentageConversion, niveauCveConversion, null, null);
+    }
 
     @Test
     void testConvertPourcentageEnNote() {
-        String result;
-        result = convertirValeurEnLettreService.convertPourcentageEnNote(95);
-        assertEquals("A", result, "La note attendu est de A");
-        result = convertirValeurEnLettreService.convertPourcentageEnNote(80);
-        assertEquals("B", result, "La note attendu est de B");
-        result = convertirValeurEnLettreService.convertPourcentageEnNote(65);
-        assertEquals("B", result, "La note attendu est de B");
-        result = convertirValeurEnLettreService.convertPourcentageEnNote(60);
-        assertEquals("C", result, "La note attendu est de C");
-        result = convertirValeurEnLettreService.convertPourcentageEnNote(50);
-        assertEquals("C", result, "La note attendu est de C");
-        result = convertirValeurEnLettreService.convertPourcentageEnNote(40);
-        assertEquals("D", result, "La note attendu est de D");
-        result = convertirValeurEnLettreService.convertPourcentageEnNote(20);
-        assertEquals("E", result, "La note attendu est de E");
-        result = convertirValeurEnLettreService.convertPourcentageEnNote(0);
-        assertEquals("X", result, "La note attendu est de X");
-        result = convertirValeurEnLettreService.convertPourcentageEnNote(-10);
-        assertEquals("NR", result, "La note attendu est de NR");
+        assertEquals("A", conversionService.convertPourcentageEnNote(95));
+        assertEquals("B", conversionService.convertPourcentageEnNote(80));
+        assertEquals("B", conversionService.convertPourcentageEnNote(65));
+        assertEquals("C", conversionService.convertPourcentageEnNote(60));
+        assertEquals("C", conversionService.convertPourcentageEnNote(50));
+        assertEquals("D", conversionService.convertPourcentageEnNote(40));
+        assertEquals("E", conversionService.convertPourcentageEnNote(20));
+        assertEquals("X", conversionService.convertPourcentageEnNote(0));
+        assertEquals("NR", conversionService.convertPourcentageEnNote(-10));
     }
 
     @Test
     void testConvertNiveauCveEnLettre() {
-        String result;
-        result = convertirValeurEnLettreService.convertNiveauCveEnLettre(3.1);
-        assertEquals("E", result, "La note attendu est de E");
-        result = convertirValeurEnLettreService.convertNiveauCveEnLettre(2.1);
-        assertEquals("D", result, "La note attendu est de D");
-        result = convertirValeurEnLettreService.convertNiveauCveEnLettre(1.1);
-        assertEquals("C", result, "La note attendu est de C");
-        result = convertirValeurEnLettreService.convertNiveauCveEnLettre(0.9);
-        assertEquals("B", result, "La note attendu est de B");
-        result = convertirValeurEnLettreService.convertNiveauCveEnLettre(0);
-        assertEquals("A", result, "La note attendu est de A");
+        assertEquals("E", conversionService.convertNiveauCveEnLettre(3.1));
+        assertEquals("D", conversionService.convertNiveauCveEnLettre(2.1));
+        assertEquals("C", conversionService.convertNiveauCveEnLettre(1.1));
+        assertEquals("B", conversionService.convertNiveauCveEnLettre(0.9));
+        assertEquals("A", conversionService.convertNiveauCveEnLettre(0));
     }
 }
