@@ -92,7 +92,7 @@ public class RecupCveSecuriteService {
     /** Récupère la liste des applications depuis l'API */
     private List<ApplicationAnalyzer> getApplicationsFromApi() {
         try {
-            final String url = apiBaseUrl + "/applications";
+            final String url = apiBaseUrl + "/cve-par-application";
 
             final HttpHeaders headers = new HttpHeaders();
             headers.setBearerAuth(analyzerAuthentification.execute());

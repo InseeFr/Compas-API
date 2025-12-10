@@ -68,7 +68,7 @@ class RecupCveSecuriteServiceTest {
         verify(tableFaitsRepository, never()).save(any());
         verify(restTemplate)
                 .exchange(
-                        eq("https://analyzer.example/api/applications"),
+                        eq("https://analyzer.example/api/cve-par-application"),
                         eq(HttpMethod.GET),
                         argThat(
                                 (HttpEntity<?> e) ->
