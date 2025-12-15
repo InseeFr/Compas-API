@@ -32,6 +32,7 @@ public class IndicateursModuleA11Y {
     private float scoreAudit;
     private LocalDate dateAudit;
     private Notation notation;
+    private LocalDate dateDeclaration;
 
     private String nbIssueAccessibilite;
     private String lettreIssueAccessibilite;

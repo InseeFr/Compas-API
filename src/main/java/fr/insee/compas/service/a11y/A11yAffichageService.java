@@ -52,11 +52,14 @@ public class A11yAffichageService {
                                 indicateursModuleA11Y.setDateMajInfosSaisie(
                                         infos.getDateMajInfosSaisies());
                                 indicateursModuleA11Y.setDeclaration(infos.isDeclaration());
+                                // 👇 NOUVEAU : on remonte la date de déclaration
+                                indicateursModuleA11Y.setDateDeclaration(
+                                        infos.getDateDeclaration());
+
                                 indicateursModuleA11Y.setTypeAuditId(
                                         infos.getIdIndicateurTypeAudit());
                                 indicateursModuleA11Y.setTypeAuditLibelle(
-                                        getTypeAuditLibelle(
-                                                infos.getIdIndicateurTypeAudit())); // todo
+                                        getTypeAuditLibelle(infos.getIdIndicateurTypeAudit()));
 
                                 indicateursModuleA11Y.setScoreAudit(infos.getScoreAudit());
                                 indicateursModuleA11Y.setDateAudit(infos.getDateAudit());

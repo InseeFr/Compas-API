@@ -22,5 +22,6 @@ public class InfosSaisiesA11yEntity {
     private int idIndicateurTypeAudit; // nomenclature A11Y dans indicateur (51x)
     private float scoreAudit;
     private LocalDate dateAudit;
+    private LocalDate dateDeclaration; // date de déclaration sur compas
     private Integer idModule;
 }

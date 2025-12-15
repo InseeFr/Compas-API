@@ -42,6 +42,7 @@ public class A11yMajService {
                         .idIndicateurTypeAudit(infosSaisiesA11yToSaveDTO.getIdIndicateurTypeAudit())
                         .scoreAudit(infosSaisiesA11yToSaveDTO.getScoreAudit())
                         .dateAudit(infosSaisiesA11yToSaveDTO.getDateAudit())
+                        .dateDeclaration(infosSaisiesA11yToSaveDTO.getDateDeclaration())
                         .build();
 
         return infosSaisiesA11yRepository.save(infosSaisiesA11yEntity).getId();

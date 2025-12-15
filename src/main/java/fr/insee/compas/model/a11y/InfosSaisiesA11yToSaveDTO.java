@@ -18,6 +18,7 @@ public class InfosSaisiesA11yToSaveDTO {
     private int idIndicateurTypeAudit; // nomenclature A11Y dans indicateur (51x)
     private float scoreAudit;
     private LocalDate dateAudit;
+    private LocalDate dateDeclaration;
 
     private Integer idModule;
 }
