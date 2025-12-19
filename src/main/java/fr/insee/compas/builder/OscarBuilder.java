@@ -6,11 +6,11 @@ import java.time.ZoneId;
 
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
 import fr.insee.compas.model.oscar.Application;
 import fr.insee.compas.model.oscar.Module;
 import fr.insee.compas.model.oscar.ModuleHistorique;
+
+import tools.jackson.databind.JsonNode;
 
 @Component
 public class OscarBuilder {
@@ -20,9 +20,10 @@ public class OscarBuilder {
         ModuleHistorique moduleHistorique = new ModuleHistorique();
         moduleHistorique.setIdModuleHistorique(
                 moduleHistoriqueNode.path("idModuleHistorique").asInt());
-        moduleHistorique.setAuteurOperation(moduleHistoriqueNode.path("auteurOperation").asText());
+        moduleHistorique.setAuteurOperation(
+                moduleHistoriqueNode.path("auteurOperation").asText(null));
         moduleHistorique.setIdModule(moduleHistoriqueNode.path("idModule").asInt());
-        moduleHistorique.setStatut(moduleHistoriqueNode.path("statut").asText());
+        moduleHistorique.setStatut(moduleHistoriqueNode.path("statut").asText(null));
         JsonNode dateNode = moduleHistoriqueNode.path("dateOperation");
         if (dateNode.isArray() && dateNode.size() >= 6) {
             // Cas ancien format : tableau [year, month, day, hour, minute, second, nanos]
@@ -37,26 +38,26 @@ public class OscarBuilder {
                             dateNode.size() > 6 ? dateNode.get(6).asInt() : 0);
             moduleHistorique.setDateOperation(dateOperation);
 
-        } else if (dateNode.isTextual()) {
+        } else if (dateNode.isString()) {
             // Cas ISO 8601 en String : "2025-02-25T16:41:38.994458"
-            LocalDateTime dateOperation = LocalDateTime.parse(dateNode.asText());
+            LocalDateTime dateOperation = LocalDateTime.parse(dateNode.asText(null));
             moduleHistorique.setDateOperation(dateOperation);
         }
-        moduleHistorique.setOperation(moduleHistoriqueNode.path("operation").asText());
+        moduleHistorique.setOperation(moduleHistoriqueNode.path("operation").asText(null));
 
         return moduleHistorique;
     }
 
     public Module buildModule(JsonNode moduleNode) {
         Module module = new fr.insee.compas.model.oscar.Module();
-        module.setNomTechnique(moduleNode.path("nomTechnique").asText());
+        module.setNomTechnique(moduleNode.path("nomTechnique").asText(null));
         module.setApplicationTechnique(
-                moduleNode.path("applicationTechnique").path("nom").asText());
+                moduleNode.path("applicationTechnique").path("nom").asText(null));
         module.setId(moduleNode.path("id").asInt());
-        module.setSourceCreation(moduleNode.path("sourceCreation").asText());
-        module.setUrlCodeSource(moduleNode.path("urlCodeSource").asText());
-        module.setModName(moduleNode.path("nom").asText());
-        module.setStatut(moduleNode.path("statut").asText());
+        module.setSourceCreation(moduleNode.path("sourceCreation").asText(null));
+        module.setUrlCodeSource(moduleNode.path("urlCodeSource").asText(null));
+        module.setModName(moduleNode.path("nom").asText(null));
+        module.setStatut(moduleNode.path("statut").asText(null));
         module.setAppName(
                 getPathApplication(moduleNode)
                         .path("nom")
@@ -73,25 +74,25 @@ public class OscarBuilder {
         } else {
             module.setDateDerniereLivraisonEnProduction(null);
         }
-        module.setKeySonar(moduleNode.path("projectKeySonar").asText());
+        module.setKeySonar(moduleNode.path("projectKeySonar").asText(null));
         module.setIdApplication(getPathApplication(moduleNode).path("id").asInt());
-        module.setSndi(getPathApplication(moduleNode).path("sndi").path("nom").asText());
+        module.setSndi(getPathApplication(moduleNode).path("sndi").path("nom").asText(null));
         module.setDomaineSndi(
-                getPathApplication(moduleNode).path("domaineSndi").path("nom").asText());
+                getPathApplication(moduleNode).path("domaineSndi").path("nom").asText(null));
         module.setDomaineFonctionnel(
-                getPathApplication(moduleNode).path("domaineFonctionnel").path("nom").asText());
-        module.setTypeLivrable((moduleNode).path("typeLivrable").asText());
+                getPathApplication(moduleNode).path("domaineFonctionnel").path("nom").asText(null));
+        module.setTypeLivrable((moduleNode).path("typeLivrable").asText(null));
         return module;
     }
 
     public Application buildApplication(JsonNode applicationNoeud) {
         Application application = new Application();
         application.setIdApplication(applicationNoeud.path("id").asInt());
-        application.setAppName(applicationNoeud.path("nom").asText());
-        application.setSndi(applicationNoeud.path("sndi").path("nom").asText());
+        application.setAppName(applicationNoeud.path("nom").asText(null));
+        application.setSndi(applicationNoeud.path("sndi").path("nom").asText(null));
         application.setDomaineFonctionnel(
-                applicationNoeud.path("domaineFonctionnel").path("nom").asText());
-        application.setDomaineSndi(applicationNoeud.path("domaineSndi").path("nom").asText());
+                applicationNoeud.path("domaineFonctionnel").path("nom").asText(null));
+        application.setDomaineSndi(applicationNoeud.path("domaineSndi").path("nom").asText(null));
 
         return application;
     }

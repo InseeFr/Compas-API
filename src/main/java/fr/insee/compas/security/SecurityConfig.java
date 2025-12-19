@@ -1,6 +1,6 @@
 package fr.insee.compas.security;
 
-import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
+import org.springframework.boot.security.autoconfigure.web.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -13,7 +13,7 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
     @Bean
     @Profile("!local")
-    public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) {
         http.csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(
                         auth ->
@@ -33,7 +33,7 @@ public class SecurityConfig {
 
     @Bean
     @Profile("local")
-    public SecurityFilterChain h2SecurityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain h2SecurityFilterChain(HttpSecurity http) {
         http.csrf(csrf -> csrf.disable())
                 .securityMatcher(PathRequest.toH2Console())
                 .authorizeHttpRequests(

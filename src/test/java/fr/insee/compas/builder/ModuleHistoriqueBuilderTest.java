@@ -7,10 +7,10 @@ import java.time.LocalDateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import fr.insee.compas.model.oscar.ModuleHistorique;
+
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 class ModuleHistoriqueBuilderTest {
 
@@ -28,13 +28,14 @@ class ModuleHistoriqueBuilderTest {
         // Given
         String json =
                 """
-                    {
-                        "idModuleHistorique": 1,
-                        "auteurOperation": "TestAuthor",
-                        "statut": "TestStatus",
-                        "dateOperation": [2025, 3, 26, 14, 30, 45, 500],
-                        "operation": "TestOperation"
-                    }
+                   {
+                             "idModuleHistorique": 1,
+                             "auteurOperation": "TestAuthor",
+                             "statut": "TestStatus",
+                             "idModule": 123,
+                             "dateOperation": [2025, 3, 26, 14, 30, 45, 500],
+                             "operation": "TestOperation"
+                           }
                 """;
         JsonNode moduleHistoriqueNode = objectMapper.readTree(json);
 
@@ -60,9 +61,11 @@ class ModuleHistoriqueBuilderTest {
                 """
                     {
                         "idModuleHistorique": 1,
+                        "idModule":123,
                         "auteurOperation": "TestAuthor",
                         "statut": "TestStatus",
-                        "operation": "TestOperation"
+                        "operation": "TestOperation",
+                        "dateOperation": []
                     }
                 """;
         JsonNode moduleHistoriqueNode = objectMapper.readTree(json);
@@ -84,6 +87,7 @@ class ModuleHistoriqueBuilderTest {
                 """
                     {
                         "idModuleHistorique": 1,
+                        "idModule":123,
                         "auteurOperation": "TestAuthor",
                         "statut": "TestStatus",
                         "dateOperation": [2025, 3, 26, 14, 30],
@@ -108,6 +112,8 @@ class ModuleHistoriqueBuilderTest {
                 """
                     {
                         "idModuleHistorique": 1,
+                        "idModule":123,
+                        "statut": "",
                         "auteurOperation": "TestAuthor",
                         "dateOperation": [2025, 3, 26, 14, 30, 45, 500],
                         "operation": "TestOperation"
@@ -131,9 +137,11 @@ class ModuleHistoriqueBuilderTest {
                 """
                     {
                         "idModuleHistorique": 1,
+                        "idModule":123,
                         "auteurOperation": "TestAuthor",
                         "statut": "TestStatus",
-                        "dateOperation": [2025, 3, 26, 14, 30, 45, 500]
+                        "dateOperation": [2025, 3, 26, 14, 30, 45, 500],
+                        "operation":""
                     }
                 """;
         JsonNode moduleHistoriqueNode = objectMapper.readTree(json);

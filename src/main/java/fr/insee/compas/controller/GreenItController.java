@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -78,7 +79,7 @@ public class GreenItController {
                         .map(indicateurApplicationGreenITViewMapper::toView)
                         .flatMap(Optional::stream)
                         .toList();
-        return new ResponseEntity<>(views, null, HttpStatus.OK);
+        return new ResponseEntity<>(views, HttpHeaders.EMPTY, HttpStatus.OK);
     }
 
     @GetMapping("/modules")
@@ -96,7 +97,7 @@ public class GreenItController {
                         .map(indicateurModuleGreenITViewMapper::toView)
                         .flatMap(Optional::stream)
                         .toList();
-        return new ResponseEntity<>(views, null, HttpStatus.OK);
+        return new ResponseEntity<>(views, HttpHeaders.EMPTY, HttpStatus.OK);
     }
 
     @PostMapping(value = "/modules/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

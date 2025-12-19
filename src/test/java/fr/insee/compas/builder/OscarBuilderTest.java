@@ -7,11 +7,11 @@ import java.time.LocalDate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import fr.insee.compas.model.oscar.Application;
 import fr.insee.compas.model.oscar.Module;
+
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 class OscarBuilderTest {
 
@@ -29,31 +29,40 @@ class OscarBuilderTest {
         // Arrange
         String json =
                 """
-                    {
-                        "id": 1,
-                        "nom": "TestModule",
-                        "dateDerniereLivraisonEnProduction": 1672531200000,
-                        "projectKeySonar": "key-sonar",
-                        "applicationTechnique": {
-                            "application": {
-                                "id": 2,
-                                "nom" : "AppTest",
-                                "sndi": {"nom": "TestSndi"},
-                                "domaineSndi": {"nom": "TestDomaineSndi"},
-                                "domaineFonctionnel": {"nom": "TestDomaineFonctionnel"}
-                            }
+                {
+                    "id": 1,
+                    "nom": "TestModule",
+                    "nomTechnique": "TechModule",
+                    "sourceCreation": "TestSource",
+                    "urlCodeSource": "http://example.com/repo",
+                    "statut": "Actif",
+                    "typeLivrable": "Librairie",
+                    "dateDerniereLivraisonEnProduction": 1672531200000,
+                    "projectKeySonar": "key-sonar",
+                    "applicationTechnique": {
+                        "nom": "AppTechniqueNom",
+                        "application": {
+                            "id": 2,
+                            "nom" : "AppTest",
+                            "sndi": {"nom": "TestSndi"},
+                            "domaineSndi": {"nom": "TestDomaineSndi"},
+                            "domaineFonctionnel": {"nom": "TestDomaineFonctionnel"}
                         }
                     }
+                }
                 """;
         JsonNode moduleNode = objectMapper.readTree(json);
 
-        // Act
         Module module = oscarBuilder.buildModule(moduleNode);
 
-        // Assert
         assertNotNull(module);
         assertEquals(1, module.getId());
         assertEquals("TestModule", module.getModName());
+        assertEquals("TechModule", module.getNomTechnique());
+        assertEquals("TestSource", module.getSourceCreation());
+        assertEquals("http://example.com/repo", module.getUrlCodeSource());
+        assertEquals("Actif", module.getStatut());
+        assertEquals("Librairie", module.getTypeLivrable());
         assertEquals("AppTest", module.getAppName());
         assertEquals(LocalDate.of(2023, 1, 1), module.getDateDerniereLivraisonEnProduction());
         assertEquals("key-sonar", module.getKeySonar());
@@ -69,18 +78,25 @@ class OscarBuilderTest {
         String json =
                 """
                     {
-                        "id": 1,
-                        "nom": "TestModule",
-                        "projectKeySonar": "key-sonar",
-                        "applicationTechnique": {
-                            "application": {
-                                "id": 2,
-                                "sndi": {"nom": "TestSndi"},
-                                "domaineSndi": {"nom": "TestDomaineSndi"},
-                                "domaineFonctionnel": {"nom": "TestDomaineFonctionnel"}
-                            }
-                        }
-                    }
+                                    "id": 1,
+                                    "nom": "TestModule",
+                                    "nomTechnique": "TechModule",
+                                    "sourceCreation": "TestSource",
+                                    "urlCodeSource": "http://example.com/repo",
+                                    "statut": "Actif",
+                                    "typeLivrable": "Librairie",
+                                    "projectKeySonar": "key-sonar",
+                                    "applicationTechnique": {
+                                        "nom": "AppTechniqueNom",
+                                        "application": {
+                                            "id": 2,
+                                            "nom": "TestApplication",
+                                            "sndi": {"nom": "TestSndi"},
+                                            "domaineSndi": {"nom": "TestDomaineSndi"},
+                                            "domaineFonctionnel": {"nom": "TestDomaineFonctionnel"}
+                                        }
+                                    }
+                                }
                 """;
         JsonNode moduleNode = objectMapper.readTree(json);
 

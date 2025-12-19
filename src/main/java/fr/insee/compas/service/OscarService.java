@@ -9,10 +9,6 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import fr.insee.compas.builder.OscarBuilder;
 import fr.insee.compas.client.OscarClient;
 import fr.insee.compas.model.oscar.Application;
@@ -21,6 +17,9 @@ import fr.insee.compas.model.oscar.ModuleHistorique;
 import fr.insee.compas.repository.ModuleOscarRepository;
 
 import lombok.extern.slf4j.Slf4j;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 @Slf4j
 @Service
@@ -65,7 +64,7 @@ public class OscarService {
             for (JsonNode noeud : root) {
                 modules.add(oscarBuilder.buildModule(noeud));
             }
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.error("Erreur lors du traitement JSON : {}", e.getMessage());
         }
 
@@ -97,7 +96,7 @@ public class OscarService {
                         .computeIfAbsent(moduleId, k -> new ArrayList<>())
                         .add(moduleHistorique);
             }
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.error("Erreur lors du traitement JSON : {}", e.getMessage());
         }
 
@@ -120,7 +119,7 @@ public class OscarService {
             for (JsonNode noeud : root) {
                 applications.add(oscarBuilder.buildApplication(noeud));
             }
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new RuntimeException(e);
         }
 

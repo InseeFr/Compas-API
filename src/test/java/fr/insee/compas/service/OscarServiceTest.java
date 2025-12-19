@@ -16,15 +16,15 @@ import org.springframework.http.*;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import fr.insee.compas.builder.OscarBuilder;
 import fr.insee.compas.client.OscarClient;
 import fr.insee.compas.model.oscar.Application;
 import fr.insee.compas.model.oscar.Module;
 import fr.insee.compas.model.oscar.ModuleHistorique;
+
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 @ExtendWith(MockitoExtension.class)
 class OscarServiceTest {
@@ -128,8 +128,7 @@ class OscarServiceTest {
                 .thenReturn(responseEntity);
 
         // ✅ Mock de ObjectMapper utilisé par OscarService
-        when(objectMapper.readTree(invalidJson))
-                .thenThrow(new JsonProcessingException("Invalid JSON") {});
+        when(objectMapper.readTree(invalidJson)).thenThrow(new JacksonException("Invalid JSON") {});
 
         // ✅ Vérifier que RuntimeException est bien levée
         assertThrows(RuntimeException.class, () -> oscarService.getApplications());
@@ -149,8 +148,7 @@ class OscarServiceTest {
                 .thenReturn(responseEntity);
 
         // ✅ Mock de ObjectMapper utilisé par OscarService
-        when(objectMapper.readTree(invalidJson))
-                .thenThrow(new JsonProcessingException("Invalid JSON") {});
+        when(objectMapper.readTree(invalidJson)).thenThrow(new JacksonException("Invalid JSON") {});
 
         // ✅ Vérifier que la méthode capture l'erreur sans lever d'exception
         oscarService.getModules();
@@ -169,8 +167,7 @@ class OscarServiceTest {
         when(oscarClient.getModuleHistoriqueOscar()).thenReturn(responseEntity);
 
         // Simuler une exception lors du parsing
-        when(objectMapper.readTree(invalidJson))
-                .thenThrow(new JsonProcessingException("Invalid JSON") {});
+        when(objectMapper.readTree(invalidJson)).thenThrow(new JacksonException("Invalid JSON") {});
 
         // Appel à la méthode qui doit gérer l'exception
         Map<String, List<ModuleHistorique>> moduleHistoriquesMap =

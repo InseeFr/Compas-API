@@ -6,7 +6,6 @@ import static org.mockito.Mockito.*;
 
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
-import java.sql.Date;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -228,9 +227,9 @@ class GreenItServiceGetTest {
     void testGetApplicationMetriques_TroisLignes() {
         List<Object[]> rows =
                 List.of(
-                        new Object[] {3, Date.valueOf(LocalDate.of(2025, 2, 1)), BigDecimal.ONE},
-                        new Object[] {2, Date.valueOf(LocalDate.of(2025, 2, 2)), BigDecimal.TEN},
-                        new Object[] {1, Date.valueOf(LocalDate.of(2025, 2, 3)), BigDecimal.ZERO});
+                        new Object[] {3, LocalDate.of(2025, 2, 1), BigDecimal.ONE},
+                        new Object[] {2, LocalDate.of(2025, 2, 2), BigDecimal.TEN},
+                        new Object[] {1, LocalDate.of(2025, 2, 3), BigDecimal.ZERO});
         when(tableFaitsRepository.findLatestSummedValuesByIndicateurForAllApplications(
                         IndicateurType.CONSO_ELEC.getValue()))
                 .thenReturn(rows);
@@ -259,9 +258,9 @@ class GreenItServiceGetTest {
     void testGetModuleMetriques_TroisLignes() {
         List<Object[]> rows =
                 List.of(
-                        new Object[] {3, Date.valueOf(LocalDate.of(2025, 2, 1)), BigDecimal.ONE},
-                        new Object[] {2, Date.valueOf(LocalDate.of(2025, 2, 2)), BigDecimal.TEN},
-                        new Object[] {1, Date.valueOf(LocalDate.of(2025, 2, 3)), BigDecimal.ZERO});
+                        new Object[] {3, LocalDate.of(2025, 2, 1), BigDecimal.ONE},
+                        new Object[] {2, LocalDate.of(2025, 2, 2), BigDecimal.TEN},
+                        new Object[] {1, LocalDate.of(2025, 2, 3), BigDecimal.ZERO});
         when(tableFaitsRepository.findLatestSummedValuesByIndicateurForAllModules(
                         IndicateurType.CONSO_ELEC.getValue()))
                 .thenReturn(rows);

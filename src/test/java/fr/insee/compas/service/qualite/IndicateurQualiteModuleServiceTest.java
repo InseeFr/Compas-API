@@ -20,9 +20,9 @@ import fr.insee.compas.view.IndicateurQualiteView;
 @ActiveProfiles("test")
 class IndicateurQualiteModuleServiceTest {
 
-    @MockitoBean OscarService oscarService;
+    @MockitoBean private OscarService oscarService;
 
-    @Autowired IndicateurQualiteModuleService indicateurService;
+    @Autowired private IndicateurQualiteModuleService indicateurService;
 
     @Test
     @Sql(

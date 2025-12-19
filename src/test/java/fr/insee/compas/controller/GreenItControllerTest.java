@@ -17,7 +17,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
@@ -27,8 +27,6 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import fr.insee.compas.exception.CompasUploadException;
 import fr.insee.compas.mapper.IndicateurApplicationGreenITViewMapper;
@@ -41,6 +39,8 @@ import fr.insee.compas.service.FichierControlService;
 import fr.insee.compas.service.greenit.GreenItService;
 import fr.insee.compas.view.IndicateurApplicationGreenITView;
 import fr.insee.compas.view.IndicateurModuleGreenITView;
+
+import tools.jackson.databind.ObjectMapper;
 
 @WebMvcTest(GreenItController.class)
 @Import(NoSecurityConfig.class)

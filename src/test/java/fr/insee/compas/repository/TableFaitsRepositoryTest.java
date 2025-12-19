@@ -5,14 +5,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.math.BigDecimal;
-import java.sql.Date;
 import java.time.LocalDate;
 import java.util.List;
 
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 
 import fr.insee.compas.model.compas.TableFaits;
 
@@ -83,7 +82,7 @@ class TableFaitsRepositoryTest {
         softAssertions.assertThat(results).isNotNull();
         softAssertions.assertThat(results.size()).isEqualTo(2);
         softAssertions.assertThat(results.get(0)[0]).isEqualTo(2);
-        softAssertions.assertThat(results.get(0)[1]).isEqualTo(Date.valueOf("2024-12-02"));
+        softAssertions.assertThat(results.get(0)[1]).isEqualTo(LocalDate.of(2024, 12, 02));
         softAssertions.assertThat(((Number) results.get(0)[2]).intValue()).isEqualTo(395);
         softAssertions.assertThat(results.get(1)[0]).isEqualTo(1);
         softAssertions.assertThat(((Number) results.get(1)[2]).intValue()).isEqualTo(102);
@@ -108,7 +107,7 @@ class TableFaitsRepositoryTest {
         softAssertions.assertThat(results).isNotNull();
         softAssertions.assertThat(results.size()).isEqualTo(2);
         softAssertions.assertThat(results.get(0)[0]).isEqualTo(130);
-        softAssertions.assertThat(results.get(0)[1]).isEqualTo(Date.valueOf("2024-12-04"));
+        softAssertions.assertThat(results.get(0)[1]).isEqualTo(LocalDate.of(2024, 12, 04));
         softAssertions.assertThat(((Number) results.get(0)[2]).intValue()).isEqualTo(16);
         softAssertions.assertThat(results.get(1)[0]).isEqualTo(131);
         softAssertions.assertThat(((Number) results.get(1)[2]).intValue()).isEqualTo(8);

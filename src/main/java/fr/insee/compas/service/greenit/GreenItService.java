@@ -503,7 +503,7 @@ public class GreenItService {
                         result ->
                                 new MetriqueApplicationDTO(
                                         (Integer) result[0],
-                                        ((java.sql.Date) result[1]).toLocalDate(),
+                                        (LocalDate) result[1],
                                         (BigDecimal) result[2]))
                 .toList();
     }
@@ -517,7 +517,7 @@ public class GreenItService {
                         result ->
                                 new MetriqueModuleDTO(
                                         (Integer) result[0],
-                                        ((java.sql.Date) result[1]).toLocalDate(),
+                                        (LocalDate) result[1],
                                         (BigDecimal) result[2]))
                 .toList();
     }
