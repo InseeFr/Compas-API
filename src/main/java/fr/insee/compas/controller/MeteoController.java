@@ -64,4 +64,9 @@ public class MeteoController {
         meteoAlerteService.envoyerAlertesRga(jours, test);
         return ResponseEntity.accepted().build();
     }
+
+    @GetMapping("/history")
+    public List<Meteo> getHistory() {
+        return meteoAffichageService.listerDernieresMeteosParApplication();
+    }
 }

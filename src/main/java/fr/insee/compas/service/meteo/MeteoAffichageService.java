@@ -1,11 +1,14 @@
 package fr.insee.compas.service.meteo;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Sort;
@@ -13,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import fr.insee.compas.model.compas.TableFaits;
 import fr.insee.compas.model.meteo.Meteo;
+import fr.insee.compas.model.oscar.Application;
 import fr.insee.compas.repository.TableFaitsRepository;
 import fr.insee.compas.service.OscarService;
 
@@ -123,6 +127,51 @@ public class MeteoAffichageService {
                 .toList();
     }
 
+    /** Récupère les 10 dernières météo pour chaque application (id_indicateur = 401) */
+    public List<Meteo> listerDernieresMeteosParApplication() {
+        // Prépare un cache {idApp -> (nom, sndi, domaine)}
+        Map<Integer, AppMeta> metaById =
+                oscarService.getApplications().stream()
+                        .collect(
+                                Collectors.toMap(
+                                        Application::getIdApplication,
+                                        a ->
+                                                new AppMeta(
+                                                        a.getAppName(),
+                                                        a.getSndi(),
+                                                        a.getDomaineSndi())));
+
+        List<Object[]> rows = tableFaitsRepository.findLast10MeteoPerApp();
+
+        return rows.stream()
+                .map(
+                        r -> {
+                            Integer idApp = (Integer) r[0];
+                            java.time.LocalDate date =
+                                    (r[1] == null)
+                                            ? null
+                                            : (r[1] instanceof java.sql.Date)
+                                                    ? ((java.sql.Date) r[1]).toLocalDate()
+                                                    : (java.time.LocalDate) r[1];
+                            BigDecimal valeur = (BigDecimal) r[2];
+                            String commentaire = (String) r[3];
+
+                            AppMeta meta =
+                                    metaById.getOrDefault(idApp, new AppMeta(null, null, null));
+
+                            return Meteo.builder()
+                                    .idApplication(idApp)
+                                    .appName(meta.appName)
+                                    .sndi(meta.sndi)
+                                    .domaineSndi(meta.domaine)
+                                    .date(date)
+                                    .valeurMeteo(valeur)
+                                    .commentaire(commentaire)
+                                    .build();
+                        })
+                .toList();
+    }
+
     /** Convertit la date du TableFaits vers LocalDate, quel que soit son type courant. */
     private static LocalDate toLocalDate(Object date) {
         if (date == null) return null;
@@ -132,4 +181,6 @@ public class MeteoAffichageService {
 
         return null;
     }
+
+    private record AppMeta(String appName, String sndi, String domaine) {}
 }

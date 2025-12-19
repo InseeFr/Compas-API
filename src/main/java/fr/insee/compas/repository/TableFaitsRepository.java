@@ -315,4 +315,23 @@ select count(tf) from TableFaits tf where tf.idIndicateur = :idIndicateur and tf
 """)
     Integer countGreenItValuesByDate(
             @Param("dateIn") LocalDate dateIn, @Param("idIndicateur") Integer idIndicateur);
+
+    @Query(
+            value =
+                    """
+                    SELECT
+                        f.id_application     AS id_application,
+                        f.date::date         AS date,
+                        f.valeur::numeric    AS valeur_meteo,
+                        f.commentaire        AS commentaire
+                    FROM (
+                        SELECT m.id_application, m.date, m.valeur, m.commentaire,
+                               ROW_NUMBER() OVER (PARTITION BY m.id_application ORDER BY m.date DESC) AS rn
+                        FROM table_faits m
+                        WHERE m.id_indicateur = 401
+                    ) f
+                    ORDER BY f.id_application, f.date DESC
+                    """,
+            nativeQuery = true)
+    List<Object[]> findLast10MeteoPerApp();
 }
