@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 public class InfosSaisiesA11yToSaveDTO {
 
     private LocalDate dateMajInfosSaisies;
-    private boolean isDeclaration; // presence d'une declaration d'accessibilite
+    private Boolean isDeclaration; // presence d'une declaration d'accessibilite
     private int idIndicateurTypeAudit; // nomenclature A11Y dans indicateur (51x)
     private float scoreAudit;
     private LocalDate dateAudit;

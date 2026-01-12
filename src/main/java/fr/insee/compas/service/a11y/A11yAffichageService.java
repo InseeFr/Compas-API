@@ -51,7 +51,7 @@ public class A11yAffichageService {
                                 InfosSaisiesA11yEntity infos = mapMetric.get(module.getId());
                                 indicateursModuleA11Y.setDateMajInfosSaisie(
                                         infos.getDateMajInfosSaisies());
-                                indicateursModuleA11Y.setDeclaration(infos.isDeclaration());
+                                indicateursModuleA11Y.setIsDeclaration(infos.getIsDeclaration());
                                 // 👇 NOUVEAU : on remonte la date de déclaration
                                 indicateursModuleA11Y.setDateDeclaration(
                                         infos.getDateDeclaration());
@@ -145,7 +145,7 @@ public class A11yAffichageService {
             return Notation.NR; // Aucune info.Indicateur Sonar todo si aucune remontée sonar
         }
 
-        boolean hasDeclaration = infos.isDeclaration();
+        boolean hasDeclaration = infos.getIsDeclaration();
         int typeAudit = infos.getIdIndicateurTypeAudit();
         float score = infos.getScoreAudit();
 

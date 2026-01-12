@@ -26,7 +26,7 @@ public class IndicateursModuleA11Y {
     private String domaineSndi;
 
     private LocalDate dateMajInfosSaisie;
-    private boolean isDeclaration; // presence d'une declaration d'accessibilite
+    private Boolean isDeclaration; // presence d'une declaration d'accessibilite
     private int typeAuditId;
     private String typeAuditLibelle;
     private float scoreAudit;

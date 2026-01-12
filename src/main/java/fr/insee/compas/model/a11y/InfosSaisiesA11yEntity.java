@@ -18,8 +18,8 @@ public class InfosSaisiesA11yEntity {
     private Long id;
 
     private LocalDate dateMajInfosSaisies;
-    private boolean isDeclaration; // presence d'une declaration d'accessibilite
-    private int idIndicateurTypeAudit; // nomenclature A11Y dans indicateur (51x)
+    private Boolean isDeclaration;
+    private int idIndicateurTypeAudit;
     private float scoreAudit;
     private LocalDate dateAudit;
     private LocalDate dateDeclaration; // date de déclaration sur compas

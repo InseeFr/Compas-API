@@ -41,7 +41,7 @@ class A11yAffichageServiceTest {
 
     private InfosSaisiesA11yEntity infos(boolean declaration, int typeAuditId, float score) {
         InfosSaisiesA11yEntity i = mock(InfosSaisiesA11yEntity.class);
-        when(i.isDeclaration()).thenReturn(declaration);
+        when(i.getIsDeclaration()).thenReturn(declaration);
         when(i.getIdIndicateurTypeAudit()).thenReturn(typeAuditId);
         when(i.getScoreAudit()).thenReturn(score);
         return i;
@@ -110,7 +110,7 @@ class A11yAffichageServiceTest {
         // Module 1
         IndicateursModuleA11Y v1 =
                 out.stream().filter(v -> v.getIdModule().equals(1)).findFirst().orElseThrow();
-        assertThat(v1.isDeclaration()).isFalse();
+        assertThat(v1.getIsDeclaration()).isFalse();
         assertThat(v1.getTypeAuditId()).isEqualTo(512);
         assertThat(v1.getTypeAuditLibelle()).isEqualTo("Audit complet");
         assertThat(v1.getNotation()).isEqualTo(Notation.H);
@@ -118,7 +118,7 @@ class A11yAffichageServiceTest {
         // Module 2
         IndicateursModuleA11Y v2 =
                 out.stream().filter(v -> v.getIdModule().equals(2)).findFirst().orElseThrow();
-        assertThat(v2.isDeclaration()).isTrue();
+        assertThat(v2.getIsDeclaration()).isTrue();
         assertThat(v2.getTypeAuditId()).isEqualTo(511);
         assertThat(v2.getTypeAuditLibelle()).isEqualTo("Audit partiel");
         assertThat(v2.getScoreAudit()).isEqualTo(49.9f);

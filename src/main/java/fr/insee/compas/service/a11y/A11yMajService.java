@@ -38,7 +38,7 @@ public class A11yMajService {
                 InfosSaisiesA11yEntity.builder()
                         .idModule(infosSaisiesA11yToSaveDTO.getIdModule())
                         .dateMajInfosSaisies(infosSaisiesA11yToSaveDTO.getDateMajInfosSaisies())
-                        .isDeclaration(infosSaisiesA11yToSaveDTO.isDeclaration())
+                        .isDeclaration(infosSaisiesA11yToSaveDTO.getIsDeclaration())
                         .idIndicateurTypeAudit(infosSaisiesA11yToSaveDTO.getIdIndicateurTypeAudit())
                         .scoreAudit(infosSaisiesA11yToSaveDTO.getScoreAudit())
                         .dateAudit(infosSaisiesA11yToSaveDTO.getDateAudit())
