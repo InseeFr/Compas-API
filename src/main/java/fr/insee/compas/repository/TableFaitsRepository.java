@@ -232,7 +232,7 @@ public interface TableFaitsRepository extends JpaRepository<TableFaits, Long> {
                                            ROW_NUMBER() OVER (PARTITION BY id_application, id_indicateur ORDER BY date DESC) AS rn
                                        FROM
                                            table_faits
-                                       WHERE id_module is null
+                                       WHERE id_module is null  and id_application  is not null
                                    )
                                    SELECT
                                       id_application AS applicationId,
@@ -291,7 +291,7 @@ WITH latest_data AS (
                                    ROW_NUMBER() OVER (PARTITION BY id_application, id_indicateur ORDER BY date DESC) AS rn
                                FROM
                                    table_faits
-                               WHERE id_module is null
+                               WHERE id_module is null and id_application is not null
                            )
                            SELECT
                               id_application AS applicationId,
