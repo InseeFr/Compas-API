@@ -430,13 +430,21 @@ public class UpdateIndicatorDevopsService {
                         .size();
             } else if (sourceUrl.contains("github.com")) {
                 String[] parts = sourceUrl.split("github.com/")[1].split("/");
-                if (parts.length < 2) return IndicatorSpecialValue.NR.getCode();
+                if (parts.length < 2) {
+                    return IndicatorSpecialValue.NR.getCode();
+                }
+
                 return githubService
                         .getGithubAuthorsForRepo(parts[0], parts[1], startDate, endDate)
                         .size();
             } else {
                 return IndicatorSpecialValue.SO.getCode();
             }
+
+        } catch (IllegalArgumentException e) {
+            log.warn("Scan ignoré (hors périmètre) pour l'URL {} : {}", sourceUrl, e.getMessage());
+            return IndicatorSpecialValue.SO.getCode();
+
         } catch (IOException e) {
             log.error("Erreur réseau lors récupération auteurs: {}", sourceUrl, e);
             return IndicatorSpecialValue.NR.getCode();

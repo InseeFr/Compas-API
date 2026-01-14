@@ -83,7 +83,7 @@ class GithubServiceTest {
         when(restTemplate.postForEntity(any(String.class), any(HttpEntity.class), eq(String.class)))
                 .thenReturn(new ResponseEntity<>(jsonResponse, HttpStatus.OK));
 
-        String owner = "owner";
+        String owner = "inseeFr";
         String repo = "repo";
         LocalDateTime start = LocalDateTime.now().minusDays(7);
         LocalDateTime end = LocalDateTime.now();
@@ -115,7 +115,7 @@ class GithubServiceTest {
         when(restTemplate.postForEntity(any(String.class), any(HttpEntity.class), eq(String.class)))
                 .thenReturn(new ResponseEntity<>("error", HttpStatus.INTERNAL_SERVER_ERROR));
 
-        String owner = "owner";
+        String owner = "inseeFr";
         String repo = "repo";
         LocalDateTime start = LocalDateTime.now().minusDays(7);
         LocalDateTime end = LocalDateTime.now();

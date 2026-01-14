@@ -3,6 +3,7 @@ package fr.insee.compas.service;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -43,6 +44,7 @@ public class GithubService {
     private final RestTemplate restTemplate;
     private HttpHeaders headers;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private static final List<String> ALLOWED_ORGANIZATIONS = List.of("InseeFr", "InseeFrLab");
 
     /**
      * Constructeur du service GitHub.
@@ -73,6 +75,20 @@ public class GithubService {
      */
     public Set<String> getGithubAuthorsForRepo(
             String owner, String repo, LocalDateTime start, LocalDateTime end) throws IOException {
+
+        boolean isAllowed =
+                ALLOWED_ORGANIZATIONS.stream()
+                        .anyMatch(allowedOrg -> allowedOrg.equalsIgnoreCase(owner));
+
+        if (!isAllowed) {
+            log.warn("Tentative de scan bloquée pour l'organisation externe : {}", owner);
+            throw new IllegalArgumentException(
+                    String.format(
+                            "L'analyse GitHub est restreinte aux organisations %s. Organisation"
+                                    + " demandée : '%s'",
+                            ALLOWED_ORGANIZATIONS, owner));
+        }
+
         String graphqlQuery = buildGraphqlQuery(owner, repo, start, end);
         String responseBody = executeGraphqlQuery(graphqlQuery);
         return parseAuthorsFromResponse(responseBody);
