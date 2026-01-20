@@ -21,9 +21,9 @@ public class OscarBuilder {
         moduleHistorique.setIdModuleHistorique(
                 moduleHistoriqueNode.path("idModuleHistorique").asInt());
         moduleHistorique.setAuteurOperation(
-                moduleHistoriqueNode.path("auteurOperation").asText(null));
+                moduleHistoriqueNode.path("auteurOperation").asString(null));
         moduleHistorique.setIdModule(moduleHistoriqueNode.path("idModule").asInt());
-        moduleHistorique.setStatut(moduleHistoriqueNode.path("statut").asText(null));
+        moduleHistorique.setStatut(moduleHistoriqueNode.path("statut").asString(null));
         JsonNode dateNode = moduleHistoriqueNode.path("dateOperation");
         if (dateNode.isArray() && dateNode.size() >= 6) {
             // Cas ancien format : tableau [year, month, day, hour, minute, second, nanos]
@@ -40,24 +40,24 @@ public class OscarBuilder {
 
         } else if (dateNode.isString()) {
             // Cas ISO 8601 en String : "2025-02-25T16:41:38.994458"
-            LocalDateTime dateOperation = LocalDateTime.parse(dateNode.asText(null));
+            LocalDateTime dateOperation = LocalDateTime.parse(dateNode.asString(null));
             moduleHistorique.setDateOperation(dateOperation);
         }
-        moduleHistorique.setOperation(moduleHistoriqueNode.path("operation").asText(null));
+        moduleHistorique.setOperation(moduleHistoriqueNode.path("operation").asString(null));
 
         return moduleHistorique;
     }
 
     public Module buildModule(JsonNode moduleNode) {
         Module module = new fr.insee.compas.model.oscar.Module();
-        module.setNomTechnique(moduleNode.path("nomTechnique").asText(null));
+        module.setNomTechnique(moduleNode.path("nomTechnique").asString(null));
         module.setApplicationTechnique(
-                moduleNode.path("applicationTechnique").path("nom").asText(null));
+                moduleNode.path("applicationTechnique").path("nom").asString(null));
         module.setId(moduleNode.path("id").asInt());
-        module.setSourceCreation(moduleNode.path("sourceCreation").asText(null));
-        module.setUrlCodeSource(moduleNode.path("urlCodeSource").asText(null));
-        module.setModName(moduleNode.path("nom").asText(null));
-        module.setStatut(moduleNode.path("statut").asText(null));
+        module.setSourceCreation(moduleNode.path("sourceCreation").asString(null));
+        module.setUrlCodeSource(moduleNode.path("urlCodeSource").asString(null));
+        module.setModName(moduleNode.path("nom").asString(null));
+        module.setStatut(moduleNode.path("statut").asString(null));
         module.setAppName(
                 getPathApplication(moduleNode)
                         .path("nom")
@@ -74,25 +74,28 @@ public class OscarBuilder {
         } else {
             module.setDateDerniereLivraisonEnProduction(null);
         }
-        module.setKeySonar(moduleNode.path("projectKeySonar").asText(null));
+        module.setKeySonar(moduleNode.path("projectKeySonar").asString(null));
         module.setIdApplication(getPathApplication(moduleNode).path("id").asInt());
-        module.setSndi(getPathApplication(moduleNode).path("sndi").path("nom").asText(null));
+        module.setSndi(getPathApplication(moduleNode).path("sndi").path("nom").asString(null));
         module.setDomaineSndi(
-                getPathApplication(moduleNode).path("domaineSndi").path("nom").asText(null));
+                getPathApplication(moduleNode).path("domaineSndi").path("nom").asString(null));
         module.setDomaineFonctionnel(
-                getPathApplication(moduleNode).path("domaineFonctionnel").path("nom").asText(null));
-        module.setTypeLivrable((moduleNode).path("typeLivrable").asText(null));
+                getPathApplication(moduleNode)
+                        .path("domaineFonctionnel")
+                        .path("nom")
+                        .asString(null));
+        module.setTypeLivrable((moduleNode).path("typeLivrable").asString(null));
         return module;
     }
 
     public Application buildApplication(JsonNode applicationNoeud) {
         Application application = new Application();
         application.setIdApplication(applicationNoeud.path("id").asInt());
-        application.setAppName(applicationNoeud.path("nom").asText(null));
-        application.setSndi(applicationNoeud.path("sndi").path("nom").asText(null));
+        application.setAppName(applicationNoeud.path("nom").asString(null));
+        application.setSndi(applicationNoeud.path("sndi").path("nom").asString(null));
         application.setDomaineFonctionnel(
-                applicationNoeud.path("domaineFonctionnel").path("nom").asText(null));
-        application.setDomaineSndi(applicationNoeud.path("domaineSndi").path("nom").asText(null));
+                applicationNoeud.path("domaineFonctionnel").path("nom").asString(null));
+        application.setDomaineSndi(applicationNoeud.path("domaineSndi").path("nom").asString(null));
 
         return application;
     }

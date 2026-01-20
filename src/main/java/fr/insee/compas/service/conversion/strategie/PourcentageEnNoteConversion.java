@@ -20,5 +20,4 @@ public class PourcentageEnNoteConversion implements IConversionStrategie<String,
         if (value > 20) return Notation.D.getGrade();
         return Notation.E.getGrade();
     }
-    ;
 }

@@ -129,7 +129,6 @@ public class MeteoAffichageService {
 
     /** Récupère les 10 dernières météo pour chaque application (id_indicateur = 401) */
     public List<Meteo> listerDernieresMeteosParApplication() {
-        // Prépare un cache {idApp -> (nom, sndi, domaine)}
         Map<Integer, AppMeta> metaById =
                 oscarService.getApplications().stream()
                         .collect(
@@ -147,12 +146,11 @@ public class MeteoAffichageService {
                 .map(
                         r -> {
                             Integer idApp = (Integer) r[0];
-                            java.time.LocalDate date =
-                                    (r[1] == null)
-                                            ? null
-                                            : (r[1] instanceof java.sql.Date)
-                                                    ? ((java.sql.Date) r[1]).toLocalDate()
-                                                    : (java.time.LocalDate) r[1];
+                            LocalDate localDate =
+                                    (r[1] instanceof java.sql.Date date)
+                                            ? date.toLocalDate()
+                                            : (LocalDate) r[1];
+                            LocalDate date = (r[1] == null) ? null : localDate;
                             BigDecimal valeur = (BigDecimal) r[2];
                             String commentaire = (String) r[3];
 

@@ -1,17 +1,17 @@
 package fr.insee.compas.service;
 
-import java.util.*;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.restclient.RestTemplateBuilder;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import fr.insee.compas.exception.JsonProcessingExceptionWrapper;
 import fr.insee.compas.model.hyperx.IndicateurRecuperationSecuriteVM;
 
 import lombok.extern.slf4j.Slf4j;
@@ -43,7 +43,8 @@ public class HyperxService {
         ResponseEntity<String> response =
                 restTemplate.exchange(apiUrl, HttpMethod.GET, entity, String.class);
         if (response.getStatusCode() != HttpStatus.OK) {
-            throw new RuntimeException("Erreur API: " + response.getStatusCode());
+            throw new HttpClientErrorException(
+                    response.getStatusCode(), "Erreur API: " + response.getStatusCode());
         }
         ObjectMapper mapper = new ObjectMapper();
         JsonNode root;
@@ -65,7 +66,7 @@ public class HyperxService {
                 }
             }
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            throw new JsonProcessingExceptionWrapper("Erreur lors du processing Json: ", e);
         }
         return new IndicateurRecuperationSecuriteVM(max, nb);
     }

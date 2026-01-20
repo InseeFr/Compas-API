@@ -83,7 +83,7 @@ class GreenItControllerTest {
                         multipart("/kpi-green/modules/upload")
                                 .file((MockMultipartFile) mockFile)
                                 .contentType(MediaType.MULTIPART_FORM_DATA))
-                .andExpect(status().isUnprocessableEntity());
+                .andExpect(status().isUnprocessableContent());
 
         verify(greenItService, never()).miseAJourIndicateursGreenItFromFile(any(), any());
     }

@@ -3,6 +3,7 @@ package fr.insee.compas.repository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -17,6 +18,9 @@ public interface TableFaitsRepository extends JpaRepository<TableFaits, Long> {
 
     List<TableFaits> findByDateAndIdIndicateurAndIdApplication(
             LocalDate date, Integer idIndicateur, Integer idApplication);
+
+    Optional<List<TableFaits>> findByIdApplicationAndDateAndIdIndicateur(
+            Integer idApplication, LocalDate date, Integer idIndicateur);
 
     @Query(
             value =
