@@ -40,6 +40,8 @@ import fr.insee.compas.model.greenit.IndicateurModuleGreenIT;
 import fr.insee.compas.model.greenit.MetriqueVm;
 import fr.insee.compas.model.greenit.MetriqueVmCsvRead;
 import fr.insee.compas.model.greenit.util.LectureCsvUtil;
+import fr.insee.compas.repository.MetriqueApplicationProjection;
+import fr.insee.compas.repository.MetriqueModuleProjection;
 import fr.insee.compas.repository.TableFaitsRepository;
 import fr.insee.compas.service.greenit.GreenItService;
 
@@ -225,11 +227,14 @@ class GreenItServiceGetTest {
     @Test
     @DisplayName("getApplicationMetriques retourne 3 lignes")
     void testGetApplicationMetriques_TroisLignes() {
-        List<Object[]> rows =
+        List<MetriqueApplicationProjection> rows =
                 List.of(
-                        new Object[] {3, LocalDate.of(2025, 2, 1), BigDecimal.ONE},
-                        new Object[] {2, LocalDate.of(2025, 2, 2), BigDecimal.TEN},
-                        new Object[] {1, LocalDate.of(2025, 2, 3), BigDecimal.ZERO});
+                        new MetriqueApplicationProjectionStub(
+                                3, LocalDate.of(2025, 2, 1), BigDecimal.ONE),
+                        new MetriqueApplicationProjectionStub(
+                                2, LocalDate.of(2025, 2, 2), BigDecimal.TEN),
+                        new MetriqueApplicationProjectionStub(
+                                1, LocalDate.of(2025, 2, 3), BigDecimal.ZERO));
         when(tableFaitsRepository.findLatestSummedValuesByIndicateurForAllApplications(
                         IndicateurType.CONSO_ELEC.getValue()))
                 .thenReturn(rows);
@@ -256,11 +261,14 @@ class GreenItServiceGetTest {
     @Test
     @DisplayName("getModuleMetriques retourne 3 lignes")
     void testGetModuleMetriques_TroisLignes() {
-        List<Object[]> rows =
+        List<MetriqueModuleProjection> rows =
                 List.of(
-                        new Object[] {3, LocalDate.of(2025, 2, 1), BigDecimal.ONE},
-                        new Object[] {2, LocalDate.of(2025, 2, 2), BigDecimal.TEN},
-                        new Object[] {1, LocalDate.of(2025, 2, 3), BigDecimal.ZERO});
+                        new MetriqueModuleProjectionStub(
+                                3, LocalDate.of(2025, 2, 1), BigDecimal.ONE),
+                        new MetriqueModuleProjectionStub(
+                                2, LocalDate.of(2025, 2, 2), BigDecimal.TEN),
+                        new MetriqueModuleProjectionStub(
+                                1, LocalDate.of(2025, 2, 3), BigDecimal.ZERO));
         when(tableFaitsRepository.findLatestSummedValuesByIndicateurForAllModules(
                         IndicateurType.CONSO_ELEC.getValue()))
                 .thenReturn(rows);
@@ -315,5 +323,62 @@ class GreenItServiceGetTest {
         verify(metriqueVmMapper).toMetriqueVm(dto2);
         verify(metriqueVmMapper).toMetriqueVm(dto3);
         verify(greenItService).miseAJourIndicateursGreenIT(date);
+    }
+
+    class MetriqueApplicationProjectionStub implements MetriqueApplicationProjection {
+
+        private final Integer idApplication;
+        private final LocalDate date;
+        private final BigDecimal totalValeur;
+
+        MetriqueApplicationProjectionStub(
+                Integer idApplication, LocalDate date, BigDecimal totalValeur) {
+            this.idApplication = idApplication;
+            this.date = date;
+            this.totalValeur = totalValeur;
+        }
+
+        @Override
+        public Integer getIdApplication() {
+            return idApplication;
+        }
+
+        @Override
+        public LocalDate getDate() {
+            return date;
+        }
+
+        @Override
+        public BigDecimal getTotalValeur() {
+            return totalValeur;
+        }
+    }
+
+    class MetriqueModuleProjectionStub implements MetriqueModuleProjection {
+
+        private final Integer idModule;
+        private final LocalDate date;
+        private final BigDecimal totalValeur;
+
+        MetriqueModuleProjectionStub(Integer idModule, LocalDate date, BigDecimal totalValeur) {
+            this.idModule = idModule;
+            this.date = date;
+            this.totalValeur = totalValeur;
+        }
+
+        @Override
+        public Integer getIdModule() {
+            return idModule;
+        }
+
+        @Override
+        public LocalDate getDate() {
+            return date;
+        }
+
+        @Override
+        public BigDecimal getTotalValeur() {
+            return totalValeur;
+        }
     }
 }

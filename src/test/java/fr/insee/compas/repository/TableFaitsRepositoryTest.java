@@ -76,22 +76,26 @@ class TableFaitsRepositoryTest {
 
     @Test
     void testFindLatestSummedValuesByIndicateurForAllModules_Indicateur2() {
-        final List<Object[]> results =
+        final List<MetriqueModuleProjection> results =
                 tableFaitsRepository.findLatestSummedValuesByIndicateurForAllModules(2);
         final SoftAssertions softAssertions = new SoftAssertions();
         softAssertions.assertThat(results).isNotNull();
         softAssertions.assertThat(results.size()).isEqualTo(2);
-        softAssertions.assertThat(results.get(0)[0]).isEqualTo(2);
-        softAssertions.assertThat(results.get(0)[1]).isEqualTo(LocalDate.of(2024, 12, 02));
-        softAssertions.assertThat(((Number) results.get(0)[2]).intValue()).isEqualTo(395);
-        softAssertions.assertThat(results.get(1)[0]).isEqualTo(1);
-        softAssertions.assertThat(((Number) results.get(1)[2]).intValue()).isEqualTo(102);
+        softAssertions.assertThat(results.get(0).getIdModule()).isEqualTo(2);
+        softAssertions.assertThat(results.get(0).getDate()).isEqualTo(LocalDate.of(2024, 12, 02));
+        softAssertions
+                .assertThat(((Number) results.get(0).getTotalValeur()).intValue())
+                .isEqualTo(395);
+        softAssertions.assertThat(results.get(1).getIdModule()).isEqualTo(1);
+        softAssertions
+                .assertThat(((Number) results.get(1).getTotalValeur()).intValue())
+                .isEqualTo(102);
         softAssertions.assertAll();
     }
 
     @Test
     void testFindLatestSummedValuesByIndicateurForAllModules_NoResult() {
-        final List<Object[]> results =
+        final List<MetriqueModuleProjection> results =
                 tableFaitsRepository.findLatestSummedValuesByIndicateurForAllModules(207);
         final SoftAssertions softAssertions = new SoftAssertions();
         softAssertions.assertThat(results).isNotNull();
@@ -101,23 +105,27 @@ class TableFaitsRepositoryTest {
 
     @Test
     void testFindLatestSummedValuesByIndicateurForAllApplications_Indicateur201() {
-        final List<Object[]> results =
+        final List<MetriqueApplicationProjection> results =
                 tableFaitsRepository.findLatestSummedValuesByIndicateurForAllApplications(201);
         final SoftAssertions softAssertions = new SoftAssertions();
         softAssertions.assertThat(results).isNotNull();
         softAssertions.assertThat(results.size()).isEqualTo(2);
-        softAssertions.assertThat(results.get(0)[0]).isEqualTo(130);
-        softAssertions.assertThat(results.get(0)[1]).isEqualTo(LocalDate.of(2024, 12, 04));
-        softAssertions.assertThat(((Number) results.get(0)[2]).intValue()).isEqualTo(16);
-        softAssertions.assertThat(results.get(1)[0]).isEqualTo(131);
-        softAssertions.assertThat(((Number) results.get(1)[2]).intValue()).isEqualTo(8);
+        softAssertions.assertThat(results.get(0).getIdApplication()).isEqualTo(130);
+        softAssertions.assertThat(results.get(0).getDate()).isEqualTo(LocalDate.of(2024, 12, 04));
+        softAssertions
+                .assertThat(((Number) results.get(0).getTotalValeur()).intValue())
+                .isEqualTo(16);
+        softAssertions.assertThat(results.get(1).getIdApplication()).isEqualTo(131);
+        softAssertions
+                .assertThat(((Number) results.get(1).getTotalValeur()).intValue())
+                .isEqualTo(8);
         softAssertions.assertAll();
     }
 
     @Test
     void testFindLatestSummedValuesByIndicateurForAllApplications_NoResult() {
-        final List<Object[]> results =
-                tableFaitsRepository.findLatestSummedValuesByIndicateurForAllApplications(207);
+        final List<MetriqueApplicationProjection> results =
+                tableFaitsRepository.findLatestSummedValuesByIndicateurForAllApplications(208);
         final SoftAssertions softAssertions = new SoftAssertions();
         softAssertions.assertThat(results).isNotNull();
         softAssertions.assertThat(results.size()).isEqualTo(0);

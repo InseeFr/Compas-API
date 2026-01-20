@@ -39,6 +39,8 @@ import fr.insee.compas.model.greenit.IndicateurApplicationGreenIT;
 import fr.insee.compas.model.greenit.IndicateurModuleGreenIT;
 import fr.insee.compas.model.greenit.MetriqueVm;
 import fr.insee.compas.model.greenit.MetriqueVmCsvRead;
+import fr.insee.compas.repository.MetriqueApplicationProjection;
+import fr.insee.compas.repository.MetriqueModuleProjection;
 import fr.insee.compas.repository.TableFaitsRepository;
 import fr.insee.compas.util.ScoreUtils;
 
@@ -495,30 +497,30 @@ public class GreenItService {
     }
 
     public List<MetriqueApplicationDTO> getApplicationMetriques() {
-        final List<Object[]> results =
+        final List<MetriqueApplicationProjection> results =
                 tableFaitsRepository.findLatestSummedValuesByIndicateurForAllApplications(
                         IndicateurType.CONSO_ELEC.getValue());
         return results.stream()
                 .map(
                         result ->
                                 new MetriqueApplicationDTO(
-                                        (Integer) result[0],
-                                        (LocalDate) result[1],
-                                        (BigDecimal) result[2]))
+                                        result.getIdApplication(),
+                                        result.getDate(),
+                                        result.getTotalValeur()))
                 .toList();
     }
 
     public List<MetriqueModuleDTO> getModuleMetriques() {
-        final List<Object[]> results =
+        final List<MetriqueModuleProjection> results =
                 tableFaitsRepository.findLatestSummedValuesByIndicateurForAllModules(
                         IndicateurType.CONSO_ELEC.getValue());
         return results.stream()
                 .map(
                         result ->
                                 new MetriqueModuleDTO(
-                                        (Integer) result[0],
-                                        (LocalDate) result[1],
-                                        (BigDecimal) result[2]))
+                                        result.getIdModule(),
+                                        result.getDate(),
+                                        result.getTotalValeur()))
                 .toList();
     }
 }

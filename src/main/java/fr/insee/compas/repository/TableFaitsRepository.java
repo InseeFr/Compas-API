@@ -90,11 +90,11 @@ public interface TableFaitsRepository extends JpaRepository<TableFaits, Long> {
     @Query(
             value =
 """
-    select subquery.id_Application, subquery.date, subquery.totalValeur from (select id_Application , date, sum(tf.valeur) over (partition by tf.id_Application, tf.date order by tf.date desc) as totalValeur,
+        select subquery.id_Application as idApplication, subquery.date as date, subquery.totalValeur as totalValeur from (select id_Application , date, sum(tf.valeur) over (partition by tf.id_Application, tf.date order by tf.date desc) as totalValeur,
      row_number() over (partition by tf.id_Application order by tf.date desc) as row_num FROM Table_Faits tf WHERE tf.id_Indicateur = :idIndicateur) as subquery where subquery.row_num = 1 order by totalValeur desc
 """,
             nativeQuery = true)
-    List<Object[]> findLatestSummedValuesByIndicateurForAllApplications(
+    List<MetriqueApplicationProjection> findLatestSummedValuesByIndicateurForAllApplications(
             @Param("idIndicateur") Integer idIndicateur);
 
     @Query(
@@ -116,11 +116,11 @@ public interface TableFaitsRepository extends JpaRepository<TableFaits, Long> {
     @Query(
             value =
 """
-    select subquery.id_Module, subquery.date, subquery.totalValeur from (select id_Module , date, sum(tf.valeur) over (partition by tf.id_Module, tf.date order by tf.date desc) as totalValeur,
+    select subquery.id_Module as idModule, subquery.date as date, subquery.totalValeur as totalValeur from (select id_Module , date, sum(tf.valeur) over (partition by tf.id_Module, tf.date order by tf.date desc) as totalValeur,
      row_number() over (partition by tf.id_Module order by tf.date desc) as row_num FROM Table_Faits tf WHERE tf.id_Indicateur = :idIndicateur and id_Module is not null) as subquery where subquery.row_num = 1 order by totalValeur desc
 """,
             nativeQuery = true)
-    List<Object[]> findLatestSummedValuesByIndicateurForAllModules(
+    List<MetriqueModuleProjection> findLatestSummedValuesByIndicateurForAllModules(
             @Param("idIndicateur") Integer idIndicateur);
 
     @Query(

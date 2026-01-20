@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>fr.insee</groupId>
 	<artifactId>compas</artifactId>
-	<version>1.5.4</version>
+	<version>1.5.7</version>
 	<name>compas</name>
 	<description>Application pour le Tableau de Bord DDSI</description>
 
@@ -19,6 +19,7 @@
 		<spotless-maven-plugin.version>3.0.0</spotless-maven-plugin.version>
 		<googleJavaFormat.version>1.27.0</googleJavaFormat.version>
 		<sonar.exclusions>**/test/**, **/*Test.java, **/*Tests.java</sonar.exclusions>
+		<sonar.coverage.exclusions>**/LocalSecurityConfig.java</sonar.coverage.exclusions>
 		<maven.compiler.source>25</maven.compiler.source>
 		<maven.compiler.target>25</maven.compiler.target>
 	</properties>
@@ -34,7 +35,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-webmvc</artifactId>
+			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springdoc</groupId>
