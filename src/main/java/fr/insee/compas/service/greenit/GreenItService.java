@@ -280,7 +280,7 @@ public class GreenItService {
     }
 
     private BigDecimal calculatePercent(BigDecimal numerateur, BigDecimal denominateur) {
-        if (denominateur == null || BigDecimal.ZERO.equals(denominateur)) {
+        if (numerateur == null || denominateur == null || BigDecimal.ZERO.equals(denominateur)) {
             return null;
         }
         return numerateur
