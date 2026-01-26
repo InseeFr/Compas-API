@@ -1,6 +1,7 @@
 package fr.insee.compas.service.meteo;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
@@ -205,5 +206,65 @@ class MeteoAffichageServiceTest {
         }
 
         assertThat(results).isEmpty();
+    }
+
+    @Test
+    @Sql(
+            scripts = "classpath:meteo/data-meteo-last.sql",
+            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+    void listerApplicationLastMeteo_3mois() {
+        Application app1 =
+                Application.builder()
+                        .idApplication(1)
+                        .appName("App 10")
+                        .sndi("S1")
+                        .domaineSndi("DS1")
+                        .build();
+        Application app2 =
+                Application.builder()
+                        .idApplication(2)
+                        .appName("App 11")
+                        .sndi("S2")
+                        .domaineSndi("DS2")
+                        .build();
+        Application app3 =
+                Application.builder()
+                        .idApplication(3)
+                        .appName("App 12")
+                        .sndi("S3")
+                        .domaineSndi("DS3")
+                        .build();
+
+        when(oscarService.getApplications()).thenReturn(List.of(app1, app2, app3));
+        List<Meteo> result = meteoAffichageService.listerDernieresMeteosParApplication(3);
+
+        assertFalse(result.isEmpty(), "La liste des meteo ne doit pas être vide");
+
+        LocalDate cutoff = LocalDate.now().minusMonths(3);
+        for (Meteo m : result) {
+            assertTrue(
+                    m.getDate().isAfter(cutoff) || m.getDate().isEqual(cutoff),
+                    "La date doit être dans les 3 derniers mois");
+        }
+
+        List<Meteo> meteoApp = result.stream().toList();
+        assertEquals(2, meteoApp.size(), "Il doit y avoir 2 meteo dans les 3 derniers mois");
+        Meteo m1 = meteoApp.getFirst();
+        assertEquals(1, m1.getIdApplication());
+        assertEquals("App 10", m1.getAppName());
+        assertEquals(LocalDate.of(2026, 1, 10), m1.getDate());
+        assertEquals(new BigDecimal("3"), m1.getValeurMeteo());
+
+        Meteo m2 = meteoApp.get(1);
+        assertEquals(2, m2.getIdApplication());
+        assertEquals("App 11", m2.getAppName());
+        assertEquals(LocalDate.of(2025, 11, 10), m2.getDate());
+        assertEquals(new BigDecimal("1"), m2.getValeurMeteo());
+
+        for (Meteo m : meteoApp) {
+            assertTrue(
+                    m.getDate().isAfter(cutoff) || m.getDate().isEqual(cutoff),
+                    "La date doit être dans les 3 derniers mois");
+        }
     }
 }

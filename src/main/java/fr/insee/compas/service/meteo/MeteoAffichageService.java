@@ -128,7 +128,8 @@ public class MeteoAffichageService {
     }
 
     /** Récupère les 10 dernières météo pour chaque application (id_indicateur = 401) */
-    public List<Meteo> listerDernieresMeteosParApplication() {
+    public List<Meteo> listerDernieresMeteosParApplication(Integer nbMois) {
+        LocalDate startDate = LocalDate.now().withDayOfMonth(1).minusMonths(nbMois - 1L);
         Map<Integer, AppMeta> metaById =
                 oscarService.getApplications().stream()
                         .collect(
@@ -140,7 +141,7 @@ public class MeteoAffichageService {
                                                         a.getSndi(),
                                                         a.getDomaineSndi())));
 
-        List<Object[]> rows = tableFaitsRepository.findLast10MeteoPerApp();
+        List<Object[]> rows = tableFaitsRepository.findLast10MeteoPerApp(startDate);
 
         return rows.stream()
                 .map(

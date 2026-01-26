@@ -15,7 +15,7 @@ public class LocalSecurityConfig {
         "java:S4502",
         "java:S2187"
     }) // CSRF is intentionally relaxed for stateless REST API, inutile de tester le framework sur
-    // une classe locale
+    // une classe locale.
     @Bean
     public SecurityFilterChain localSecurityFilterChain(HttpSecurity http) {
 

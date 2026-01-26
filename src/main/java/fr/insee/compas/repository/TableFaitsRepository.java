@@ -332,10 +332,10 @@ select count(tf) from TableFaits tf where tf.idIndicateur = :idIndicateur and tf
                         SELECT m.id_application, m.date, m.valeur, m.commentaire,
                                ROW_NUMBER() OVER (PARTITION BY m.id_application ORDER BY m.date DESC) AS rn
                         FROM table_faits m
-                        WHERE m.id_indicateur = 401
+                        WHERE m.id_indicateur = 401 AND m.date >= :startDate AND m.date <= CURRENT_DATE
                     ) f
                     ORDER BY f.id_application, f.date DESC
                     """,
             nativeQuery = true)
-    List<Object[]> findLast10MeteoPerApp();
+    List<Object[]> findLast10MeteoPerApp(@Param("startDate") LocalDate startDate);
 }

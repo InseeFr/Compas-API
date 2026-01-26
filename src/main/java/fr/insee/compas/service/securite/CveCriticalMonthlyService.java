@@ -1,7 +1,6 @@
 package fr.insee.compas.service.securite;
 
 import java.math.BigDecimal;
-import java.sql.Date;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +23,7 @@ public class CveCriticalMonthlyService {
         List<IndicateurApplicationSecuriteMonthly> out = new ArrayList<>(rows.size());
         for (Object[] r : rows) {
             Integer appId = (Integer) r[0];
-            LocalDate month = ((Date) r[1]).toLocalDate();
+            LocalDate month = (LocalDate) r[1];
             BigDecimal val = (BigDecimal) r[2];
             out.add(
                     new IndicateurApplicationSecuriteMonthly(

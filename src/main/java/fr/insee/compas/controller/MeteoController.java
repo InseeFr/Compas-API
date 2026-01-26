@@ -2,8 +2,12 @@ package fr.insee.compas.controller;
 
 import java.util.List;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import fr.insee.compas.model.meteo.DemandeCreationMeteo;
@@ -13,6 +17,7 @@ import fr.insee.compas.service.meteo.MeteoAlerteService;
 import fr.insee.compas.service.meteo.MeteoCreationService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 
@@ -20,6 +25,7 @@ import lombok.AllArgsConstructor;
 @RequestMapping("/meteo")
 @Tag(name = "API Meteo", description = "API des indicateurs Météo du dev")
 @AllArgsConstructor
+@Validated
 public class MeteoController {
 
     private MeteoCreationService meteoCreationService;
@@ -66,7 +72,13 @@ public class MeteoController {
     }
 
     @GetMapping("/history")
-    public List<Meteo> getHistory() {
-        return meteoAffichageService.listerDernieresMeteosParApplication();
+    @Operation(summary = "Lister les dernières données météo sur une fenêtre de X mois")
+    public List<Meteo> getHistory(
+            @Parameter(description = "Nombre de mois à remonter", example = "6")
+                    @RequestParam(name = "nbMois", defaultValue = "6")
+                    @Min(3)
+                    @Max(12)
+                    Integer nbMois) {
+        return meteoAffichageService.listerDernieresMeteosParApplication(nbMois);
     }
 }
