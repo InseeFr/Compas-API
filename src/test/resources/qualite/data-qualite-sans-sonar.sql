@@ -1,3 +1,5 @@
+DELETE FROM table_faits;
+
 INSERT INTO table_faits (id_module, id_indicateur, id_application,date, valeur, id_source)
 VALUES
 (488, 3, 197, '2025-01-10', 0, 3),
