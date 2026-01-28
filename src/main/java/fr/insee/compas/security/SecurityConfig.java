@@ -17,7 +17,12 @@ public class SecurityConfig {
         http.csrf(
                         csrf ->
                                 csrf.ignoringRequestMatchers(
-                                        "/swagger-ui/**", "/v3/api-docs/**", "/kpi-green/**"))
+                                        "/swagger-ui/**",
+                                        "/v3/api-docs/**",
+                                        "/kpi-green/**",
+                                        "/meteo/**",
+                                        "/a11y/**",
+                                        "/cloud/**"))
                 .authorizeHttpRequests(
                         auth ->
                                 auth.requestMatchers(
