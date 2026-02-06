@@ -31,7 +31,8 @@ class SpocServiceTest {
         if (server != null) server.stop();
     }
 
-    private SpocService newService(boolean addBalfOscar, String... defaultReceivers) {
+    private SpocService newService(
+            boolean addBalfOscar, String[] defaultReceivers, String[] defaultReceiverAdjMail) {
         String url = server.baseUrl() + "/spoc";
         return new SpocService(
                 "user1", // spoc.username
@@ -39,6 +40,7 @@ class SpocServiceTest {
                 url, // spoc.url
                 "sender@insee.fr", // sender.mail
                 defaultReceivers, // default.receiver.mail
+                defaultReceiverAdjMail, // default.receiver.adj.mail
                 addBalfOscar // receiver.mail.add.balf.oscar
                 );
     }
@@ -80,7 +82,8 @@ class SpocServiceTest {
         // stub SPOC 200
         stubFor(post(urlEqualTo("/spoc")).willReturn(aResponse().withStatus(200).withBody("OK")));
 
-        SpocService svc = newService(true, "balf@insee.fr");
+        SpocService svc =
+                newService(true, new String[] {"balf@insee.fr"}, new String[] {"balfadj@insee.fr"});
 
         Mail mail = new Mail();
         mail.setObject("Sujet X");
@@ -116,7 +119,7 @@ class SpocServiceTest {
 
         // Header Cc : contient les défauts
         String ccValue = getCcHeaderValueFrom(body);
-        assertThat(ccValue).isEqualTo("balf@insee.fr");
+        assertThat(ccValue).isEqualTo("balf@insee.fr;balfadj@insee.fr");
 
         // Champs MessageTemplate
         assertThat(body)
@@ -132,7 +135,9 @@ class SpocServiceTest {
     void sendMail_replaceMode_doesNotAddDefaultReceivers() throws Exception {
         stubFor(post(urlEqualTo("/spoc")).willReturn(aResponse().withStatus(200)));
 
-        SpocService svc = newService(false, "balf@insee.fr");
+        SpocService svc =
+                newService(
+                        false, new String[] {"balf@insee.fr"}, new String[] {"balfadj@insee.fr"});
 
         // Même si on a un defaultReceiver, en mode addBalfOscar=false
         // on n'ajoute PAS "balf@insee.fr" -> seul le TO d'origine est utilisé.
@@ -161,7 +166,7 @@ class SpocServiceTest {
     @Test
     void sendMail_noReceivers_noCall() {
         // Pas de stub nécessaire si pas d'appel
-        SpocService svc = newService(false); // pas de défauts
+        SpocService svc = newService(false, new String[] {}, new String[] {}); // pas de défauts
 
         Mail mail = new Mail();
         mail.setObject("S");
@@ -181,7 +186,11 @@ class SpocServiceTest {
     void sendMailTo_delegates_andMerges() throws Exception {
         stubFor(post(urlEqualTo("/spoc")).willReturn(aResponse().withStatus(200)));
 
-        SpocService svc = newService(true, "default@insee.fr");
+        SpocService svc =
+                newService(
+                        true,
+                        new String[] {"default@insee.fr"},
+                        new String[] {"defaultadj@insee.fr"});
 
         svc.sendMailTo(List.of("rga@insee.fr"), "Sub", "Body");
 
@@ -195,7 +204,7 @@ class SpocServiceTest {
 
         // CC = defaultReceiver
         String ccValue = getCcHeaderValueFrom(body);
-        assertThat(ccValue).isEqualTo("default@insee.fr");
+        assertThat(ccValue).isEqualTo("default@insee.fr;defaultadj@insee.fr");
     }
 
     // --- 5) Réponse 500 : on tente l’envoi (1 requête), pas d’exception levée
@@ -203,7 +212,8 @@ class SpocServiceTest {
     void sendMail_http500_logsWarning_noThrow() {
         stubFor(post(urlEqualTo("/spoc")).willReturn(aResponse().withStatus(500).withBody("OOPS")));
 
-        SpocService svc = newService(true, "balf@insee.fr");
+        SpocService svc =
+                newService(true, new String[] {"balf@insee.fr"}, new String[] {"balfadj@insee.fr"});
 
         Mail mail = new Mail();
         mail.setObject("S");

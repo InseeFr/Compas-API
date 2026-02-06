@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.*;
 import fr.insee.compas.model.meteo.DemandeCreationMeteo;
 import fr.insee.compas.model.meteo.Meteo;
 import fr.insee.compas.service.meteo.MeteoAffichageService;
-import fr.insee.compas.service.meteo.MeteoAlerteService;
 import fr.insee.compas.service.meteo.MeteoCreationService;
+import fr.insee.compas.service.meteo.alerte.ISendAlerteMeteo;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -30,7 +30,7 @@ public class MeteoController {
 
     private MeteoCreationService meteoCreationService;
     private MeteoAffichageService meteoAffichageService;
-    private final MeteoAlerteService meteoAlerteService;
+    private final ISendAlerteMeteo meteoAlerteService;
 
     @PostMapping
     @Operation(
@@ -64,10 +64,11 @@ public class MeteoController {
     }
 
     @PostMapping("/alertes")
+    @Operation(summary = "Envoie des mails d'alertes aux responsables des apps de chaque sndi")
     public ResponseEntity<Void> envoyerAlertes(
             @RequestParam(defaultValue = "23") int jours,
             @RequestParam(defaultValue = "true") boolean test) {
-        meteoAlerteService.envoyerAlertesRga(jours, test);
+        meteoAlerteService.sendAlerteMeteo(jours, test);
         return ResponseEntity.accepted().build();
     }
 

@@ -252,13 +252,13 @@ class MeteoAffichageServiceTest {
         Meteo m1 = meteoApp.getFirst();
         assertEquals(1, m1.getIdApplication());
         assertEquals("App 10", m1.getAppName());
-        assertEquals(LocalDate.of(2026, 1, 10), m1.getDate());
+        assertEquals(LocalDate.now().minusMonths(1), m1.getDate());
         assertEquals(new BigDecimal("3"), m1.getValeurMeteo());
 
         Meteo m2 = meteoApp.get(1);
         assertEquals(2, m2.getIdApplication());
         assertEquals("App 11", m2.getAppName());
-        assertEquals(LocalDate.of(2025, 11, 10), m2.getDate());
+        assertEquals(LocalDate.now().minusMonths(2), m2.getDate());
         assertEquals(new BigDecimal("1"), m2.getValeurMeteo());
 
         for (Meteo m : meteoApp) {

@@ -39,6 +39,7 @@ public class SpocService {
     private final String spocApiUrl;
     private final String senderMail;
     private final List<String> defaultReceiverMail;
+    private final List<String> defaultReceiverAdjMail;
     private final boolean addBalfOscar;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -50,6 +51,7 @@ public class SpocService {
             @Value("${spoc.url}") String spocApiUrl,
             @Value("${sender.mail}") String senderMail,
             @Value("${default.receiver.mail}") String[] defaultReceiverMail,
+            @Value("${default.receiver.adj.mail}") String[] defaultReceiverAdjMail,
             @Value("${receiver.mail.add.balf.oscar}") boolean addBalfOscar) {
 
         this.spocUsername = Objects.requireNonNull(spocUsername, "spoc.username manquant");
@@ -58,6 +60,10 @@ public class SpocService {
         this.senderMail = Objects.requireNonNull(senderMail, "sender.mail manquant");
         this.defaultReceiverMail =
                 Arrays.stream(Optional.ofNullable(defaultReceiverMail).orElse(new String[0]))
+                        .filter(s -> s != null && !s.isBlank())
+                        .toList();
+        this.defaultReceiverAdjMail =
+                Arrays.stream(Optional.ofNullable(defaultReceiverAdjMail).orElse(new String[0]))
                         .filter(s -> s != null && !s.isBlank())
                         .toList();
         this.addBalfOscar = addBalfOscar;
@@ -86,8 +92,10 @@ public class SpocService {
 
         if (addBalfOscar) {
             cc.addAll(defaultReceiverMail);
+            cc.addAll(defaultReceiverAdjMail);
         } else if (to.isEmpty()) {
             to.addAll(defaultReceiverMail);
+            cc.addAll(defaultReceiverAdjMail);
         }
 
         // Nettoyage basique TO/CC
@@ -242,5 +250,9 @@ public class SpocService {
 
     public List<String> getDefaultReceivers() {
         return new ArrayList<>(defaultReceiverMail);
+    }
+
+    public List<String> getDefaultReceiverAdjMail() {
+        return new ArrayList<>(defaultReceiverAdjMail);
     }
 }

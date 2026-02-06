@@ -12,7 +12,7 @@ import fr.insee.compas.model.sonar.RecuperationMeasures;
 import fr.insee.compas.service.OscarService;
 import fr.insee.compas.service.a11y.A11yMajService;
 import fr.insee.compas.service.devops.UpdateIndicatorDevopsService;
-import fr.insee.compas.service.meteo.MeteoAlerteService;
+import fr.insee.compas.service.meteo.alerte.MeteoAlerteService;
 import fr.insee.compas.service.qualite.RecuperationIndicateurSonarService;
 import fr.insee.compas.service.securite.RecupCveSecuriteService;
 import fr.insee.compas.service.securite.RecupHyperxSecuriteService;
@@ -89,7 +89,7 @@ public class ApiScheduler {
 
         log.info("Début de l’envoi hebdomadaire des alertes météo (lundi {})", LocalDate.now());
         try {
-            meteoAlerteService.envoyerAlertesRga(23, false);
+            meteoAlerteService.sendAlerteMeteo(23, false);
             log.info("Fin de l’envoi hebdomadaire des alertes météo.");
         } catch (Exception e) {
             log.error("Erreur lors de l’envoi des alertes météo : ", e);
