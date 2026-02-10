@@ -4,9 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
-import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -89,7 +89,7 @@ class RecupIndicateursSonarTest {
     }
 
     @Test
-    void testPutIndicateursSonar() throws IOException {
+    void testPutIndicateursSonar() {
         // 1. Préparer les données mockées
         Module moduleok =
                 Module.builder()
@@ -117,13 +117,34 @@ class RecupIndicateursSonarTest {
         List<Measure> mesures = List.of(m);
         Component c = Component.builder().measures(mesures).build();
         mesuresValides.setComponent(c);
-        when(sonarService.getDataFromSonarAPIMeasures("keySonarValide", "gitlab"))
+        when(sonarService.getDataFromSonarAPIMeasures("keySonarValide", "gitlab", "module"))
                 .thenReturn(mesuresValides);
 
-        // 2. Appeler la méthode à tester
         recupIndicateursSonarService.putIndicateursSonarModule();
 
-        // 3. Vérifier les appels et les effets
         verify(tableFaitsRepository, times(2)).save(any(TableFaits.class));
+    }
+
+    @Test
+    void testPutIndicateursSonar_ModuleAvecKeyMaisSansAnalyse() {
+        Module moduleSansAnalyse =
+                Module.builder().id(1).idApplication(10).keySonar("keySansAnalyse").build();
+
+        when(oscarService.getModules()).thenReturn(List.of(moduleSansAnalyse));
+
+        when(sonarService.getDataFromSonarAPIMeasures("keySansAnalyse", "gitlab", null))
+                .thenReturn(null);
+        when(sonarService.getDataFromSonarAPIMeasures("keySansAnalyse", "github", null))
+                .thenReturn(null);
+
+        Map<String, RecuperationMeasures> result =
+                recupIndicateursSonarService.putIndicateursSonarModule();
+
+        assertTrue(result.isEmpty()); // no valid measures
+        verify(tableFaitsRepository, never()).save(any(TableFaits.class)); // nothing saved
+        verify(sonarService, times(1))
+                .getDataFromSonarAPIMeasures("keySansAnalyse", "gitlab", null);
+        verify(sonarService, times(1))
+                .getDataFromSonarAPIMeasures("keySansAnalyse", "github", null);
     }
 }

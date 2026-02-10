@@ -1,6 +1,5 @@
 package fr.insee.compas.schedule;
 
-import java.io.IOException;
 import java.time.LocalDate;
 import java.util.Map;
 
@@ -56,20 +55,16 @@ public class ApiScheduler {
         oscarService.miseAjourModuleOscarEnBaseDeDonnees();
         log.info("fin mise à jour des indicateurs sonar");
         log.info("mise à jour des indicateurs qualite");
-        try {
-            Map<String, RecuperationMeasures> analyseModule =
-                    indicateurSonar.putIndicateursSonarModule();
-            indicateurSonar.putIndicateursSonarApplication(analyseModule);
-        } catch (IOException e) {
-            log.error("pb lors de la mise à jour des indicateur sonar{}", e.getMessage());
-        }
+        Map<String, RecuperationMeasures> analyseModule =
+                indicateurSonar.putIndicateursSonarModule();
+        indicateurSonar.putIndicateursSonarApplication(analyseModule);
         log.info("fin mise à jour des indicateurs qualite");
         log.info("mise à jour des indicateurs cve");
         cveService.recupereCve();
         log.info("fin des mises à jour des cve");
         log.info("intégration des issues sonar accessibiliy");
         a11yMajService.getNbIssueSonarAccessibility();
-        log.info("fin intégration des issues sonar accessibiliy");
+        log.info("fin intégration des issues sonar accessibility");
         log.info("mise à jour indicateur hyperx");
         recupHyperxSecuriteService.updateDonneesVmNonMiseAjourDansDelaiParHyperX();
         log.info("fin mise à jour indicateur hyperx");

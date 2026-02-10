@@ -18,6 +18,8 @@ import fr.insee.compas.view.IndicateurQualiteView;
 @Service
 public class IndicateurQualiteModuleService {
 
+    private static final String SANS_OBJET = "Sans objet";
+
     private final OscarService oscarService;
 
     private final TableFaitsService tableFaitsService;
@@ -83,7 +85,7 @@ public class IndicateurQualiteModuleService {
             viewModule.setLettreDetteTechnique(
                     conversionService.convertDetteTechnique(viewModule.getDetteTechnique()));
         } else {
-            if ("Sans objet".equals(module.getKeySonar().trim())) {
+            if (SANS_OBJET.equals(module.getKeySonar().trim())) {
                 viewModule.setDetteTechnique(Notation.SO.getGrade());
                 viewModule.setLettreDetteTechnique(Notation.SO.getGrade());
 
@@ -100,7 +102,7 @@ public class IndicateurQualiteModuleService {
                     Character.toString(
                             (char) ('A' + Double.parseDouble(viewModule.getFiabilite()) - 1)));
         } else {
-            if ("Sans objet".equals(module.getKeySonar().trim())) {
+            if (SANS_OBJET.equals(module.getKeySonar().trim())) {
                 viewModule.setFiabilite(Notation.SO.getGrade());
                 viewModule.setLettreFiabilite(Notation.SO.getGrade());
 
@@ -132,7 +134,7 @@ public class IndicateurQualiteModuleService {
 
         } else {
             // Ajouter le module avec un grade par défaut
-            if ("Sans objet".equals(module.getKeySonar().trim())) {
+            if (SANS_OBJET.equals(module.getKeySonar().trim())) {
                 viewModule.setPourcentageCouvertureTestUniaire("SO");
                 viewModule.setLettreCouvertureTestUniaire("SO");
 

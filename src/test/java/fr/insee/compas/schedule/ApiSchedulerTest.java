@@ -2,7 +2,6 @@ package fr.insee.compas.schedule;
 
 import static org.mockito.Mockito.*;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -42,7 +41,7 @@ class ApiSchedulerTest {
     }
 
     @Test
-    void callApi_shouldUpdateAllIndicators() throws IOException {
+    void callApi_shouldUpdateAllIndicators() {
         // Given
         Map<String, RecuperationMeasures> dummyMap = new HashMap<>();
         when(indicateurSonar.putIndicateursSonarModule()).thenReturn(dummyMap);
@@ -54,23 +53,6 @@ class ApiSchedulerTest {
         verify(oscarService, times(1)).miseAjourModuleOscarEnBaseDeDonnees();
         verify(indicateurSonar, times(1)).putIndicateursSonarModule();
         verify(indicateurSonar, times(1)).putIndicateursSonarApplication(dummyMap);
-        verify(cveService, times(1)).recupereCve();
-        verify(updateIndicatorDevopsService, times(1))
-                .miseAJourIndicateursDevopsEnBaseDeDonnes(null, null);
-    }
-
-    @Test
-    void callApi_shouldHandleIOExceptionGracefully() throws IOException {
-        // Given
-        when(indicateurSonar.putIndicateursSonarModule()).thenThrow(new IOException("Erreur test"));
-
-        // When
-        apiScheduler.callApi();
-
-        // Then
-        verify(oscarService, times(1)).miseAjourModuleOscarEnBaseDeDonnees();
-        verify(indicateurSonar, times(1)).putIndicateursSonarModule();
-        verify(indicateurSonar, times(0)).putIndicateursSonarApplication(any());
         verify(cveService, times(1)).recupereCve();
         verify(updateIndicatorDevopsService, times(1))
                 .miseAJourIndicateursDevopsEnBaseDeDonnes(null, null);

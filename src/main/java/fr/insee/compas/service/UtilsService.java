@@ -12,10 +12,7 @@ import fr.insee.compas.model.compas.IndicateurSonar;
 import fr.insee.compas.model.sonar.Measure;
 import fr.insee.compas.model.sonar.RecuperationMeasures;
 
-import lombok.extern.slf4j.Slf4j;
-
 @Service
-@Slf4j
 public class UtilsService {
 
     private static final Logger log = LoggerFactory.getLogger(UtilsService.class);
@@ -72,7 +69,7 @@ public class UtilsService {
                             m1.setValue(String.valueOf(sum));
                         } catch (NumberFormatException e) {
                             // Ignorer ou logger si une valeur n'est pas un nombre
-                            log.error("Erreur de conversion numérique pour le metric " + metric);
+                            log.error("Erreur de conversion numérique pour le metric {}", metric);
                         }
                     }
                 } else {

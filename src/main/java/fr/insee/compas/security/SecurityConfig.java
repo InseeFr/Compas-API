@@ -20,6 +20,10 @@ public class SecurityConfig {
                                         "/swagger-ui/**",
                                         "/v3/api-docs/**",
                                         "/kpi-green/**",
+                                        "/qualite/**",
+                                        "/securite/**",
+                                        "/devops/**",
+                                        "/module-oscar/**",
                                         "/meteo/**",
                                         "/a11y/**",
                                         "/cloud/**"))

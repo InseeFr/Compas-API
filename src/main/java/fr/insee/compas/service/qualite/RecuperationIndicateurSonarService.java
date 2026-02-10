@@ -1,6 +1,5 @@
 package fr.insee.compas.service.qualite;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
@@ -25,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @Slf4j
 public class RecuperationIndicateurSonarService {
+    private static final String SANS_OBJET = "Sans objet";
 
     private final OscarService oscarService;
     private final TableFaitsRepository tableFaitsRepository;
@@ -39,73 +39,37 @@ public class RecuperationIndicateurSonarService {
         this.sonarService = sonarService;
     }
 
-    public Map<String, RecuperationMeasures> putIndicateursSonarModule() throws IOException {
+    public Map<String, RecuperationMeasures> putIndicateursSonarModule() {
         List<Module> modules = oscarService.getModules();
         Map<String, RecuperationMeasures> result = new HashMap<>();
         LocalDate now = LocalDate.now();
-        log.debug("la date est {}", now);
-        int compteurModuleOscarWithProjectKey = 0;
-        int compteurModuleOscarWithProjectKeySansAnalyse = 0;
+
+        int withProjectKey = 0;
+        int withoutValidAnalysis = 0;
+
         for (Module module : modules) {
-            boolean analyseSonarNonNulEtNonSansObjet =
-                    !"null".equals(module.getKeySonar())
-                            && !module.getKeySonar().equals("Sans objet");
-            // cas ou une key sonar est renseigné
-            if (analyseSonarNonNulEtNonSansObjet) {
-                compteurModuleOscarWithProjectKey++;
-                boolean moduleSansAnalyse = false;
-                // on lance la recherche sur le sonar interne
-                RecuperationMeasures measures =
-                        sonarService.getDataFromSonarAPIMeasures(module.getKeySonar(), "gitlab");
 
-                if (measures != null
-                        && measures.getComponent() != null
-                        && !measures.getComponent().getMeasures().isEmpty()) {
-                    result.put(module.getKeySonar(), measures);
-                    // on a un retour
-                    moduleSansAnalyse = putIndicateurSonarInBdd(module, null, measures, now);
-                }
-                if (!moduleSansAnalyse) {
-                    // on fait l'appel à l'api de sonarcloud
-                    measures =
-                            sonarService.getDataFromSonarAPIMeasures(
-                                    module.getKeySonar(), "github");
-                    if (measures != null
-                            && measures.getComponent() != null
-                            && !measures.getComponent().getMeasures().isEmpty()) {
-                        // on a un retour
-                        result.put(module.getKeySonar(), measures);
-                        moduleSansAnalyse = putIndicateurSonarInBdd(module, null, measures, now);
-                    }
-                }
-
-                if (!moduleSansAnalyse) {
-                    log.warn("Le module {} n'a pas une analyse Sonar correcte", module.getId());
-                    compteurModuleOscarWithProjectKeySansAnalyse++;
-                }
+            if (isSansObjet(module)) {
+                saveSansObjetIndicator(module, now);
+                continue;
             }
-            if (module.getKeySonar().equals("Sans objet")) {
-                log.info(
-                        "le module est SO pour sonar, on met donc -1 pour l'indicateur ligne de"
-                                + " code");
-                tableFaitsRepository.save(
-                        TableFaits.builder()
-                                .idModule(module.getId())
-                                .idApplication(module.getIdApplication())
-                                .idIndicateur(IndicateurType.NBR_LIGNE.getValue())
-                                .date(now)
-                                .valeur(new BigDecimal(-1))
-                                .idSource(0)
-                                .build());
+
+            if (hasValidSonarKey(module)) {
+                withProjectKey++;
+
+                boolean hasAnalysis = processSonarAnalysis(module, now, result);
+
+                if (!hasAnalysis) {
+                    log.warn(
+                            "Le projet {} n'a pas une analyse Sonar correcte", module.getModName());
+                    withoutValidAnalysis++;
+                }
             }
         }
-
-        log.info(
-                "Nombre de modules Oscar avec un project Key Sonar : {}",
-                compteurModuleOscarWithProjectKey);
+        log.info("Nombre de modules Oscar avec un project Key Sonar : {}", withProjectKey);
         log.info(
                 "Nombre de modules Oscar avec un project Key Sonar mais pas d'analyse valide : {}",
-                compteurModuleOscarWithProjectKeySansAnalyse);
+                withoutValidAnalysis);
 
         return result;
     }
@@ -156,7 +120,7 @@ public class RecuperationIndicateurSonarService {
         for (Map.Entry<Application, Set<String>> entry : applications.entrySet()) {
             Set<String> keysSonar = entry.getValue();
             RecuperationMeasures sommeMesures = new RecuperationMeasures();
-            if (!keysSonar.isEmpty() && keysSonar.stream().allMatch(s -> s.equals("Sans objet"))) {
+            if (!keysSonar.isEmpty() && keysSonar.stream().allMatch(s -> s.equals(SANS_OBJET))) {
                 Component component = new Component();
                 Measure ligneNegative = new Measure("lines_to_cover", "-1");
                 component.setMeasures(new ArrayList<>(List.of(ligneNegative)));
@@ -173,5 +137,63 @@ public class RecuperationIndicateurSonarService {
                 putIndicateurSonarInBdd(null, entry.getKey(), sommeMesures, LocalDate.now());
             }
         }
+    }
+
+    private boolean hasValidSonarKey(Module module) {
+        return module.getKeySonar() != null
+                && !"null".equals(module.getKeySonar())
+                && !SANS_OBJET.equals(module.getKeySonar());
+    }
+
+    private boolean isSansObjet(Module module) {
+        return SANS_OBJET.equals(module.getKeySonar());
+    }
+
+    private boolean processSonarAnalysis(
+            Module module, LocalDate now, Map<String, RecuperationMeasures> result) {
+
+        RecuperationMeasures measures =
+                fetchMeasures(module.getKeySonar(), "gitlab", module.getModName());
+
+        if (isValidMeasures(measures)) {
+            result.put(module.getKeySonar(), measures);
+            return putIndicateurSonarInBdd(module, null, measures, now);
+        }
+
+        measures = fetchMeasures(module.getKeySonar(), "github", module.getModName());
+
+        if (isValidMeasures(measures)) {
+            result.put(module.getKeySonar(), measures);
+            return putIndicateurSonarInBdd(module, null, measures, now);
+        }
+
+        return false;
+    }
+
+    private RecuperationMeasures fetchMeasures(
+            String keySonar, String provider, String projectName) {
+        return sonarService.getDataFromSonarAPIMeasures(keySonar, provider, projectName);
+    }
+
+    private boolean isValidMeasures(RecuperationMeasures measures) {
+        return measures != null
+                && measures.getComponent() != null
+                && !measures.getComponent().getMeasures().isEmpty();
+    }
+
+    private void saveSansObjetIndicator(Module module, LocalDate now) {
+        log.info(
+                "le module {} est SO pour sonar, on met donc -1 pour l'indicateur ligne de code",
+                module.getModName());
+
+        tableFaitsRepository.save(
+                TableFaits.builder()
+                        .idModule(module.getId())
+                        .idApplication(module.getIdApplication())
+                        .idIndicateur(IndicateurType.NBR_LIGNE.getValue())
+                        .date(now)
+                        .valeur(BigDecimal.valueOf(-1))
+                        .idSource(0)
+                        .build());
     }
 }

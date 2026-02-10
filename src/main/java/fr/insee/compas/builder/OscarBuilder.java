@@ -61,7 +61,7 @@ public class OscarBuilder {
         module.setAppName(
                 getPathApplication(moduleNode)
                         .path("nom")
-                        .asText()); // Assuming modName and appName are the same
+                        .asString(null)); // Assuming modName and appName are the same
         JsonNode dateDerniereLivraisonEnProductionNode =
                 moduleNode.path("dateDerniereLivraisonEnProduction");
 

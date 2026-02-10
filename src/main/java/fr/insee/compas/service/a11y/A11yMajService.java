@@ -56,14 +56,16 @@ public class A11yMajService {
                     && !"null".equals(module.getKeySonar())
                     && !module.getKeySonar().equals("Sans objet")) {
                 String issue =
-                        sonarService.getNbIssueSonarAccessibility(module.getKeySonar(), "gitlab");
+                        sonarService.getNbIssueSonarAccessibility(
+                                module.getKeySonar(), "gitlab", module.getModName());
                 // Si c'est O ca peut être un 'vrai' 0 ou une analyse qui est sur github
                 if (issue != null && issue.equals("0")) {
                     issue =
                             sonarService.getNbIssueSonarAccessibility(
-                                    module.getKeySonar(), "github");
+                                    module.getKeySonar(), "github", module.getModName());
                 }
                 if (StringUtils.isNotEmpty(issue)) {
+                    log.info("Sauvegarde des nb issues sonar dans la table");
                     tableFaitsRepository.save(
                             TableFaits.builder()
                                     .idModule(module.getId())

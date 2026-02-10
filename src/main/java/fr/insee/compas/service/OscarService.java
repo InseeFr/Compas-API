@@ -11,6 +11,7 @@ import org.springframework.web.client.RestTemplate;
 
 import fr.insee.compas.builder.OscarBuilder;
 import fr.insee.compas.client.OscarClient;
+import fr.insee.compas.exception.JsonProcessingExceptionWrapper;
 import fr.insee.compas.model.oscar.Application;
 import fr.insee.compas.model.oscar.Module;
 import fr.insee.compas.model.oscar.ModuleHistorique;
@@ -120,7 +121,8 @@ public class OscarService {
                 applications.add(oscarBuilder.buildApplication(noeud));
             }
         } catch (JacksonException e) {
-            throw new RuntimeException(e);
+            throw new JsonProcessingExceptionWrapper(
+                    "Erreur lors du mappage des applications venant d'oscar", e);
         }
 
         return applications;

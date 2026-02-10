@@ -74,7 +74,7 @@ public class IndicateurQualiteApplicationService {
     }
 
     private void calculLettreCouvertureTest(IndicateurQualiteView viewApplication) {
-        log.info(viewApplication.getApplicationName());
+        log.debug(viewApplication.getApplicationName());
 
         if (StringUtils.isNotEmpty(viewApplication.getNbLigneCode())) {
             if (viewApplication.getNbLigneCodeNonTeste().isEmpty()) {
