@@ -1,5 +1,7 @@
 package fr.insee.compas.service;
 
+import static fr.insee.compas.util.GitLabMarkdownConstantes.INDICATEURS_MD;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.URLEncoder;
@@ -8,6 +10,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -22,11 +25,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import fr.insee.compas.dto.MarkdownResultGitlabDto;
+import fr.insee.compas.exception.GitLabException;
 import fr.insee.compas.util.DevopsConstantes;
 
 import lombok.extern.slf4j.Slf4j;
@@ -56,6 +62,49 @@ public class GitlabService {
     private void initHeaders() {
         headers = new HttpHeaders();
         headers.set("Private-Token", gitlabToken);
+    }
+
+    /**
+     * Récupère tous les markdowns des indicateurs
+     *
+     * @return un ensemble une map reliant les indicateurs avec le markdown respectifs
+     * @throws RestClientException si une erreur HTTP survient
+     */
+    public Map<String, String> getMarkdownIndicators() {
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+        return INDICATEURS_MD.stream()
+                .map(
+                        indicateur -> {
+                            log.debug("Récupération du markdown {}", indicateur);
+                            URI url =
+                                    URI.create(
+                                            String.format(
+                                                    "%s/projects/dsi%%2Fcompas%%2Fdocumentation%%2Fcompas-wiki/wikis/doc%%2F%s",
+                                                    DevopsConstantes.GITLAB_API_URL, indicateur));
+                            try {
+                                ResponseEntity<MarkdownResultGitlabDto> response =
+                                        restTemplate.exchange(
+                                                url,
+                                                HttpMethod.GET,
+                                                entity,
+                                                MarkdownResultGitlabDto.class);
+
+                                if (response.getStatusCode() == HttpStatus.NOT_FOUND
+                                        || response.getBody() == null) {
+                                    log.warn("Aucune doc trouvée pour {}", indicateur);
+                                    return null;
+                                }
+
+                                return Map.entry(indicateur, response.getBody().getContent());
+
+                            } catch (HttpClientErrorException e) {
+                                throw new GitLabException(
+                                        "Erreur lors de la récupération du markdown " + indicateur,
+                                        e);
+                            }
+                        })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     /**

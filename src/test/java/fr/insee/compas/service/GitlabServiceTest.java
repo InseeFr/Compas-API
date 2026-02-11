@@ -1,5 +1,9 @@
 package fr.insee.compas.service;
 
+import static fr.insee.compas.util.GitLabMarkdownConstantes.INDICATEURS_MD;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -10,17 +14,21 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.math.BigInteger;
+import java.net.URI;
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+
+import fr.insee.compas.dto.MarkdownResultGitlabDto;
+import fr.insee.compas.exception.GitLabException;
 
 class GitlabServiceTest {
 
@@ -76,5 +84,70 @@ class GitlabServiceTest {
         HttpEntity<Void> capturedEntity = captor.getValue();
         assertNotNull(capturedEntity.getHeaders().getFirst("Private-Token"));
         assertEquals("dummy-token", capturedEntity.getHeaders().getFirst("Private-Token"));
+    }
+
+    @Test
+    void shouldReturnMarkdowns() {
+        when(restTemplate.exchange(
+                        any(URI.class),
+                        eq(HttpMethod.GET),
+                        any(HttpEntity.class),
+                        eq(MarkdownResultGitlabDto.class)))
+                .thenAnswer(
+                        invocation -> {
+                            URI uri = invocation.getArgument(0);
+
+                            String indicateur =
+                                    INDICATEURS_MD.stream()
+                                            .filter(uri.toString()::contains)
+                                            .findFirst()
+                                            .orElseThrow();
+
+                            MarkdownResultGitlabDto dto =
+                                    new MarkdownResultGitlabDto(
+                                            BigInteger.ONE,
+                                            "markdown",
+                                            "slug",
+                                            "Titre",
+                                            "# Markdown " + indicateur,
+                                            "UTF-8");
+
+                            return ResponseEntity.ok(dto);
+                        });
+
+        Map<String, String> result = service.getMarkdownIndicators();
+
+        assertThat(result).hasSize(INDICATEURS_MD.size());
+
+        INDICATEURS_MD.forEach(
+                indicateur ->
+                        assertThat(result).containsEntry(indicateur, "# Markdown " + indicateur));
+    }
+
+    @Test
+    void shouldThrowGitLabExceptionOnHttpClientError() {
+        when(restTemplate.exchange(
+                        any(URI.class),
+                        eq(HttpMethod.GET),
+                        any(HttpEntity.class),
+                        eq(MarkdownResultGitlabDto.class)))
+                .thenThrow(new HttpClientErrorException(HttpStatus.BAD_REQUEST));
+
+        assertThatThrownBy(() -> service.getMarkdownIndicators())
+                .isInstanceOf(GitLabException.class)
+                .hasMessageContaining("Erreur lors de la récupération du markdown");
+    }
+
+    @Test
+    void shouldIgnoreNotFoundIndicator() {
+        when(restTemplate.exchange(
+                        any(URI.class),
+                        eq(HttpMethod.GET),
+                        any(HttpEntity.class),
+                        eq(MarkdownResultGitlabDto.class)))
+                .thenReturn(new ResponseEntity<>((HttpHeaders) null, HttpStatus.NOT_FOUND));
+
+        Map<String, String> result = service.getMarkdownIndicators();
+        assertThat(result).isEmpty();
     }
 }
