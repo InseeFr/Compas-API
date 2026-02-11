@@ -72,7 +72,7 @@ class SonarServiceTest {
         verify(restTemplate)
                 .exchange(urlCaptor.capture(), eq(HttpMethod.GET), any(), eq(String.class));
         assertThat(urlCaptor.getValue())
-                .contains("http://sonar.insee.fr")
+                .contains("https://sonar.insee.fr")
                 .contains(PROJET)
                 .contains("accessibility");
     }
@@ -154,7 +154,7 @@ class SonarServiceTest {
         ArgumentCaptor<String> urlCaptor = ArgumentCaptor.forClass(String.class);
         verify(restTemplate)
                 .exchange(urlCaptor.capture(), eq(HttpMethod.GET), any(), eq(String.class));
-        assertThat(urlCaptor.getValue()).contains("http://sonar.insee.fr/api/measures/component");
+        assertThat(urlCaptor.getValue()).contains("https://sonar.insee.fr/api/measures/component");
     }
 
     @Test

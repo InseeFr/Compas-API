@@ -136,13 +136,13 @@ public class SonarService {
 
     private String getUrlNbIssue(String source) {
         return GITLAB_INTERNE.equals(source)
-                ? "http://sonar.insee.fr/api/issues/search?componentKeys=%s&tags=%s"
+                ? "https://sonar.insee.fr/api/issues/search?componentKeys=%s&tags=%s"
                 : "https://sonarcloud.io/api/issues/search?componentKeys=%s&tags=%s";
     }
 
     private String getUrlApiMeasures(String source) {
         return GITLAB_INTERNE.equals(source)
-                ? "http://sonar.insee.fr/api/measures/component?component=%s&metricKeys=%s"
+                ? "https://sonar.insee.fr/api/measures/component?component=%s&metricKeys=%s"
                 : "https://sonarcloud.io/api/measures/component?component=%s&metricKeys=%s";
     }
 
