@@ -119,7 +119,7 @@ class SpocServiceTest {
 
         // Header Cc : contient les défauts
         String ccValue = getCcHeaderValueFrom(body);
-        assertThat(ccValue).isEqualTo("balf@insee.fr;balfadj@insee.fr");
+        assertThat(ccValue).isEqualTo("balf@insee.fr,balfadj@insee.fr");
 
         // Champs MessageTemplate
         assertThat(body)
@@ -204,7 +204,7 @@ class SpocServiceTest {
 
         // CC = defaultReceiver
         String ccValue = getCcHeaderValueFrom(body);
-        assertThat(ccValue).isEqualTo("default@insee.fr;defaultadj@insee.fr");
+        assertThat(ccValue).isEqualTo("default@insee.fr,defaultadj@insee.fr");
     }
 
     // --- 5) Réponse 500 : on tente l’envoi (1 requête), pas d’exception levée

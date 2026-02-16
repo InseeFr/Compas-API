@@ -161,7 +161,11 @@ public class MeteoExtendAlerteService {
 
         try {
             spocService.sendMail(mail);
-            log.info("Mail {} envoyé avec succès à {}", mailAlerteMeteo.getType(), recipients.to());
+            log.info(
+                    "Mail {} envoyé avec succès à {} et en cc à {}",
+                    mailAlerteMeteo.getType(),
+                    recipients.to(),
+                    recipients.cc());
         } catch (Exception e) {
             log.error(
                     "Erreur lors de l'envoi du mail {} à {}",

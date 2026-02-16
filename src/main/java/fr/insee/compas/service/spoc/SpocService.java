@@ -209,7 +209,7 @@ public class SpocService {
         if (cc != null && !cc.isEmpty()) {
             Map<String, Object> ccHeader = new LinkedHashMap<>();
             ccHeader.put("Name", "Cc");
-            ccHeader.put("Value", String.join(";", cc)); // séparateur à adapter si besoin
+            ccHeader.put("Value", String.join(",", cc)); // séparateur à adapter si besoin
             headers.add(ccHeader);
         }
         if (!headers.isEmpty()) {
