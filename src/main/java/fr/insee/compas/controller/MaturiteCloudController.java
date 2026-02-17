@@ -14,8 +14,17 @@ import fr.insee.compas.repository.ApplicationTipsRepository;
 import fr.insee.compas.repository.MaturiteCloudRepository;
 import fr.insee.compas.service.maturitecloud.ApplicationTipsService;
 import fr.insee.compas.service.maturitecloud.MaturiteCloudCsvService;
+import fr.insee.compas.service.maturitecloud.indicateur.IMaturiteIndicateur;
+import fr.insee.compas.service.maturitecloud.indicateur.MaturiteIndicateurService;
 import fr.insee.compas.view.IndicateurApplicationMaturiteCloud;
+import fr.insee.compas.view.IndicateurMaturiteView;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
 
 @RestController
@@ -25,6 +34,7 @@ public class MaturiteCloudController {
 
     private final MaturiteCloudRepository repo;
     private final MaturiteCloudCsvService service;
+    private final IMaturiteIndicateur maturiteIndicateurService;
     private final ApplicationTipsRepository tipsRepo;
     private final ApplicationTipsService tipsCsvService;
 
@@ -32,11 +42,45 @@ public class MaturiteCloudController {
             MaturiteCloudRepository repo,
             MaturiteCloudCsvService service,
             ApplicationTipsRepository tipsRepo,
-            ApplicationTipsService tipsCsvService) {
+            ApplicationTipsService tipsCsvService,
+            MaturiteIndicateurService maturiteIndicateurService) {
         this.repo = repo;
         this.service = service;
         this.tipsRepo = tipsRepo;
+        this.maturiteIndicateurService = maturiteIndicateurService;
         this.tipsCsvService = tipsCsvService;
+    }
+
+    @GetMapping(value = "/indicateur", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Récupération des indicateurs de maturité cloud")
+    @ApiResponses(
+            value = {
+                @ApiResponse(
+                        responseCode = "200",
+                        description = "Indicateurs récupérés avec succès",
+                        content =
+                                @Content(
+                                        mediaType = "application/json",
+                                        array =
+                                                @ArraySchema(
+                                                        schema =
+                                                                @Schema(
+                                                                        implementation =
+                                                                                IndicateurMaturiteView
+                                                                                        .class)))),
+                @ApiResponse(
+                        responseCode = "204",
+                        description = "Aucun indicateur trouvé",
+                        content = @Content),
+                @ApiResponse(
+                        responseCode = "500",
+                        description = "Erreur interne du serveur",
+                        content = @Content)
+            })
+    public ResponseEntity<List<IndicateurMaturiteView>> getIndicateur() {
+        List<IndicateurMaturiteView> result = maturiteIndicateurService.getIndicateurMaturite();
+        if (result.isEmpty()) return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(result);
     }
 
     @GetMapping("/applications")

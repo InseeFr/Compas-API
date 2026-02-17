@@ -24,7 +24,16 @@ class ConversionServiceTest {
         MockitoAnnotations.openMocks(this);
 
         conversionService =
-                new ConversionService(pourcentageConversion, niveauCveConversion, null, null, null);
+                new ConversionService(
+                        pourcentageConversion,
+                        niveauCveConversion,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null);
     }
 
     @Test

@@ -10,8 +10,55 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import fr.insee.compas.model.compas.TableFaits;
+import fr.insee.compas.model.maturite.MaturiteIndicateurTableProjection;
 
 public interface TableFaitsRepository extends JpaRepository<TableFaits, Long> {
+
+    @Query(
+            value =
+                    """
+                           SELECT DISTINCT
+                               tf.id_module,
+                               tf.id_application,
+                               CAST(null AS text) AS commentaire,
+                               CAST(null AS integer) AS valeur,
+                               CAST(null AS integer) AS id_indicateur
+                           FROM compas_dev1.table_faits tf
+                           WHERE NOT EXISTS (
+                               SELECT 1 FROM compas_dev1.table_faits tf2
+                               WHERE tf2.id_application = tf.id_application
+                               AND tf2.id_module = tf.id_module
+                               AND tf2.id_indicateur IN (:idIndicateurs)
+                           )
+
+                           UNION ALL
+
+                           SELECT
+                               tf.id_module,
+                               tf.id_application,
+                               tf.commentaire,
+                               tf.valeur,
+                               tf.id_indicateur
+                           FROM compas_dev1.table_faits tf
+                           WHERE tf.id_indicateur IN (:idIndicateurs)
+
+                           ORDER BY id_application
+                    """,
+            nativeQuery = true)
+    List<MaturiteIndicateurTableProjection> getValuesByMaturiteIndicateur(
+            @Param("idIndicateurs") List<Integer> idIndicateurs);
+
+    @Query(
+            value =
+                    """
+                        SELECT DISTINCT ON (tf.id_application) tf.id_application, tf.valeur
+                        FROM compas_dev7.table_faits tf
+                        WHERE tf.id_indicateur = :idIndicateur
+                        ORDER BY tf.id_application, tf.date DESC
+                    """,
+            nativeQuery = true)
+    List<MaturiteIndicateurTableProjection> getMaturitesByIdIndicateur(
+            @Param("idIndicateur") Integer idIndicateur);
 
     List<TableFaits> findByDateAndIdIndicateurAndIdModule(
             LocalDate date, Integer idIndicateur, Integer idModule);

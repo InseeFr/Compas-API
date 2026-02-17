@@ -24,6 +24,7 @@ public class Module {
     String statut;
     LocalDate dateDerniereLivraisonEnProduction;
     String typeLivrable;
+    String zoneProduction;
     String urlCodeSource;
 
     public Module() {

@@ -106,26 +106,6 @@ release-docker-dev3:
   variables:
     IMAGE_TAG: dev3
 
-release-docker-dev4:
-  extends: .template:release-docker-dev
-  variables:
-    IMAGE_TAG: dev4
-
-release-docker-dev5:
-  extends: .template:release-docker-dev
-  variables:
-    IMAGE_TAG: dev5
-
-release-docker-dev6:
-  extends: .template:release-docker-dev
-  variables:
-    IMAGE_TAG: dev6
-
-release-docker-dev7:
-  extends: .template:release-docker-dev
-  variables:
-    IMAGE_TAG: dev7
-
 sonarqube:
   stage: analyse
   script:

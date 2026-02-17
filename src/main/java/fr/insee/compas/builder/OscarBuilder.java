@@ -85,6 +85,7 @@ public class OscarBuilder {
                         .path("nom")
                         .asString(null));
         module.setTypeLivrable((moduleNode).path("typeLivrable").asString(null));
+        module.setZoneProduction(moduleNode.path("zoneProduction").asString(null));
         return module;
     }
 

@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -28,6 +29,8 @@ import fr.insee.compas.repository.ApplicationTipsRepository;
 import fr.insee.compas.repository.MaturiteCloudRepository;
 import fr.insee.compas.service.maturitecloud.ApplicationTipsService;
 import fr.insee.compas.service.maturitecloud.MaturiteCloudCsvService;
+import fr.insee.compas.service.maturitecloud.indicateur.MaturiteIndicateurService;
+import fr.insee.compas.view.IndicateurMaturiteView;
 
 @WebMvcTest(MaturiteCloudController.class)
 @AutoConfigureMockMvc(addFilters = false)
@@ -38,6 +41,8 @@ class MaturiteCloudControllerTest {
     @MockitoBean MaturiteCloudRepository repo;
 
     @MockitoBean MaturiteCloudCsvService service;
+
+    @MockitoBean MaturiteIndicateurService maturiteIndicateurService;
 
     @MockitoBean ApplicationTipsRepository tipsRepo;
 
@@ -176,5 +181,36 @@ class MaturiteCloudControllerTest {
                 .andExpect(jsonPath("$.sourceId").value(2));
 
         verify(tipsCsvService).importCsv(any(), eq(2));
+    }
+
+    @Test
+    void getIndicateur_shouldReturn200_whenIndicateursFound() throws Exception {
+        List<IndicateurMaturiteView> mockResult =
+                List.of(
+                        IndicateurMaturiteView.builder()
+                                .idApp(1)
+                                .appName("App Test")
+                                .isModule(false)
+                                .build());
+        when(maturiteIndicateurService.getIndicateurMaturite()).thenReturn(mockResult);
+
+        mockMvc.perform(get("/cloud/indicateur").accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$[0].appName").value("App Test"));
+    }
+
+    @Test
+    void getIndicateur_shouldReturn204_whenNoIndicateursFound() throws Exception {
+        when(maturiteIndicateurService.getIndicateurMaturite()).thenReturn(Collections.emptyList());
+
+        mockMvc.perform(get("/cloud/indicateur").accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void getIndicateur_shouldReturn406_whenAcceptHeaderIsNotJson() throws Exception {
+        mockMvc.perform(get("/cloud/indicateur").accept(MediaType.APPLICATION_XML))
+                .andExpect(status().isNotAcceptable());
     }
 }
