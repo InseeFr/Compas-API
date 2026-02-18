@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -32,7 +33,7 @@ public class MeteoController {
     private MeteoAffichageService meteoAffichageService;
     private final ISendAlerteMeteo meteoAlerteService;
 
-    @PostMapping
+    @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(
             summary =
                     "Création d'une météo pour une application. Renvoie les ids des TableFaits"
@@ -43,21 +44,21 @@ public class MeteoController {
                 .body(meteoCreationService.creerMeteo(demandeCreationMeteo));
     }
 
-    @GetMapping
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lister toutes les applications et leur éventuelle météo")
     public List<Meteo> listerApplicationsMeteo() {
         return meteoAffichageService.listerApplicationsMeteo();
     }
 
     // 🆕 Nouveau GET : renvoie uniquement les applis dont la dernière météo a au moins 23 jours
-    @GetMapping("/anciennes")
+    @GetMapping(value = "/anciennes", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lister les applications dont la dernière météo date d'au moins 23 jours")
     public List<Meteo> listerApplicationsMeteoAnciennes() {
         return meteoAffichageService.listerApplicationsMeteoAncienne();
     }
 
     // (optionnel) GET paramétrable : si tu veux choisir le nombre de jours via query param
-    @GetMapping("/anciennes/{jours}")
+    @GetMapping(value = "/anciennes/{jours}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lister les applications dont la dernière météo date d'au moins X jours")
     public List<Meteo> listerApplicationsMeteoAnciennesParam(@PathVariable int jours) {
         return meteoAffichageService.listerApplicationsMeteoAvecAgeMin(jours);
@@ -72,7 +73,7 @@ public class MeteoController {
         return ResponseEntity.accepted().build();
     }
 
-    @GetMapping("/history")
+    @GetMapping(value = "/history", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lister les dernières données météo sur une fenêtre de X mois")
     public List<Meteo> getHistory(
             @Parameter(description = "Nombre de mois à remonter", example = "6")

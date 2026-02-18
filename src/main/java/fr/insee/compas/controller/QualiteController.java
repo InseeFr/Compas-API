@@ -1,9 +1,9 @@
 package fr.insee.compas.controller;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -38,7 +38,7 @@ public class QualiteController {
 
     @PutMapping("/indicateurs-sonar")
     @Operation(summary = "mise à jour des indicateurs provenant de sonar")
-    public void updateIndicateursSonar() throws IOException {
+    public void updateIndicateursSonar() {
         log.info("Début de la récupération des indicateurs pour la couverture de test");
         Map<String, RecuperationMeasures> analyseModule =
                 testUnitaireService.putIndicateursSonarModule();
@@ -46,16 +46,16 @@ public class QualiteController {
         log.info("fin de la récupération des indicateurs pour la couverture de test");
     }
 
-    @GetMapping("/modules")
-    public List<IndicateurQualiteView> getIndicateurQualiteByModule() throws IOException {
+    @GetMapping(value = "/modules", produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<IndicateurQualiteView> getIndicateurQualiteByModule() {
         log.info("Début du endpoint  récupération indicateur Qualite par module");
         List<IndicateurQualiteView> result = moduleService.getIndicateurNiveauModule();
         log.info("Fin du endpoint récupération indicateur Qualite par module");
         return result;
     }
 
-    @GetMapping("/applications")
-    public List<IndicateurQualiteView> getIndicateurQualiteByApplication() throws IOException {
+    @GetMapping(value = "/applications", produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<IndicateurQualiteView> getIndicateurQualiteByApplication() {
         log.info("Début du endpoint récupération indicateur Qualite par application ");
         List<IndicateurQualiteView> result = applicationService.getIndicateurNiveauApplication();
         log.info("Fin du endpoint récupération indicateur Qualite par application");

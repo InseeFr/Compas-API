@@ -2,6 +2,7 @@ package fr.insee.compas.controller;
 
 import java.util.Map;
 
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,7 +25,7 @@ public class ApiRhController {
      * Endpoint pour récupérer les couples idep -> email à partir de l'API RH Exemple : GET
      * http://localhost:8080/api/agents
      */
-    @GetMapping
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, String>> getAgentsIdepEmail() {
         log.info("Appel du controller /api/agents");
         Map<String, String> result = apiRhAuthentification.recupererIdepEtEmails();

@@ -83,7 +83,7 @@ public class MaturiteCloudController {
         return ResponseEntity.ok(result);
     }
 
-    @GetMapping("/applications")
+    @GetMapping(value = "/applications", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<IndicateurApplicationMaturiteCloud> getMaturiteCloud() {
         List<Object[]> rows = repo.findAllLatestMatRobAndScores();
         List<IndicateurApplicationMaturiteCloud> out = new ArrayList<>(rows.size());
@@ -148,7 +148,7 @@ public class MaturiteCloudController {
         return ResponseEntity.ok(Map.of("insertedCount", inserted));
     }
 
-    @GetMapping("/conseils")
+    @GetMapping(value = "/conseils", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<ApplicationTip> getApplicationConseils(@RequestParam("nom_oscar") String nomOscar) {
         // ignore la casse côté requête
         return tipsRepo.findAllByNomOscarIgnoreCaseOrderByDateDescIdDesc(nomOscar);

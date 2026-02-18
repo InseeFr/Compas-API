@@ -3,6 +3,7 @@ package fr.insee.compas.controller;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,13 +24,13 @@ public class A11yController {
     private A11yAffichageService a11yAffichageService;
     private A11yMajService a11yMajService;
 
-    @GetMapping("/modules")
+    @GetMapping(value = "/modules", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lister tous les modules et informations accessibilité")
     public List<IndicateursModuleA11Y> listerModulesA11y() {
         return a11yAffichageService.listerModulesA11y();
     }
 
-    @GetMapping("/applications")
+    @GetMapping(value = "/applications", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lister tous les modules et informations accessibilité")
     public List<IndicateursModuleA11Y> listerApplicationA11y() {
         return a11yAffichageService.listerApplicationsA11y();

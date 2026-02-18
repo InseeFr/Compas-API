@@ -2,6 +2,7 @@ package fr.insee.compas.controller;
 
 import java.util.List;
 
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,13 +28,13 @@ public class ModuleOscarController {
         this.oscarService = oscarService;
     }
 
-    @GetMapping("/find-all")
+    @GetMapping(value = "/find-all", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Obtenir tous les modules ")
     public List<ModuleOscar> getAllUsers() {
         return moduleRepository.findAll();
     }
 
-    @GetMapping("/find-module-actif")
+    @GetMapping(value = "/find-module-actif", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Obtenir tous les modules actifs ")
     public List<ModuleOscar> getModuleActif() {
         return moduleRepository.findByActif(true);

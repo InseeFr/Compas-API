@@ -43,7 +43,9 @@ public class GreenItController {
     private final IndicateurModuleGreenITViewMapper indicateurModuleGreenITViewMapper;
     private final IndicateurApplicationGreenITViewMapper indicateurApplicationGreenITViewMapper;
 
-    @GetMapping("/applications/{applicationId}")
+    @GetMapping(
+            value = "/applications/{applicationId}",
+            produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<IndicateurApplicationGreenITView> getNombreVirtualMachine(
             @PathVariable("applicationId") Integer applicationId) {
         final IndicateurApplicationGreenIT kpiGreen =
@@ -53,7 +55,7 @@ public class GreenItController {
         return view.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/modules/{moduleId}")
+    @GetMapping(value = "/modules/{moduleId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<IndicateurModuleGreenITView> getIndicateursGreenIT(
             @PathVariable("moduleId") Integer moduleId) {
         final IndicateurModuleGreenIT kpiGreen =
@@ -63,7 +65,7 @@ public class GreenItController {
         return view.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/applications")
+    @GetMapping(value = "/applications", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<IndicateurApplicationGreenITView>> getApplications() {
         final List<MetriqueApplicationDTO> consommationsDTO =
                 greenItService.getApplicationMetriques();
@@ -82,7 +84,7 @@ public class GreenItController {
         return new ResponseEntity<>(views, HttpHeaders.EMPTY, HttpStatus.OK);
     }
 
-    @GetMapping("/modules")
+    @GetMapping(value = "/modules", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<IndicateurModuleGreenITView>> getModules() {
         final List<MetriqueModuleDTO> consommationsDTO = greenItService.getModuleMetriques();
         final List<IndicateurModuleGreenIT> kpisGreen =

@@ -2,6 +2,7 @@ package fr.insee.compas.controller;
 
 import java.util.List;
 
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import fr.insee.compas.service.securite.CveCriticalMonthlyService;
@@ -43,7 +44,7 @@ public class SecuriteController {
         log.info("Fin de la récupération des indicateurs pour les cve pour les applications");
     }
 
-    @GetMapping("/modules")
+    @GetMapping(value = "/modules", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<IndicateurSecuriteView> getIndicateurSecuriteByModule() {
         log.info("Début du endpoint  récupération indicateur Securite par module");
         List<IndicateurSecuriteView> result = indicateurSecuriteService.getIndicateursModuleView();
@@ -51,7 +52,7 @@ public class SecuriteController {
         return result;
     }
 
-    @GetMapping("/applications")
+    @GetMapping(value = "/applications", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<IndicateurSecuriteView> getIndicateurSecuriteByApplication() {
         log.info("Début du endpoint récupération indicateur Securite par application ");
         List<IndicateurSecuriteView> result =
@@ -61,7 +62,9 @@ public class SecuriteController {
         return result;
     }
 
-    @GetMapping("/applications/cve-critical/monthly")
+    @GetMapping(
+            value = "/applications/cve-critical/monthly",
+            produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "CVE critiques par application et par mois (mesures du 1er du mois)")
     public List<IndicateurApplicationSecuriteMonthly> getCveCriticalMonthly() {
         log.info("Début endpoint CVE critiques mensuel (sans filtre)");

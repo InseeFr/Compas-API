@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
@@ -28,31 +29,31 @@ public class OscarController {
         this.oscarService = oscarService;
     }
 
-    @GetMapping("/get-all-modules")
+    @GetMapping(value = "/get-all-modules", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "liste des modules d'oscar ")
     public List<ModuleOscarView> getAllModules() {
         return oscarClient.getAllModuleOscar().getBody();
     }
 
-    @GetMapping("/get-modules")
+    @GetMapping(value = "/get-modules", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "liste des modules d'oscar sans feign ")
     public List<Module> getModules() {
         return oscarService.getModules();
     }
 
-    @GetMapping("/get-key-sonar-applications")
+    @GetMapping(value = "/get-key-sonar-applications", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "liste des modules d'oscar sans feign ")
     public Map<Application, Set<String>> getKeySonarParApplication() {
         return oscarService.mapApplicationsToKeySonars();
     }
 
-    @GetMapping("/get-applications")
+    @GetMapping(value = "/get-applications", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "liste des applications d'oscar sans feign ")
     public List<Application> getApplications() {
         return oscarService.getApplications();
     }
 
-    @GetMapping("/application/{id}/rga")
+    @GetMapping(value = "/application/{id}/rga", produces = MediaType.APPLICATION_JSON_VALUE)
     public String getRgaByApplicationId(@PathVariable Integer id) {
         return oscarService.getRgaById(id);
     }

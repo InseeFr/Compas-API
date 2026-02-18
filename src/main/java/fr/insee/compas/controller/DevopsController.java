@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -43,7 +44,7 @@ public class DevopsController {
         log.info("****** Fin de la récupération des indicateurs devops ********");
     }
 
-    @GetMapping("/applications")
+    @GetMapping(value = "/applications", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<IndicateurDevopsView> getApplications(
             @RequestParam(name = "isSynthetique", required = false, defaultValue = "false")
                     boolean isSynthetique) {
@@ -56,11 +57,11 @@ public class DevopsController {
         return result;
     }
 
-    @GetMapping("/modules")
+    @GetMapping(value = "/modules", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<IndicateurDevopsView> getModules(
             @RequestParam(name = "isSynthetique", required = false, defaultValue = "false")
                     boolean isSynthetique) {
-        log.info("****** Début du endpoint getModules (isSynthetique={}) ********");
+        log.info("****** Début du endpoint getModules (isSynthetique={}) ********", isSynthetique);
         List<IndicateurDevopsView> result =
                 indicatorDevopsModuleService.getIndicateurNiveauModule(isSynthetique);
         log.info("****** fin du endpoint getModules********");
