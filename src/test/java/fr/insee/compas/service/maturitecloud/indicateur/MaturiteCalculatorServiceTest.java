@@ -3,6 +3,7 @@ package fr.insee.compas.service.maturitecloud.indicateur;
 import static fr.insee.compas.util.MaturiteConstantes.SANS_OBJET;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
@@ -136,10 +137,66 @@ class MaturiteCalculatorServiceTest {
     }
 
     @Test
+    void calculateTauxCloudProdModule_shouldReturn0_whenNoneAreCloud() {
+        String result = maturiteCalculatorService.calculateTauxCloudProdModule("VM");
+        assertThat(result).isEqualTo("0%");
+    }
+
+    @Test
+    void calculateTauxCloudProdModule_shouldReturn100_whenIsCloud() {
+        String result = maturiteCalculatorService.calculateTauxCloudProdModule("Kube");
+        String result2 = maturiteCalculatorService.calculateTauxCloudProdModule("Cloud Externe");
+        assertThat(result).isEqualTo("100%");
+        assertThat(result2).isEqualTo("100%");
+    }
+
+    @Test
+    void calculateTauxCloudProdModule_shouldReturn0_whenIsNoNe() {
+        String result = maturiteCalculatorService.calculateTauxCloudProdModule("SO");
+        assertThat(result).isEqualTo("0%");
+    }
+
+    @Test
     void calculateTauxCloudProd_shouldReturnCorrectTaux_whenMixed() {
         String result =
                 maturiteCalculatorService.calculateTauxCloudProd(
                         List.of("Kube", "VM", "Cloud Externe", "Autre"));
         assertThat(result).isEqualTo("50%");
+    }
+
+    @Test
+    void shouldJoinDistinctNonBlankValues() {
+        List<String> input = Arrays.asList("DEV", "QA", "DEV", "", " ", null, "PROD");
+
+        String result = maturiteCalculatorService.getEnvApp(input);
+
+        assertEquals("DEV, QA, PROD", result);
+    }
+
+    @Test
+    void shouldReturnEmptyStringWhenListIsEmpty() {
+        List<String> input = List.of();
+
+        String result = maturiteCalculatorService.getEnvApp(input);
+
+        assertEquals("", result);
+    }
+
+    @Test
+    void shouldReturnEmptyStringWhenAllValuesAreBlankOrNull() {
+        List<String> input = Arrays.asList(null, "", "   ");
+
+        String result = maturiteCalculatorService.getEnvApp(input);
+
+        assertEquals("", result);
+    }
+
+    @Test
+    void shouldReturnSingleValueWhenOnlyOneValidElement() {
+        List<String> input = Arrays.asList(null, "DEV", "DEV", " ");
+
+        String result = maturiteCalculatorService.getEnvApp(input);
+
+        assertEquals("DEV", result);
     }
 }

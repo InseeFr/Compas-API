@@ -112,6 +112,18 @@ public class MaturiteMapperIndicateur {
 
                     String maturite = maturiteByApp.getOrDefault(key, SANS_OBJET);
 
+                    String envCibleProd =
+                            maturiteCalculatorService.getEnvApp(
+                                    value.stream()
+                                            .map(MaturiteIndicateurDto::getEnvCibleProd)
+                                            .toList());
+
+                    String envActuelProd =
+                            maturiteCalculatorService.getEnvApp(
+                                    value.stream()
+                                            .map(MaturiteIndicateurDto::getEnvActuelProd)
+                                            .toList());
+
                     MaturiteIndicateurDto maturiteApp =
                             MaturiteIndicateurDto.builder()
                                     .idMod(null)
@@ -122,8 +134,8 @@ public class MaturiteMapperIndicateur {
                                     .domaineDev(value.getFirst().getDomaineDev())
                                     .domaineFonctionnel(value.getFirst().getDomaineFonctionnel())
                                     .tauxCloudProd(tauxCloudProd)
-                                    .envActuelProd(SANS_OBJET)
-                                    .envCibleProd(SANS_OBJET)
+                                    .envActuelProd(envActuelProd)
+                                    .envCibleProd(envCibleProd)
                                     .ecartCible(ecartCible)
                                     .strategieCloud(stratCloud)
                                     .commentaire(allCommentaires)
@@ -191,7 +203,9 @@ public class MaturiteMapperIndicateur {
             log.warn("Module introuvable dans Oscar pour l'id : {}", value.getIdModule());
             return;
         }
-
+        String envActuelProd =
+                maturiteCalculatorService.getEnvActuelProd(
+                        informationsModule.envActuelProd(), informationsModule.zoneProduction());
         MaturiteIndicateurDto moduleDto =
                 moduleDtoMap.computeIfAbsent(
                         value.getIdModule(),
@@ -211,11 +225,10 @@ public class MaturiteMapperIndicateur {
                                     .domaineFonctionnel(informationsModule.domaineFonctionnel())
                                     .nameApp(informationsModule.appName())
                                     .nameMod(informationsModule.nameMod())
-                                    .tauxCloudProd(SANS_OBJET)
-                                    .envActuelProd(
-                                            maturiteCalculatorService.getEnvActuelProd(
-                                                    informationsModule.envActuelProd(),
-                                                    informationsModule.zoneProduction()))
+                                    .tauxCloudProd(
+                                            maturiteCalculatorService.calculateTauxCloudProdModule(
+                                                    envActuelProd))
+                                    .envActuelProd(envActuelProd)
                                     .ecartCible(SANS_OBJET)
                                     .commentaire(null)
                                     .strategieCloud(SANS_OBJET)

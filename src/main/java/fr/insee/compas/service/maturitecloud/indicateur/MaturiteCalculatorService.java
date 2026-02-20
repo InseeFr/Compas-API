@@ -28,7 +28,15 @@ public class MaturiteCalculatorService {
     public String getAllCommentaires(List<String> commentaires) {
         return commentaires.stream()
                 .filter(c -> c != null && !c.isBlank())
+                .distinct()
                 .collect(Collectors.joining("; "));
+    }
+
+    public String getEnvApp(List<String> envAppList) {
+        return envAppList.stream()
+                .filter(e -> e != null && !e.isBlank())
+                .distinct()
+                .collect(Collectors.joining(", "));
     }
 
     public boolean hasOneEcart(List<String> ecartCibleList) {
@@ -59,6 +67,10 @@ public class MaturiteCalculatorService {
                         .count();
         int taux = (int) Math.round((cloudCount * 100.0) / size);
         return taux + "%";
+    }
+
+    public String calculateTauxCloudProdModule(String envActuel) {
+        return envActuel.equals("Kube") || envActuel.equals("Cloud Externe") ? "100%" : "0%";
     }
 
     protected String calculateMaturiteCloud(Integer valeur) {
