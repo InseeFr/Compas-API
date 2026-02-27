@@ -54,7 +54,7 @@ class MaturiteIndicateurServiceTest {
         when(maturiteMapperIndicateur.resultatMaturiteIndicateurToMapByApp(
                         mockResult, mockModuleMapped))
                 .thenReturn(mockByApp);
-        when(maturiteMapperIndicateur.maturiteMapToListIndicateurMaturiteView(any(), any()))
+        when(maturiteMapperIndicateur.maturiteMapToListIndicateurMaturiteView(any(), any(), any()))
                 .thenReturn(mockViews);
 
         List<IndicateurMaturiteView> result = maturiteIndicateurService.getIndicateurMaturite();
@@ -64,7 +64,8 @@ class MaturiteIndicateurServiceTest {
         verify(maturiteMapperIndicateur).getModulesMapped(mockModules);
         verify(maturiteMapperIndicateur)
                 .resultatMaturiteIndicateurToMapByApp(mockResult, mockModuleMapped);
-        verify(maturiteMapperIndicateur).maturiteMapToListIndicateurMaturiteView(any(), any());
+        verify(maturiteMapperIndicateur)
+                .maturiteMapToListIndicateurMaturiteView(any(), any(), any());
     }
 
     @Test

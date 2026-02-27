@@ -23,6 +23,11 @@ public class MaturiteMapperIndicateur {
 
     private MaturiteCalculatorService maturiteCalculatorService;
 
+    public Set<Integer> verifyIdAppsOscar(List<Module> modules) {
+        if (modules == null || modules.isEmpty()) return Collections.emptySet();
+        return modules.stream().map(Module::getIdApplication).collect(Collectors.toSet());
+    }
+
     public Map<Integer, MaturiteConstantes.ModuleInfo> getModulesMapped(List<Module> modules) {
         log.info("Mapping de {} modules", modules.size());
         Map<Integer, MaturiteConstantes.ModuleInfo> result =
@@ -48,7 +53,6 @@ public class MaturiteMapperIndicateur {
     public Map<Integer, List<MaturiteIndicateurDto>> resultatMaturiteIndicateurToMapByApp(
             List<MaturiteIndicateurTableProjection> result,
             Map<Integer, MaturiteConstantes.ModuleInfo> moduleMapped) {
-
         log.info("Début du traitement des résultats SQL afin de les mapper par application");
 
         Map<Integer, List<MaturiteIndicateurDto>> maturiteIndicateurModuleByApp =
@@ -66,7 +70,6 @@ public class MaturiteMapperIndicateur {
             }
             processProjection(value, moduleMapped, moduleDtoMap);
         }
-
         if (!moduleDtoMap.isEmpty()) {
             maturiteIndicateurModuleByApp.put(idAppCurrent, new ArrayList<>(moduleDtoMap.values()));
         }
@@ -79,14 +82,21 @@ public class MaturiteMapperIndicateur {
 
     public List<IndicateurMaturiteView> maturiteMapToListIndicateurMaturiteView(
             Map<Integer, String> maturiteByApp,
-            Map<Integer, List<MaturiteIndicateurDto>> maturiteIndicateurModuleByApp) {
+            Map<Integer, List<MaturiteIndicateurDto>> maturiteIndicateurModuleByApp,
+            Set<Integer> idAppsOscar) {
         log.info(
                 "Début du mapping des views pour {} applications",
                 maturiteIndicateurModuleByApp.size());
         List<IndicateurMaturiteView> indicateurMaturiteViewList = new ArrayList<>();
         maturiteIndicateurModuleByApp.forEach(
                 (key, value) -> {
-                    if (value.isEmpty()) return;
+                    if (value.isEmpty()) {
+                        return;
+                    }
+                    if (!idAppsOscar.contains(key)) {
+                        log.warn("Application {} ignorée car absente du référentiel Oscar", key);
+                        return;
+                    }
                     String allCommentaires =
                             maturiteCalculatorService.getAllCommentaires(
                                     value.stream()
@@ -197,12 +207,15 @@ public class MaturiteMapperIndicateur {
             MaturiteIndicateurTableProjection value,
             Map<Integer, MaturiteConstantes.ModuleInfo> moduleMapped,
             Map<Integer, MaturiteIndicateurDto> moduleDtoMap) {
-
         MaturiteConstantes.ModuleInfo informationsModule = moduleMapped.get(value.getIdModule());
         if (informationsModule == null) {
-            log.warn("Module introuvable dans Oscar pour l'id : {}", value.getIdModule());
+            log.debug(
+                    "Module {} de l'application {} introuvable dans Oscar — ignoré",
+                    value.getIdModule(),
+                    value.getIdApplication());
             return;
         }
+
         String envActuelProd =
                 maturiteCalculatorService.getEnvActuelProd(
                         informationsModule.envActuelProd(), informationsModule.zoneProduction());

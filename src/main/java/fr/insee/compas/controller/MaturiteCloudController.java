@@ -9,13 +9,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import fr.insee.compas.dto.DemandeCreationStrategieCloud;
 import fr.insee.compas.model.compas.ApplicationTip;
 import fr.insee.compas.repository.ApplicationTipsRepository;
 import fr.insee.compas.repository.MaturiteCloudRepository;
 import fr.insee.compas.service.maturitecloud.ApplicationTipsService;
 import fr.insee.compas.service.maturitecloud.MaturiteCloudCsvService;
+import fr.insee.compas.service.maturitecloud.indicateur.CloudCreationService;
+import fr.insee.compas.service.maturitecloud.indicateur.ICloudCreation;
 import fr.insee.compas.service.maturitecloud.indicateur.IMaturiteIndicateur;
 import fr.insee.compas.service.maturitecloud.indicateur.MaturiteIndicateurService;
+import fr.insee.compas.util.UtilsDemande;
 import fr.insee.compas.view.IndicateurApplicationMaturiteCloud;
 import fr.insee.compas.view.IndicateurMaturiteView;
 
@@ -37,18 +41,21 @@ public class MaturiteCloudController {
     private final IMaturiteIndicateur maturiteIndicateurService;
     private final ApplicationTipsRepository tipsRepo;
     private final ApplicationTipsService tipsCsvService;
+    private final ICloudCreation cloudCreationService;
 
     public MaturiteCloudController(
             MaturiteCloudRepository repo,
             MaturiteCloudCsvService service,
             ApplicationTipsRepository tipsRepo,
             ApplicationTipsService tipsCsvService,
-            MaturiteIndicateurService maturiteIndicateurService) {
+            MaturiteIndicateurService maturiteIndicateurService,
+            CloudCreationService cloudCreationService) {
         this.repo = repo;
         this.service = service;
         this.tipsRepo = tipsRepo;
         this.maturiteIndicateurService = maturiteIndicateurService;
         this.tipsCsvService = tipsCsvService;
+        this.cloudCreationService = cloudCreationService;
     }
 
     @GetMapping(value = "/indicateur", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -164,5 +171,30 @@ public class MaturiteCloudController {
                 Map.of(
                         "insertedCount", inserted,
                         "sourceId", sourceId));
+    }
+
+    @PostMapping(
+            value = "/strategie",
+            consumes = "application/json",
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Saisie de la maturité cloud")
+    @ApiResponses(
+            value = {
+                @ApiResponse(
+                        responseCode = "200",
+                        description = "Saisie de la maturité cloud avec succès "),
+                @ApiResponse(
+                        responseCode = "500",
+                        description = "Erreur interne du serveur",
+                        content = @Content)
+            })
+    public ResponseEntity<List<Long>> saisirStrategieCloud(
+            @RequestBody DemandeCreationStrategieCloud demande) {
+
+        UtilsDemande.validateDemande(demande);
+
+        List<Long> idsFaits = cloudCreationService.creerStrategieCloud(demande);
+
+        return ResponseEntity.ok(idsFaits);
     }
 }

@@ -88,9 +88,11 @@ public class MaturiteIndicateurService implements IMaturiteIndicateur {
                     maturiteMapperIndicateur.resultatMaturiteIndicateurToMapByApp(
                             result, moduleMapped);
 
+            Set<Integer> idAppsOscar = maturiteMapperIndicateur.verifyIdAppsOscar(modules);
+
             List<IndicateurMaturiteView> indicateurMaturiteViewList =
                     maturiteMapperIndicateur.maturiteMapToListIndicateurMaturiteView(
-                            maturiteByApp, maturiteIndicateurModuleByApp);
+                            maturiteByApp, maturiteIndicateurModuleByApp, idAppsOscar);
 
             log.info("Résultat final : {} views traitées", indicateurMaturiteViewList.size());
             return indicateurMaturiteViewList;

@@ -8,7 +8,7 @@ public class MaturiteEnvCibleConversion implements IConversionStrategie<String, 
     public String conversion(Integer value) {
         return switch (value) {
             case 1 -> "Kube";
-            case 2 -> "Puppet";
+            case 2 -> "VM";
             case 3 -> "Cloud Externe";
             case 4 -> "Autre";
             default ->

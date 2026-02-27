@@ -7,10 +7,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,6 +27,24 @@ class MaturiteMapperIndicateurTest {
     @InjectMocks private MaturiteMapperIndicateur maturiteMapperIndicateur;
 
     @Mock private MaturiteCalculatorService maturiteCalculatorService;
+
+    @Test
+    void verifyIdAppsOscar_returnSet() {
+        Module module =
+                Module.builder().sndi("test").id(1).idApplication(3).appName("app1").build();
+        Module module2 =
+                Module.builder().sndi("test").id(2).idApplication(5).appName("app2").build();
+        List<Module> list = List.of(module, module2);
+        Set<Integer> set = Set.of(3, 5);
+        assertThat(set).isEqualTo(maturiteMapperIndicateur.verifyIdAppsOscar(list));
+    }
+
+    @Test
+    void verifyIdAppsOscar_returnSetEmpty() {
+        List<Module> list = List.of();
+        Set<Integer> set = Set.of();
+        assertThat(set).isEqualTo(maturiteMapperIndicateur.verifyIdAppsOscar(list));
+    }
 
     // getModulesMapped
     @Test
@@ -196,6 +211,7 @@ class MaturiteMapperIndicateurTest {
         Map<Integer, String> maturiteByApp = Map.of(1, "Niveau 3");
         Map<Integer, List<MaturiteIndicateurDto>> maturiteByAppMap = new LinkedHashMap<>();
         maturiteByAppMap.put(1, List.of(moduleDto));
+        Set<Integer> appIds = Set.of(1);
 
         when(maturiteCalculatorService.getAllCommentaires(any())).thenReturn("commentaire");
         when(maturiteCalculatorService.hasOneEcart(any())).thenReturn(true);
@@ -204,7 +220,7 @@ class MaturiteMapperIndicateurTest {
 
         List<IndicateurMaturiteView> result =
                 maturiteMapperIndicateur.maturiteMapToListIndicateurMaturiteView(
-                        maturiteByApp, maturiteByAppMap);
+                        maturiteByApp, maturiteByAppMap, appIds);
 
         assertThat(result).hasSize(2);
         assertThat(result.getFirst().getIsModule()).isFalse();
@@ -235,7 +251,7 @@ class MaturiteMapperIndicateurTest {
         Map<Integer, String> maturiteByApp = Collections.emptyMap();
         Map<Integer, List<MaturiteIndicateurDto>> maturiteByAppMap = new LinkedHashMap<>();
         maturiteByAppMap.put(1, List.of(moduleDto));
-
+        Set<Integer> appIds = Set.of(1);
         when(maturiteCalculatorService.getAllCommentaires(any())).thenReturn("");
         when(maturiteCalculatorService.hasOneEcart(any())).thenReturn(false);
         when(maturiteCalculatorService.getStratCloud(any())).thenReturn("A instruire");
@@ -243,7 +259,7 @@ class MaturiteMapperIndicateurTest {
 
         List<IndicateurMaturiteView> result =
                 maturiteMapperIndicateur.maturiteMapToListIndicateurMaturiteView(
-                        maturiteByApp, maturiteByAppMap);
+                        maturiteByApp, maturiteByAppMap, appIds);
 
         assertThat(result.getFirst().getMaturiteCloud()).isEqualTo(SANS_OBJET);
     }

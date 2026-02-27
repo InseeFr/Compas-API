@@ -14,35 +14,27 @@ import fr.insee.compas.model.maturite.MaturiteIndicateurTableProjection;
 
 public interface TableFaitsRepository extends JpaRepository<TableFaits, Long> {
 
+    List<TableFaits> findByIdIndicateurAndIdModule(Integer idIndicateur, Integer idModule);
+
     @Query(
             value =
                     """
                            SELECT DISTINCT
                                tf.id_module,
                                tf.id_application,
-                               CAST(null AS text) AS commentaire,
-                               CAST(null AS integer) AS valeur,
-                               CAST(null AS integer) AS id_indicateur
-                           FROM compas_dev1.table_faits tf
-                           WHERE NOT EXISTS (
-                               SELECT 1 FROM compas_dev1.table_faits tf2
-                               WHERE tf2.id_application = tf.id_application
-                               AND tf2.id_module = tf.id_module
+                               tf2.commentaire,
+                               tf2.valeur,
+                               tf2.id_indicateur
+                           FROM (
+                               SELECT DISTINCT id_module, id_application\s
+                               FROM table_faits
+                               WHERE id_module IS NOT NULL
+                           ) tf
+                           LEFT JOIN table_faits tf2
+                               ON  tf.id_module      = tf2.id_module
+                               AND tf.id_application = tf2.id_application
                                AND tf2.id_indicateur IN (:idIndicateurs)
-                           )
-
-                           UNION ALL
-
-                           SELECT
-                               tf.id_module,
-                               tf.id_application,
-                               tf.commentaire,
-                               tf.valeur,
-                               tf.id_indicateur
-                           FROM compas_dev1.table_faits tf
-                           WHERE tf.id_indicateur IN (:idIndicateurs)
-
-                           ORDER BY id_application
+                           ORDER BY tf.id_application, tf.id_module
                     """,
             nativeQuery = true)
     List<MaturiteIndicateurTableProjection> getValuesByMaturiteIndicateur(
@@ -52,7 +44,7 @@ public interface TableFaitsRepository extends JpaRepository<TableFaits, Long> {
             value =
                     """
                         SELECT DISTINCT ON (tf.id_application) tf.id_application, tf.valeur
-                        FROM compas_dev7.table_faits tf
+                        FROM table_faits tf
                         WHERE tf.id_indicateur = :idIndicateur
                         ORDER BY tf.id_application, tf.date DESC
                     """,

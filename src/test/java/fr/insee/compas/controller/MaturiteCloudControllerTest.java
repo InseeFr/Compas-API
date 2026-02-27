@@ -29,9 +29,11 @@ import fr.insee.compas.repository.ApplicationTipsRepository;
 import fr.insee.compas.repository.MaturiteCloudRepository;
 import fr.insee.compas.service.maturitecloud.ApplicationTipsService;
 import fr.insee.compas.service.maturitecloud.MaturiteCloudCsvService;
+import fr.insee.compas.service.maturitecloud.indicateur.CloudCreationService;
 import fr.insee.compas.service.maturitecloud.indicateur.MaturiteIndicateurService;
 import fr.insee.compas.view.IndicateurMaturiteView;
 
+// mock
 @WebMvcTest(MaturiteCloudController.class)
 @AutoConfigureMockMvc(addFilters = false)
 class MaturiteCloudControllerTest {
@@ -41,6 +43,8 @@ class MaturiteCloudControllerTest {
     @MockitoBean MaturiteCloudRepository repo;
 
     @MockitoBean MaturiteCloudCsvService service;
+
+    @MockitoBean CloudCreationService cloudCreationService;
 
     @MockitoBean MaturiteIndicateurService maturiteIndicateurService;
 
@@ -212,5 +216,14 @@ class MaturiteCloudControllerTest {
     void getIndicateur_shouldReturn406_whenAcceptHeaderIsNotJson() throws Exception {
         mockMvc.perform(get("/cloud/indicateur").accept(MediaType.APPLICATION_XML))
                 .andExpect(status().isNotAcceptable());
+    }
+
+    @Test
+    void saisirStrategieCloud_shouldReturn415_whenContentTypeIsNotJson() throws Exception {
+        mockMvc.perform(
+                        post("/cloud/strategie")
+                                .contentType(MediaType.APPLICATION_XML)
+                                .content("<demande></demande>"))
+                .andExpect(status().isUnsupportedMediaType());
     }
 }
