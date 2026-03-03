@@ -242,10 +242,10 @@ public class MaturiteMapperIndicateur {
                                             maturiteCalculatorService.calculateTauxCloudProdModule(
                                                     envActuelProd))
                                     .envActuelProd(envActuelProd)
-                                    .ecartCible(SANS_OBJET)
+                                    .ecartCible(ECART_CIBLE_INIT)
                                     .commentaire(null)
-                                    .strategieCloud(SANS_OBJET)
-                                    .envCibleProd(SANS_OBJET)
+                                    .strategieCloud(NON_RENSEIGNE)
+                                    .envCibleProd(NON_RENSEIGNE)
                                     .build();
                         });
 
