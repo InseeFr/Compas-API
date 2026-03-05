@@ -230,7 +230,7 @@ public class UpdateIndicatorDevopsService {
                 (module, unused) -> {
                     String url = module.getUrlCodeSource();
                     if (url == null) return IndicatorSpecialValue.NR.getCode();
-                    if(DevopsConstantes.EMPTY.equals(url))
+                    if (DevopsConstantes.EMPTY.equals(url))
                         return IndicatorSpecialValue.NR.getCode();
                     if (DevopsConstantes.SANS_OBJET.equals(url))
                         return IndicatorSpecialValue.SO.getCode();
