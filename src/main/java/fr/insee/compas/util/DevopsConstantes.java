@@ -8,6 +8,7 @@ import lombok.Getter;
 public class DevopsConstantes {
 
     public static final String SANS_OBJET = "Sans objet";
+    public static final String EMPTY = "";
     public static final String SAISIE_MANUELLE = "Saisie manuelle";
     public static final String EN_DEVELOPPEMENT = "en développement";
     public static final String EN_PRODUCTION = "en production";
