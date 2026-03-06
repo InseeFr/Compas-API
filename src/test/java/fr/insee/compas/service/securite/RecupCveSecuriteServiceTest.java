@@ -128,7 +128,7 @@ class RecupCveSecuriteServiceTest {
 
         ModuleAnalyzer m1 = mock(ModuleAnalyzer.class);
         when(m1.getId()).thenReturn(1001);
-        when(m1.getDateDernierScanCve()).thenReturn(new java.util.Date()); // scanné
+        when(m1.getDateMajAnalyseTrivyCodeSource()).thenReturn(new java.util.Date()); // scanné
         when(m1.getCveActives())
                 .thenReturn(
                         CveActivesAnalyzer.builder()
@@ -140,7 +140,7 @@ class RecupCveSecuriteServiceTest {
 
         ModuleAnalyzer m2 = mock(ModuleAnalyzer.class);
         when(m2.getId()).thenReturn(1002);
-        when(m2.getDateDernierScanCve()).thenReturn(null); // ignoré
+        when(m2.getDateMajAnalyseTrivyCodeSource()).thenReturn(null); // ignoré
 
         when(app1.getModules()).thenReturn(List.of(m1, m2));
 
@@ -165,7 +165,7 @@ class RecupCveSecuriteServiceTest {
 
         ModuleAnalyzer m3 = mock(ModuleAnalyzer.class);
         when(m3.getId()).thenReturn(3001);
-        when(m3.getDateDernierScanCve()).thenReturn(new java.util.Date());
+        when(m3.getDateMajAnalyseTrivyCodeSource()).thenReturn(new java.util.Date());
         when(m3.getCveActives())
                 .thenReturn(
                         CveActivesAnalyzer.builder()

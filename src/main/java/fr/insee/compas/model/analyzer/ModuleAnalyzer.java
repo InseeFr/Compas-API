@@ -15,5 +15,5 @@ public class ModuleAnalyzer {
     private String sndi;
     private String domaine;
     private CveActivesAnalyzer cveActives;
-    private Date dateDernierScanCve;
+    private Date dateMajAnalyseTrivyCodeSource;
 }

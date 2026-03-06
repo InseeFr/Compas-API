@@ -62,7 +62,7 @@ public class RecupCveSecuriteService {
                         modules == null
                                 ? List.of()
                                 : modules.stream()
-                                        .filter(m -> m.getDateDernierScanCve() != null)
+                                        .filter(m -> m.getDateMajAnalyseTrivyCodeSource() != null)
                                         .toList();
 
                 // Sauvegarder l'application seulement s'il existe au moins un module avec une date
