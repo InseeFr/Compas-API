@@ -1,0 +1,1 @@
+ALTER TABLE table_faits ALTER COLUMN commentaire TYPE TEXT;

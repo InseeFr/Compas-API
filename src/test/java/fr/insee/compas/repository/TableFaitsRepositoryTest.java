@@ -12,11 +12,13 @@ import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration;
 
 import fr.insee.compas.model.compas.TableFaits;
 
 @DataJpaTest(
         showSql = false,
+        excludeAutoConfiguration = {FlywayAutoConfiguration.class},
         properties = {
             "spring.datasource.url=jdbc:h2:mem:testdb",
             "spring.jpa.hibernate.ddl-auto=create-drop",
