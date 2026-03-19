@@ -3,7 +3,7 @@ package fr.insee.compas.service.conversion;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
-import fr.insee.compas.service.conversion.strategie.*;
+import fr.insee.compas.service.conversion.strategie.IConversionStrategie;
 
 import lombok.extern.slf4j.Slf4j;
 

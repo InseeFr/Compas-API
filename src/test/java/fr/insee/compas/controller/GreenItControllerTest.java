@@ -2,9 +2,7 @@ package fr.insee.compas.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -19,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -72,20 +71,69 @@ class GreenItControllerTest {
     @Test
     void testUploadCSV_WithInvalidFileName_ReturnsBadRequest() throws Exception {
         // Given
-        final MultipartFile mockFile =
+        final MockMultipartFile mockFile =
                 new MockMultipartFile("file", "badname.csv", "text/csv", "data".getBytes());
 
-        when(fichierControlService.controlFileName("badname.csv"))
+        when(fichierControlService.controlVmFileName("badname.csv"))
                 .thenThrow(new CompasUploadException(422, null));
 
         // When / Then
         mockMvc.perform(
                         multipart("/kpi-green/modules/upload")
+                                .file(mockFile)
+                                .contentType(MediaType.MULTIPART_FORM_DATA))
+                .andExpect(status().is(HttpStatusCode.valueOf(422).value()));
+
+        verify(greenItService, never()).miseAJourVmMetricsGreenItFromFile(any(), any());
+    }
+
+    @Test
+    void testUploadKubeCSV_WithInvalidFileName_ReturnsBadRequest() throws Exception {
+        // Given
+        final MultipartFile mockFile =
+                new MockMultipartFile("file", "badname.csv", "text/csv", "data".getBytes());
+
+        when(fichierControlService.controlKubeFileName("badname.csv"))
+                .thenThrow(new CompasUploadException(422, null));
+
+        // When / Then
+        mockMvc.perform(
+                        multipart("/kpi-green/modules/upload/kube")
                                 .file((MockMultipartFile) mockFile)
                                 .contentType(MediaType.MULTIPART_FORM_DATA))
-                .andExpect(status().isUnprocessableContent());
+                .andExpect(status().is(HttpStatusCode.valueOf(422).value()));
 
-        verify(greenItService, never()).miseAJourIndicateursGreenItFromFile(any(), any());
+        verify(greenItService, never()).miseAJourKubeMetricsGreenItFromFile(any(), any());
+    }
+
+    @Test
+    void getIndicateursApplicationGreenIT_shouldReturnOk_whenViewIsPresent() throws Exception {
+        final Integer appId = 1;
+
+        final IndicateurApplicationGreenIT kpi = new IndicateurApplicationGreenIT();
+        kpi.setApplicationId(appId);
+        final IndicateurApplicationGreenITView view = new IndicateurApplicationGreenITView();
+
+        when(greenItService.getIndicateursApplicationGreenIT(appId)).thenReturn(kpi);
+        when(indicateurApplicationGreenITViewMapper.toView(kpi)).thenReturn(Optional.of(view));
+
+        mockMvc.perform(
+                        get("/kpi-green/applications/{applicationId}", appId)
+                                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void getIndicateursApplicationGreenIT_shouldReturnNotFound_whenViewIsEmpty() throws Exception {
+        final Integer appId = 1;
+
+        final IndicateurApplicationGreenIT kpi = new IndicateurApplicationGreenIT();
+
+        when(greenItService.getIndicateursApplicationGreenIT(appId)).thenReturn(kpi);
+        when(indicateurApplicationGreenITViewMapper.toView(kpi)).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/kpi-green/applications/{applicationId}", appId))
+                .andExpect(status().isNotFound());
     }
 
     @Test

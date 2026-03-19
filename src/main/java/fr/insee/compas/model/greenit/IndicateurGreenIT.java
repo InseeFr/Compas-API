@@ -6,8 +6,10 @@ import java.time.LocalDate;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 @Data
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 public abstract class IndicateurGreenIT {
@@ -19,6 +21,11 @@ public abstract class IndicateurGreenIT {
     private BigDecimal diskUsed;
     private Integer conso;
     private Integer nbVm;
+    private Integer cpuUsed;
+    private Long ramUsed;
+    private Integer s3Used;
+    private Integer pvcUsed;
+    private Integer nbPodMaxi;
     private Integer ramAllocatedProd;
     private BigDecimal ramMaxiProd;
     private Integer cpuAllocatedProd;
@@ -27,6 +34,11 @@ public abstract class IndicateurGreenIT {
     private BigDecimal diskUsedProd;
     private Integer consoProd;
     private Integer nbVmProd;
+    private Integer cpuUsedProd;
+    private Long ramUsedProd;
+    private Integer s3UsedProd;
+    private Integer pvcUsedProd;
+    private Integer nbPodMaxiProd;
     private LocalDate dateMaj;
 
     public abstract GreenItScore toGreenItScore(

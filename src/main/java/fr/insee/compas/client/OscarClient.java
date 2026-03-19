@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import fr.insee.compas.client.configuration.CustomErrorDecoder;
 import fr.insee.compas.client.configuration.oauth.CustomFeignAuthentification;
 import fr.insee.compas.client.view.ApplicationOscarView;
+import fr.insee.compas.client.view.KubeOscarView;
 import fr.insee.compas.client.view.ModuleOscarView;
 import fr.insee.compas.client.view.VmOscarView;
 
@@ -34,4 +35,7 @@ public interface OscarClient {
 
     @GetMapping("/virtual-machines")
     ResponseEntity<List<VmOscarView>> getAllVmOscar();
+
+    @GetMapping("/applicationsNamespaces")
+    ResponseEntity<List<KubeOscarView>> getAllNamespacesOscar();
 }

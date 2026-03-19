@@ -1,4 +1,4 @@
-package fr.insee.compas.util;
+package fr.insee.compas.util.greenit;
 
 import lombok.extern.slf4j.Slf4j;
 

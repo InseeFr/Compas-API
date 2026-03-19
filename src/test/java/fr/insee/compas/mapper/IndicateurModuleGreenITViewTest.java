@@ -58,11 +58,9 @@ class IndicateurModuleGreenITViewTest {
         softAssertions.assertThat(optView).isPresent();
         softAssertions.assertThat(view.getModuleName()).isEqualTo("TestModule");
         softAssertions.assertThat(view.getRamAllocated()).isEqualTo("4");
-        softAssertions.assertThat(view.getRamMaxi()).isEqualTo("80");
         softAssertions.assertThat(view.getDiskAllocated()).isEqualTo("100");
         softAssertions.assertThat(view.getDiskUsed()).isEqualTo("60");
         softAssertions.assertThat(view.getCpuAllocated()).isEqualTo("2000");
-        softAssertions.assertThat(view.getCpuMaxi()).isEqualTo("90");
         softAssertions.assertThat(view.getConso()).isEqualTo("150");
         softAssertions.assertThat(view.getNbVm()).isEqualTo("10");
         softAssertions.assertThat(view.getConsoScore()).isEqualTo("12.346");

@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>fr.insee</groupId>
 	<artifactId>compas</artifactId>
-	<version>1.6.0</version>
+	<version>1.6.5</version>
 	<name>compas</name>
 	<description>Application pour le Tableau de Bord DDSI</description>
 
@@ -27,6 +27,10 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-h2console</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.h2database</groupId>
@@ -50,7 +54,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
+			<artifactId>spring-boot-starter-webmvc</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springdoc</groupId>

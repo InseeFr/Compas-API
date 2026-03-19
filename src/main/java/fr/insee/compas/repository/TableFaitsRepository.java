@@ -11,6 +11,9 @@ import org.springframework.data.repository.query.Param;
 
 import fr.insee.compas.model.compas.TableFaits;
 import fr.insee.compas.model.maturite.MaturiteIndicateurTableProjection;
+import fr.insee.compas.repository.projection.MetriqueApplicationProjection;
+import fr.insee.compas.repository.projection.MetriqueModuleProjection;
+import fr.insee.compas.repository.projection.MetriqueSumIndicateurProjection;
 
 public interface TableFaitsRepository extends JpaRepository<TableFaits, Long> {
 
@@ -63,13 +66,25 @@ public interface TableFaitsRepository extends JpaRepository<TableFaits, Long> {
 
     @Query(
             value =
-"""
-    SELECT sum(tf.valeur) FROM TableFaits tf WHERE tf.idApplication = :idApplication
-        AND tf.idIndicateur = :idIndicateur and tf.date = :date
-""")
+                    """
+                        SELECT sum(tf.valeur) FROM TableFaits tf WHERE tf.idApplication = :idApplication
+                            AND tf.idIndicateur = :idIndicateur and tf.date = :date
+                    """)
     BigDecimal findSumByDateAndIdIndicateurAndIdApplication(
             @Param("date") LocalDate date,
             @Param("idIndicateur") Integer idIndicateur,
+            @Param("idApplication") Integer idApplication);
+
+    @Query(
+            value =
+                    """
+                        SELECT tf.idIndicateur as idIndicateur, sum(tf.valeur) as totalValeur FROM TableFaits tf WHERE tf.idApplication = :idApplication
+                            AND tf.idIndicateur IN  :indicateurIds and tf.date = :date
+                            GROUP BY tf.idIndicateur
+                    """)
+    List<MetriqueSumIndicateurProjection> findSumByDateAndListIndicateurIdsAndIdApplication(
+            @Param("date") LocalDate date,
+            @Param("indicateurIds") List<Integer> indicateurIds,
             @Param("idApplication") Integer idApplication);
 
     @Query(

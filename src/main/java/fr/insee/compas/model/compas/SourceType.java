@@ -9,6 +9,7 @@ public enum SourceType {
     SAISIE_MANUELLE(2),
     GITLAB(3),
     FICHIER_VM(101),
+    FICHIER_KUBE(102),
     ANALYZER(4),
     HYPERX(5);
 

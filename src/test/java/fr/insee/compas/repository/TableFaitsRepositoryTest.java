@@ -15,6 +15,8 @@ import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration;
 
 import fr.insee.compas.model.compas.TableFaits;
+import fr.insee.compas.repository.projection.MetriqueApplicationProjection;
+import fr.insee.compas.repository.projection.MetriqueModuleProjection;
 
 @DataJpaTest(
         showSql = false,

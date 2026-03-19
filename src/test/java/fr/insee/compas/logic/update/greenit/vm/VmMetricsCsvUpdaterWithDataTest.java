@@ -1,4 +1,4 @@
-package fr.insee.compas.service;
+package fr.insee.compas.logic.update.greenit.vm;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -20,12 +20,12 @@ import org.springframework.web.multipart.MultipartFile;
 import fr.insee.compas.mapper.MetriqueVmMapper;
 import fr.insee.compas.model.greenit.MetriqueVmCsvRead;
 import fr.insee.compas.repository.TableFaitsRepository;
-import fr.insee.compas.service.greenit.GreenItService;
+import fr.insee.compas.service.FichierControlService;
 
 @ExtendWith(MockitoExtension.class)
-class GreenItServiceWithCsvDataTest {
+class VmMetricsCsvUpdaterWithDataTest {
 
-    @InjectMocks private GreenItService greenItService;
+    @InjectMocks private VmMetricsCsvUpdater vmMetricsCsvUpdater;
 
     @Mock private FichierControlService fichierControlService;
 
@@ -38,7 +38,7 @@ class GreenItServiceWithCsvDataTest {
         final Path csvPath = Path.of("src/test/resources/metrique-vm.csv");
         final MultipartFile file = new MockMultipartFile("file", Files.readAllBytes(csvPath));
 
-        final List<MetriqueVmCsvRead> metricsFromCsv = greenItService.loadCSVData(file);
+        final List<MetriqueVmCsvRead> metricsFromCsv = vmMetricsCsvUpdater.loadVmCSVData(file);
 
         assertNotNull(metricsFromCsv);
         assertEquals(5, metricsFromCsv.size());
@@ -49,7 +49,7 @@ class GreenItServiceWithCsvDataTest {
         final Path csvPath = Path.of("src/test/resources/vm-metrique-20250110.csv");
         final MultipartFile file = new MockMultipartFile("file", Files.readAllBytes(csvPath));
 
-        assertThatThrownBy(() -> greenItService.loadCSVData(file))
+        assertThatThrownBy(() -> vmMetricsCsvUpdater.loadVmCSVData(file))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Erreur lors de la lecture");
     }

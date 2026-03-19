@@ -1,19 +1,15 @@
-package fr.insee.compas.service;
+package fr.insee.compas.service.greenit;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 import org.assertj.core.api.SoftAssertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,13 +19,13 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.multipart.MultipartFile;
 
 import fr.insee.compas.client.OscarClient;
 import fr.insee.compas.client.view.ApplicationOscarView;
 import fr.insee.compas.client.view.ModuleOscarView;
 import fr.insee.compas.client.view.VmOscarView;
+import fr.insee.compas.logic.update.greenit.kube.KubeMetricsCsvUpdater;
+import fr.insee.compas.logic.update.greenit.vm.VmMetricsCsvUpdater;
 import fr.insee.compas.mapper.MetriqueVmMapper;
 import fr.insee.compas.model.compas.IndicateurType;
 import fr.insee.compas.model.compas.TableFaits;
@@ -37,13 +33,10 @@ import fr.insee.compas.model.compas.dto.MetriqueApplicationDTO;
 import fr.insee.compas.model.compas.dto.MetriqueModuleDTO;
 import fr.insee.compas.model.greenit.IndicateurApplicationGreenIT;
 import fr.insee.compas.model.greenit.IndicateurModuleGreenIT;
-import fr.insee.compas.model.greenit.MetriqueVm;
-import fr.insee.compas.model.greenit.MetriqueVmCsvRead;
-import fr.insee.compas.model.greenit.util.LectureCsvUtil;
-import fr.insee.compas.repository.MetriqueApplicationProjection;
-import fr.insee.compas.repository.MetriqueModuleProjection;
 import fr.insee.compas.repository.TableFaitsRepository;
-import fr.insee.compas.service.greenit.GreenItService;
+import fr.insee.compas.repository.projection.MetriqueApplicationProjection;
+import fr.insee.compas.repository.projection.MetriqueModuleProjection;
+import fr.insee.compas.repository.projection.MetriqueSumIndicateurProjection;
 
 @ExtendWith(MockitoExtension.class)
 class GreenItServiceGetTest {
@@ -56,49 +49,9 @@ class GreenItServiceGetTest {
 
     @Mock private MetriqueVmMapper metriqueVmMapper;
 
-    private List<MetriqueVm> metrics;
+    @Mock private KubeMetricsCsvUpdater kubeMetricsCsvUpdater;
 
-    @BeforeEach
-    public void init() {
-        metrics = new ArrayList<>();
-        final MetriqueVm metric1 =
-                MetriqueVm.builder()
-                        .vm("pdsir4esli001")
-                        .diskAllocated(LectureCsvUtil.process("154,83"))
-                        .diskUsed(LectureCsvUtil.process("49,46"))
-                        .ramAllocated(LectureCsvUtil.process("4 788,75"))
-                        .ramMaxi(LectureCsvUtil.process("6 390,57"))
-                        .cpuAllocated(LectureCsvUtil.process("4"))
-                        .cpuMaxi(LectureCsvUtil.process("3,9"))
-                        .conso(LectureCsvUtil.process("1,13"))
-                        .build();
-
-        final MetriqueVm metric2 =
-                MetriqueVm.builder()
-                        .vm("pdsir4replm001")
-                        .diskAllocated(LectureCsvUtil.process("12,84"))
-                        .diskUsed(LectureCsvUtil.process("4,74"))
-                        .ramAllocated(LectureCsvUtil.process("2 394,38"))
-                        .ramMaxi(LectureCsvUtil.process("498,73"))
-                        .cpuAllocated(LectureCsvUtil.process("1"))
-                        .cpuMaxi(LectureCsvUtil.process("1"))
-                        .conso(LectureCsvUtil.process("0,07"))
-                        .build();
-
-        final MetriqueVm metric3 =
-                MetriqueVm.builder()
-                        .vm("pdsir4replm001")
-                        .diskAllocated(LectureCsvUtil.process("12,84"))
-                        .diskUsed(LectureCsvUtil.process("4,74"))
-                        .ramAllocated(LectureCsvUtil.process("2 394,38"))
-                        .ramMaxi(LectureCsvUtil.process("498,73"))
-                        .cpuAllocated(LectureCsvUtil.process("1"))
-                        .cpuMaxi(LectureCsvUtil.process("1"))
-                        .conso(LectureCsvUtil.process("0,07"))
-                        .build();
-        metrics = Arrays.asList(metric1, metric2, metric3);
-        greenItService.setMetrics(metrics);
-    }
+    @Mock private VmMetricsCsvUpdater vmMetricsCsvUpdater;
 
     @Test
     void testGetIndicateursApplicationGreenIT() {
@@ -116,28 +69,25 @@ class GreenItServiceGetTest {
                         .idModule(null)
                         .nom("pdsir4replm001")
                         .build());
-        when(tableFaitsRepository.findSumByDateAndIdIndicateurAndIdApplication(
-                        any(), eq(IndicateurType.RAM_ALLOUEE.getValue()), eq(123)))
-                .thenReturn(BigDecimal.valueOf(12.0));
-        when(tableFaitsRepository.findSumByDateAndIdIndicateurAndIdApplication(
-                        any(), eq(IndicateurType.RAM_MAXI.getValue()), eq(123)))
-                .thenReturn(BigDecimal.valueOf(12.0));
-        when(tableFaitsRepository.findSumByDateAndIdIndicateurAndIdApplication(
-                        any(), eq(IndicateurType.DISQUE_ALLOUE.getValue()), eq(123)))
-                .thenReturn(BigDecimal.valueOf(500.0));
-        when(tableFaitsRepository.findSumByDateAndIdIndicateurAndIdApplication(
-                        any(), eq(IndicateurType.DISQUE_CONSOMME.getValue()), eq(123)))
-                .thenReturn(BigDecimal.valueOf(50.0));
-        when(tableFaitsRepository.findSumByDateAndIdIndicateurAndIdApplication(
-                        any(), eq(IndicateurType.CPU_ALLOUEE.getValue()), eq(123)))
-                .thenReturn(BigDecimal.valueOf(20.0));
-        when(tableFaitsRepository.findSumByDateAndIdIndicateurAndIdApplication(
-                        any(), eq(IndicateurType.CPU_MAXI.getValue()), eq(123)))
-                .thenReturn(BigDecimal.valueOf(20.0));
-        when(tableFaitsRepository.findSumByDateAndIdIndicateurAndIdApplication(
-                        any(), eq(IndicateurType.CONSO_ELEC.getValue()), eq(123)))
-                .thenReturn(BigDecimal.valueOf(200.0));
+        MetriqueSumIndicateurProjection p1 = mock(MetriqueSumIndicateurProjection.class);
+        when(p1.getIdIndicateur()).thenReturn(201);
+        when(p1.getTotalValeur()).thenReturn(BigDecimal.valueOf(12));
 
+        MetriqueSumIndicateurProjection p2 = mock(MetriqueSumIndicateurProjection.class);
+        when(p2.getIdIndicateur()).thenReturn(203);
+        when(p2.getTotalValeur()).thenReturn(BigDecimal.valueOf(500.0));
+
+        MetriqueSumIndicateurProjection p3 = mock(MetriqueSumIndicateurProjection.class);
+        when(p3.getIdIndicateur()).thenReturn(205);
+        when(p3.getTotalValeur()).thenReturn(BigDecimal.valueOf(20.0));
+
+        MetriqueSumIndicateurProjection p4 = mock(MetriqueSumIndicateurProjection.class);
+        when(p4.getIdIndicateur()).thenReturn(207);
+        when(p4.getTotalValeur()).thenReturn(BigDecimal.valueOf(200.0));
+
+        when(tableFaitsRepository.findSumByDateAndListIndicateurIdsAndIdApplication(
+                        any(), anyList(), eq(123)))
+                .thenReturn(List.of(p1, p2, p3, p4));
         final IndicateurApplicationGreenIT applicationGreenIT =
                 greenItService.getIndicateursApplicationGreenIT(123);
         final SoftAssertions softAssertions = new SoftAssertions();
@@ -277,52 +227,6 @@ class GreenItServiceGetTest {
         softAssertions.assertThat(dtos).isNotNull();
         softAssertions.assertThat((long) dtos.size()).isEqualTo(3);
         softAssertions.assertAll();
-    }
-
-    @Test
-    @DisplayName(
-            "Mappe les Optionals (present/empty), met à jour metrics et appelle"
-                    + " miseAJourIndicateursGreenIT")
-    void testMajIndicateursGreenItfromfile() throws Exception {
-        // given
-        MultipartFile file =
-                new MockMultipartFile(
-                        "file",
-                        "metrics.csv",
-                        "text/csv",
-                        "dummy".getBytes(StandardCharsets.UTF_8));
-
-        // 3 DTO "csv"
-        MetriqueVmCsvRead dto1 = mock(MetriqueVmCsvRead.class);
-        MetriqueVmCsvRead dto2 = mock(MetriqueVmCsvRead.class);
-        MetriqueVmCsvRead dto3 = mock(MetriqueVmCsvRead.class);
-
-        // 2 métriques mappées (dto2 -> Optional.empty pour tester flatMap Optional::stream)
-        MetriqueVm m1 = mock(MetriqueVm.class);
-        MetriqueVm m3 = mock(MetriqueVm.class);
-
-        // Spy: on remplace loadCSVData(file)
-        doReturn(List.of(dto1, dto2, dto3)).when(greenItService).loadCSVData(file);
-
-        // Mapper: present / empty / present
-        when(metriqueVmMapper.toMetriqueVm(dto1)).thenReturn(Optional.of(m1));
-        when(metriqueVmMapper.toMetriqueVm(dto2)).thenReturn(Optional.empty());
-        when(metriqueVmMapper.toMetriqueVm(dto3)).thenReturn(Optional.of(m3));
-
-        LocalDate date = LocalDate.of(2025, 9, 1);
-
-        // On ne veut pas exécuter la vraie logique interne ici : on vérifie juste l'appel
-        doNothing().when(greenItService).miseAJourIndicateursGreenIT(date);
-
-        // when
-        greenItService.miseAJourIndicateursGreenItFromFile(file, date);
-
-        // then — interactions
-        verify(greenItService).loadCSVData(file);
-        verify(metriqueVmMapper).toMetriqueVm(dto1);
-        verify(metriqueVmMapper).toMetriqueVm(dto2);
-        verify(metriqueVmMapper).toMetriqueVm(dto3);
-        verify(greenItService).miseAJourIndicateursGreenIT(date);
     }
 
     class MetriqueApplicationProjectionStub implements MetriqueApplicationProjection {

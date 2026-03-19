@@ -15,6 +15,8 @@ public class MetriqueVm {
     private String vm;
     private BigDecimal diskAllocated;
     private BigDecimal diskUsed;
+    private BigDecimal applishareAllocated;
+    private BigDecimal applishareUsed;
     private Integer vCpu;
     private BigDecimal cpuAllocated;
     private BigDecimal cpuMaxi;

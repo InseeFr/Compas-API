@@ -6,7 +6,7 @@ import java.math.RoundingMode;
 import fr.insee.compas.model.greenit.GreenItScore;
 import fr.insee.compas.model.greenit.IndicateurGreenIT;
 import fr.insee.compas.model.greenit.util.ScoreGreenUtils;
-import fr.insee.compas.util.ScoreUtils;
+import fr.insee.compas.util.greenit.ScoreUtils;
 
 import lombok.extern.slf4j.Slf4j;
 

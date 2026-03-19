@@ -14,11 +14,9 @@ import lombok.NoArgsConstructor;
 public class IndicateurModuleGreenITView {
     private Integer moduleId;
     private String moduleName;
-    private String ramMaxi;
     private String ramAllocated;
     private String diskUsed;
     private String diskAllocated;
-    private String cpuMaxi;
     private String cpuAllocated;
     private String conso;
     private String nbVm;

@@ -22,6 +22,11 @@ public class IndicateurApplicationGreenITView {
     private String cpuMaxi;
     private String conso;
     private String nbVm;
+    private String cpuUsed;
+    private String ramUsed;
+    private String s3Used;
+    private String pvcUsed;
+    private String nbPodMaxi;
     private String ramAllocatedProd;
     private String ramMaxiProd;
     private String diskAllocatedProd;
@@ -30,6 +35,11 @@ public class IndicateurApplicationGreenITView {
     private String cpuMaxiProd;
     private String consoProd;
     private String nbVmProd;
+    private String cpuUsedProd;
+    private String ramUsedProd;
+    private String s3UsedProd;
+    private String pvcUsedProd;
+    private String nbPodMaxiProd;
     private String consoScore;
     private String impactScore;
     private String gaspillageScore;

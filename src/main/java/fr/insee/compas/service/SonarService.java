@@ -23,7 +23,8 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 
 import fr.insee.compas.exception.SonarApiException;
 import fr.insee.compas.model.compas.IndicateurSonar;
-import fr.insee.compas.model.sonar.*;
+import fr.insee.compas.model.sonar.Paging;
+import fr.insee.compas.model.sonar.RecuperationMeasures;
 
 import lombok.extern.slf4j.Slf4j;
 

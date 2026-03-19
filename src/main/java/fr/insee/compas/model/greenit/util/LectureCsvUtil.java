@@ -21,4 +21,21 @@ public class LectureCsvUtil {
                                                         .replace("-", "0"))))
                 .orElse(null);
     }
+
+    public static BigDecimal processKube(String ligne) {
+
+        return Optional.ofNullable(ligne)
+                .map(
+                        l ->
+                                BigDecimal.valueOf(
+                                        Double.valueOf(
+                                                l.replace(" Mo", "")
+                                                        .replace(" Ko", "")
+                                                        .replace(" Go", "")
+                                                        .replace(" o", "")
+                                                        .replace(",", ".")
+                                                        .replace(" ", "")
+                                                        .replace("-", "0"))))
+                .orElse(null);
+    }
 }

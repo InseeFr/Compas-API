@@ -1,16 +1,8 @@
 package fr.insee.compas.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -55,29 +47,29 @@ class GithubServiceTest {
     void testGetGithubAuthorsForRepo_returnsUniqueAuthors() throws IOException {
         // GIVEN: JSON de réponse simulée
         String jsonResponse =
-"""
-{
-  "data": {
-    "repository": {
-      "refs": {
-        "nodes": [
-          {
-            "target": {
-              "history": {
-                "nodes": [
-                  { "author": { "email": "author1@example.com", "name": "Author One" } },
-                  { "author": { "email": "author2@example.com", "name": "Author Two" } },
-                  { "author": { "email": "noreply@example.com", "name": "Bot" } }
-                ]
-              }
-            }
-          }
-        ]
-      }
-    }
-  }
-}
-""";
+                """
+                {
+                  "data": {
+                    "repository": {
+                      "refs": {
+                        "nodes": [
+                          {
+                            "target": {
+                              "history": {
+                                "nodes": [
+                                  { "author": { "email": "author1@example.com", "name": "Author One" } },
+                                  { "author": { "email": "author2@example.com", "name": "Author Two" } },
+                                  { "author": { "email": "noreply@example.com", "name": "Bot" } }
+                                ]
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+                """;
 
         // Mock du RestTemplate pour retourner la réponse simulée
         when(restTemplate.postForEntity(any(String.class), any(HttpEntity.class), eq(String.class)))

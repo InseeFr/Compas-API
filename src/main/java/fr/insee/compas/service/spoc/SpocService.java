@@ -10,7 +10,6 @@ import java.net.http.HttpResponse.BodyHandlers;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.*;
-import java.util.Base64;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;

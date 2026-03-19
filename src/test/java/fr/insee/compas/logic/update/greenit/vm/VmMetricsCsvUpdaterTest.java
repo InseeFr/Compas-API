@@ -1,17 +1,18 @@
-package fr.insee.compas.service;
+package fr.insee.compas.logic.update.greenit.vm;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -19,22 +20,24 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
 import fr.insee.compas.client.OscarClient;
 import fr.insee.compas.client.view.VmOscarView;
 import fr.insee.compas.exception.CompasClientException;
 import fr.insee.compas.mapper.MetriqueVmMapper;
-import fr.insee.compas.model.compas.TableFaits;
 import fr.insee.compas.model.greenit.MetriqueVm;
+import fr.insee.compas.model.greenit.MetriqueVmCsvRead;
 import fr.insee.compas.model.greenit.util.LectureCsvUtil;
 import fr.insee.compas.repository.TableFaitsRepository;
-import fr.insee.compas.service.greenit.GreenItService;
-import fr.insee.compas.util.ScoreUtils;
+import fr.insee.compas.service.FichierControlService;
+import fr.insee.compas.util.greenit.ScoreUtils;
 
 @ExtendWith(MockitoExtension.class)
-class GreenItServiceMajTest {
+class VmMetricsCsvUpdaterTest {
 
-    private GreenItService greenItService;
+    private VmMetricsCsvUpdater vmMetricsCsvUpdater;
 
     @Mock private FichierControlService fichierControlService;
 
@@ -72,10 +75,10 @@ class GreenItServiceMajTest {
 
         metrics = metrics = Arrays.asList(metric1, metric2);
 
-        greenItService =
+        vmMetricsCsvUpdater =
                 spy(
-                        new GreenItService(
-                                oscarClient, metriqueVmMapper, tableFaitsRepository, metrics));
+                        new VmMetricsCsvUpdater(
+                                oscarClient, tableFaitsRepository, metriqueVmMapper, metrics));
     }
 
     @Test
@@ -86,11 +89,11 @@ class GreenItServiceMajTest {
                         VmOscarView.builder().idApplication(124).build());
         Mockito.when(oscarClient.getAllVmOscar()).thenReturn(ResponseEntity.ok(mockVms));
 
-        assertDoesNotThrow(() -> greenItService.miseAJourIndicateursGreenIT(LocalDate.now()));
+        assertDoesNotThrow(() -> vmMetricsCsvUpdater.miseAJourIndicateursGreenIT(LocalDate.now()));
 
-        verify(greenItService, times(1))
+        verify(vmMetricsCsvUpdater, times(1))
                 .miseAJourIndicateursApplicationGreenIT(mockVms, LocalDate.now());
-        verify(greenItService, times(1))
+        verify(vmMetricsCsvUpdater, times(1))
                 .miseAJourIndicateursModuleGreenIT(mockVms, LocalDate.now());
     }
 
@@ -103,7 +106,7 @@ class GreenItServiceMajTest {
                 Assertions.assertThrows(
                         CompasClientException.class,
                         () -> {
-                            greenItService.miseAJourIndicateursGreenIT(localDate);
+                            vmMetricsCsvUpdater.miseAJourIndicateursGreenIT(localDate);
                         });
         final SoftAssertions softAssertions = new SoftAssertions();
         softAssertions.assertThat(exception.getStatus()).isEqualTo(500);
@@ -117,11 +120,11 @@ class GreenItServiceMajTest {
     void testMiseAJourIndicateursGreenIT_AvecListeVide() {
         final List<VmOscarView> emptyList = List.of();
         Mockito.when(oscarClient.getAllVmOscar()).thenReturn(ResponseEntity.ok(emptyList));
-        assertDoesNotThrow(() -> greenItService.miseAJourIndicateursGreenIT(LocalDate.now()));
+        assertDoesNotThrow(() -> vmMetricsCsvUpdater.miseAJourIndicateursGreenIT(LocalDate.now()));
 
-        verify(greenItService, times(1))
+        verify(vmMetricsCsvUpdater, times(1))
                 .miseAJourIndicateursApplicationGreenIT(emptyList, LocalDate.now());
-        verify(greenItService, times(1))
+        verify(vmMetricsCsvUpdater, times(1))
                 .miseAJourIndicateursModuleGreenIT(emptyList, LocalDate.now());
     }
 
@@ -129,7 +132,7 @@ class GreenItServiceMajTest {
     void testMiseAJourIndicateursModuleGreenIT_AvecListeVide_neFaitRien() {
         List<VmOscarView> vmOscars = List.of();
 
-        greenItService.miseAJourIndicateursModuleGreenIT(vmOscars, LocalDate.now());
+        vmMetricsCsvUpdater.miseAJourIndicateursModuleGreenIT(vmOscars, LocalDate.now());
         verify(tableFaitsRepository, Mockito.never()).save(Mockito.any());
     }
 
@@ -170,12 +173,11 @@ class GreenItServiceMajTest {
                     .when(() -> ScoreUtils.isPlateformeProd(Mockito.anyString()))
                     .thenReturn(true);
 
-            greenItService.miseAJourIndicateursModuleGreenIT(vmOscars, fileDate);
+            vmMetricsCsvUpdater.miseAJourIndicateursModuleGreenIT(vmOscars, fileDate);
         }
 
-        /* on 2 modules (10 et 20), on appelle 1 fois peuplerIndicateurs pour la prod et le global : donc 4 appels de la méthode
-         * on multiplie par 8 indicateurs,  ça fait 32 appels de save */
-        verify(tableFaitsRepository, times(32)).save(Mockito.any(TableFaits.class));
+        /* on 2 modules (10 et 20), on appelle 1 fois peuplerIndicateurs pour la prod et le global : donc 4 appels de la méthode */
+        verify(tableFaitsRepository, times(4)).saveAll(Mockito.any(List.class));
     }
 
     @Test
@@ -206,13 +208,59 @@ class GreenItServiceMajTest {
                     .when(() -> ScoreUtils.isPlateformeProd(Mockito.anyString()))
                     .thenReturn(true);
 
-            greenItService.miseAJourIndicateursModuleGreenIT(vmOscars, fileDate);
+            vmMetricsCsvUpdater.miseAJourIndicateursModuleGreenIT(vmOscars, fileDate);
         }
 
         /*
          * Ici il n’y a qu’un module : 10 on appelle 2 fois peuplerIndicateurs
-         * nb save() = 2 * 8 indicateurs = 16
+         * nb save() = 2
          */
-        verify(tableFaitsRepository, times(16)).save(Mockito.any(TableFaits.class));
+        verify(tableFaitsRepository, times(2)).saveAll(Mockito.any(List.class));
+    }
+
+    @Test
+    @DisplayName(
+            "Mappe les Optionals (present/empty), met à jour metrics et appelle"
+                    + " miseAJourIndicateursGreenIT")
+    void testMajIndicateursGreenItfromfile() throws Exception {
+        // given
+        MultipartFile file =
+                new MockMultipartFile(
+                        "file",
+                        "metrics.csv",
+                        "text/csv",
+                        "dummy".getBytes(StandardCharsets.UTF_8));
+
+        // 3 DTO "csv"
+        MetriqueVmCsvRead dto1 = mock(MetriqueVmCsvRead.class);
+        MetriqueVmCsvRead dto2 = mock(MetriqueVmCsvRead.class);
+        MetriqueVmCsvRead dto3 = mock(MetriqueVmCsvRead.class);
+
+        // 2 métriques mappées (dto2 -> Optional.empty pour tester flatMap Optional::stream)
+        MetriqueVm m1 = mock(MetriqueVm.class);
+        MetriqueVm m3 = mock(MetriqueVm.class);
+
+        // Spy: on remplace loadCSVData(file)
+        doReturn(List.of(dto1, dto2, dto3)).when(vmMetricsCsvUpdater).loadVmCSVData(file);
+
+        // Mapper: present / empty / present
+        when(metriqueVmMapper.toMetriqueVm(dto1)).thenReturn(Optional.of(m1));
+        when(metriqueVmMapper.toMetriqueVm(dto2)).thenReturn(Optional.empty());
+        when(metriqueVmMapper.toMetriqueVm(dto3)).thenReturn(Optional.of(m3));
+
+        LocalDate date = LocalDate.of(2025, 9, 1);
+
+        // On ne veut pas exécuter la vraie logique interne ici : on vérifie juste l'appel
+        doNothing().when(vmMetricsCsvUpdater).miseAJourIndicateursGreenIT(date);
+
+        // when
+        vmMetricsCsvUpdater.miseAJourIndicateursGreenItFromFile(file, date);
+
+        // then — interactions
+        verify(vmMetricsCsvUpdater).loadVmCSVData(file);
+        verify(metriqueVmMapper).toMetriqueVm(dto1);
+        verify(metriqueVmMapper).toMetriqueVm(dto2);
+        verify(metriqueVmMapper).toMetriqueVm(dto3);
+        verify(vmMetricsCsvUpdater).miseAJourIndicateursGreenIT(date);
     }
 }

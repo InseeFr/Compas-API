@@ -30,26 +30,28 @@ class IndicateurApplicationGreenITViewTest {
     @Test
     void toView_shouldMapCorrectly_whenIndicateurIsValid() {
         // Given
-        final IndicateurApplicationGreenIT indicateur = new IndicateurApplicationGreenIT();
-        indicateur.setApplicationId(42);
-        indicateur.setApplicationName("TestApp");
-        indicateur.setRamAllocated(4);
-        indicateur.setRamMaxi(new BigDecimal("80"));
-        indicateur.setDiskAllocated(100);
-        indicateur.setDiskUsed(new BigDecimal(60));
-        indicateur.setCpuAllocated(2000);
-        indicateur.setCpuMaxi(new BigDecimal(90));
-        indicateur.setConso(150);
-        indicateur.setNbVm(10);
-        indicateur.setRamAllocatedProd(2);
-        indicateur.setRamMaxiProd(new BigDecimal(2));
-        indicateur.setDiskAllocatedProd(80);
-        indicateur.setDiskUsedProd(new BigDecimal(20));
-        indicateur.setCpuAllocatedProd(800);
-        indicateur.setCpuMaxiProd(new BigDecimal(60));
-        indicateur.setConsoProd(100);
-        indicateur.setNbVmProd(5);
-        indicateur.setDateMaj(LocalDate.of(2025, 11, 24));
+        final IndicateurApplicationGreenIT indicateur =
+                IndicateurApplicationGreenIT.builder()
+                        .applicationId(42)
+                        .applicationName("TestApp")
+                        .ramAllocated(4)
+                        .ramMaxi(new BigDecimal("80"))
+                        .diskAllocated(100)
+                        .diskUsed(new BigDecimal(60))
+                        .cpuAllocated(2000)
+                        .cpuMaxi(new BigDecimal(90))
+                        .conso(150)
+                        .nbVm(10)
+                        .ramAllocatedProd(2)
+                        .ramMaxiProd(new BigDecimal(2))
+                        .diskAllocatedProd(80)
+                        .diskUsedProd(new BigDecimal(20))
+                        .cpuAllocatedProd(800)
+                        .cpuMaxiProd(new BigDecimal(60))
+                        .consoProd(100)
+                        .nbVmProd(5)
+                        .dateMaj(LocalDate.of(2025, 11, 24))
+                        .build();
 
         final GreenItScore score = new GreenItScore();
         score.setConso(BigDecimal.valueOf(12.3456));
