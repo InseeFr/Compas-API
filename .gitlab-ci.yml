@@ -85,6 +85,7 @@ release-gitops-dev3:
     - when: manual
 
 
+
 release-gitops-prod:
   stage: release-gitops
   extends: .template:gitops-updater
@@ -98,5 +99,5 @@ release-gitops-prod:
     PASSWORD_VAR: "${GITOP_TOKEN_PROD_TAG}"
     AUTOMERGE: "true"
   rules:
-    - if: '$CI_COMMIT_TAG && $CI_COMMIT_REF_NAME =~ /^main/'
+    - if: '$CI_COMMIT_REF_NAME == "main"'
       when: manual
