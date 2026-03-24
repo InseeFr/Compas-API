@@ -21,10 +21,10 @@ import fr.insee.compas.model.oscar.Application;
 import fr.insee.compas.model.oscar.Module;
 import fr.insee.compas.model.oscar.ModuleHistorique;
 import fr.insee.compas.repository.TableFaitsRepository;
-import fr.insee.compas.service.GithubService;
-import fr.insee.compas.service.GitlabService;
 import fr.insee.compas.service.OscarService;
 import fr.insee.compas.service.UtilsService;
+import fr.insee.compas.service.gitservice.GithubService;
+import fr.insee.compas.service.gitservice.GitlabService;
 import fr.insee.compas.util.DevopsConstantes;
 import fr.insee.compas.util.IndicatorSpecialValue;
 

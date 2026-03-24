@@ -1,4 +1,4 @@
-package fr.insee.compas.dto;
+package fr.insee.compas.dto.maturite;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

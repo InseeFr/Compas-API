@@ -11,7 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import fr.insee.compas.dto.DemandeCreationStrategieCloud;
+import fr.insee.compas.dto.meteo.DemandeCreationStrategieCloud;
 import fr.insee.compas.model.compas.ApplicationTip;
 import fr.insee.compas.repository.ApplicationTipsRepository;
 import fr.insee.compas.repository.MaturiteCloudRepository;

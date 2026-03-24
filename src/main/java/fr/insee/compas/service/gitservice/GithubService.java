@@ -1,4 +1,4 @@
-package fr.insee.compas.service;
+package fr.insee.compas.service.gitservice;
 
 import java.io.IOException;
 import java.time.LocalDateTime;

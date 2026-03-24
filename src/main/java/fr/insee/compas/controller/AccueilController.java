@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import fr.insee.compas.service.GitlabService;
+import fr.insee.compas.service.gitservice.IGitlabService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Tag(name = "Accueil", description = "Markdowns des dossiers gitlab")
 public class AccueilController {
-    private GitlabService gitlabService;
+    private IGitlabService gitlabService;
 
     @GetMapping(value = "/indicators", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(

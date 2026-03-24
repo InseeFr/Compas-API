@@ -1,4 +1,4 @@
-package fr.insee.compas.dto;
+package fr.insee.compas.dto.gitlab;
 
 import java.math.BigInteger;
 

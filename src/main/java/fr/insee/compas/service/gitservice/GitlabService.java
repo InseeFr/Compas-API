@@ -1,6 +1,6 @@
-package fr.insee.compas.service;
+package fr.insee.compas.service.gitservice;
 
-import static fr.insee.compas.util.GitLabMarkdownConstantes.INDICATEURS_MD;
+import static fr.insee.compas.util.GitLabConstantes.*;
 
 import java.io.IOException;
 import java.net.URI;
@@ -8,30 +8,29 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import jakarta.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import fr.insee.compas.dto.MarkdownResultGitlabDto;
+import fr.insee.compas.dto.gitlab.MarkdownResultGitlabDto;
+import fr.insee.compas.dto.gitlab.TagsGitLabDto;
 import fr.insee.compas.exception.GitLabException;
 import fr.insee.compas.util.DevopsConstantes;
 
 import lombok.extern.slf4j.Slf4j;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Service pour interagir avec l'API GitLab. Permet de récupérer les commits d'un projet et
@@ -39,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Service
 @Slf4j
-public class GitlabService {
+public class GitlabService implements IGitlabService {
 
     @Value("${fr.insee.compas.gitlab.token:}")
     private String gitlabToken;
@@ -58,6 +57,50 @@ public class GitlabService {
     private void initHeaders() {
         headers = new HttpHeaders();
         headers.set("Private-Token", gitlabToken);
+    }
+
+    public TagsGitLabDto getLatestTags() {
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+        log.info("Appels à l'API GitLab pour récupérer les tags");
+        URI urlApiTag =
+                URI.create(
+                        String.format(
+                                "%s/projects/%d/repository/tags?order_by=updated&sort=desc&per_page=1",
+                                DevopsConstantes.GITLAB_API_URL, ID_PROJET_COMPAS_API));
+        URI urlIhmTag =
+                URI.create(
+                        String.format(
+                                "%s/projects/%d/repository/tags?order_by=updated&sort=desc&per_page=1",
+                                DevopsConstantes.GITLAB_API_URL, ID_PROJET_COMPAS_UI));
+        try {
+            ResponseEntity<List<TagsGitLabDto.TagApi>> responseApiTag =
+                    restTemplate.exchange(
+                            urlApiTag,
+                            HttpMethod.GET,
+                            entity,
+                            new ParameterizedTypeReference<>() {});
+
+            ResponseEntity<List<TagsGitLabDto.TagIhm>> responseIhmTag =
+                    restTemplate.exchange(
+                            urlIhmTag,
+                            HttpMethod.GET,
+                            entity,
+                            new ParameterizedTypeReference<>() {});
+            if (responseApiTag.getStatusCode() == HttpStatus.NOT_FOUND
+                    || responseApiTag.getBody() == null
+                    || responseApiTag.getBody().isEmpty()
+                    || responseIhmTag.getStatusCode() == HttpStatus.NOT_FOUND
+                    || responseIhmTag.getBody() == null
+                    || responseIhmTag.getBody().isEmpty()) {
+                log.warn("Aucune tag trouvée pour API ou IHM");
+                return null;
+            }
+            return new TagsGitLabDto(
+                    responseApiTag.getBody().getFirst(), responseIhmTag.getBody().getFirst());
+        } catch (HttpStatusCodeException e) {
+            log.error("Erreur lors de la récupération des tags pour API ou IHM");
+            throw new GitLabException("Erreur lors de la récupération des tags", e);
+        }
     }
 
     /**

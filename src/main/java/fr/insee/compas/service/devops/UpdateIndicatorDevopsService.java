@@ -24,10 +24,10 @@ import fr.insee.compas.model.oscar.Application;
 import fr.insee.compas.model.oscar.Module;
 import fr.insee.compas.model.oscar.ModuleHistorique;
 import fr.insee.compas.repository.TableFaitsRepository;
-import fr.insee.compas.service.GithubService;
-import fr.insee.compas.service.GitlabService;
 import fr.insee.compas.service.OscarService;
 import fr.insee.compas.service.UtilsService;
+import fr.insee.compas.service.gitservice.GithubService;
+import fr.insee.compas.service.gitservice.IGitlabService;
 import fr.insee.compas.util.DevopsConstantes;
 import fr.insee.compas.util.IndicatorSpecialValue;
 
@@ -52,7 +52,7 @@ public class UpdateIndicatorDevopsService {
 
     private final OscarService oscarService;
     private final TableFaitsRepository tableFaitsRepository;
-    private final GitlabService gitlabService;
+    private final IGitlabService gitlabService;
     private final GithubService githubService;
     private final UtilsService utilsService;
 
@@ -60,7 +60,7 @@ public class UpdateIndicatorDevopsService {
     public UpdateIndicatorDevopsService(
             TableFaitsRepository tableFaitsRepository,
             OscarService oscarService,
-            GitlabService gitlabService,
+            IGitlabService gitlabService,
             GithubService githubService,
             UtilsService utilsService) {
         this.tableFaitsRepository = tableFaitsRepository;

@@ -8,7 +8,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import fr.insee.compas.dto.DemandeCreationStrategieCloud;
+import fr.insee.compas.dto.meteo.DemandeCreationStrategieCloud;
 
 class UtilsDemandeTest {
 

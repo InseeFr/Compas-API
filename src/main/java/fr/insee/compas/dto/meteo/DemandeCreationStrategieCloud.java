@@ -1,4 +1,4 @@
-package fr.insee.compas.dto;
+package fr.insee.compas.dto.meteo;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

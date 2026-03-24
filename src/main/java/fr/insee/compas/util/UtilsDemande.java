@@ -1,10 +1,15 @@
 package fr.insee.compas.util;
 
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Optional;
 
-import fr.insee.compas.dto.DemandeCreationStrategieCloud;
+import fr.insee.compas.dto.meteo.DemandeCreationStrategieCloud;
 
 public final class UtilsDemande {
+    private static final ZoneId PARIS_ZONE = ZoneId.of("Europe/Paris");
 
     private UtilsDemande() {}
 
@@ -37,5 +42,12 @@ public final class UtilsDemande {
                     "L'avancement doit être compris entre 1 et 3, valeur reçue: "
                             + demande.getAvancement());
         }
+    }
+
+    public static LocalDate parseDate(String createdAt) {
+        return Optional.ofNullable(createdAt)
+                .map(Instant::parse)
+                .map(instant -> instant.atZone(PARIS_ZONE).toLocalDate())
+                .orElse(null);
     }
 }

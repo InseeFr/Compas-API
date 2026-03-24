@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
-import fr.insee.compas.dto.MaturiteIndicateurDto;
+import fr.insee.compas.dto.maturite.MaturiteIndicateurDto;
 import fr.insee.compas.exception.MaturiteIndicateurException;
 import fr.insee.compas.model.maturite.MaturiteIndicateurTableProjection;
 import fr.insee.compas.model.oscar.Module;

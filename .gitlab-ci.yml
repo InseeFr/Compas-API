@@ -1,143 +1,102 @@
-default:
-  image: gitlab-registry.insee.fr:443/kubernetes/images/build/maven-jdk:25
-  tags:
-    - docker
-
 include:
-  - project: "kubernetes/kubeapp/ci-templates"
+  - component: "${CI_SERVER_FQDN}/sndi-lille/ressources-communes/components/meta-component-java-kube/meta-components@2.0.0"
+    inputs:
+      sonar_token: ${SONAR_KEY}
+      sonar_project_key: ${SONAR_PROJECT_KEY}
+      sonar_props_java: >
+        -Dsonar.coverage.exclusions=src/test/java/**
+        -Dsonar.java.binaries=target/classes
+        -Dsonar.java.coveragePlugin=jacoco
+        -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+        -Dsonar.exclusions=**/test/**,**/*Test*.java,**/*Tests*.java,**/*TestCase*.java
+        -Dsonar.junit.reportPaths=target/surefire-reports/*.xml
+      maven_java_version: 25
+      maven_build_args_opts: -Drevision=${CLEANED_TAG_AND_VERSION_NAME}
+      trivy_path_to_trivyignore: "${CI_PROJECT_DIR}/.trivyignore"
+  - project: 'ressources-humaines/outils/ci-templates'
     ref: main
-    file: "images.yaml"
+    file:
+      - '/templates/workflow.yaml'
+      - 'templates/formatting.yaml'
+      - 'templates/build-test.yaml'
+      - '/templates/quality.yaml'
+      - '/templates/pages.yaml'
+      - '/templates/kube/docker.yaml'
+      - '/templates/kube/deploy.yaml'
+
 
 stages:
-  - formatting
-  - build 🔨
-  - docker 👾
-  - test 🙈
-  - release ⭐
-  - analyse
+  - check-source-branch
+  - security-app
+  - build-app-and-test
+  - quality
+  - calculate-version-and-release
+  - tag
+  - prepare-docker
+  - trigger-docker
+  - docker
+  - release-gitops
 
-variables:
-  HTTP_PROXY: http://proxy-app.insee.fr:3128
-  http_proxy: http://proxy-app.insee.fr:3128
-  HTTPS_PROXY: http://proxy-app.insee.fr:3128
-  https_proxy: http://proxy-app.insee.fr:3128
-  NO_PROXY: ".insee.fr,.insee.eu,.insee.intra,localhost,insee.test"
-  no_proxy: ".insee.fr,.insee.eu,.insee.intra,localhost,insee.test"
-  GITLEAKS_IMAGE: zricethezav/gitleaks:latest
-  GITLEAKS_ARGS: '--verbose --redact'
 
-.template:release-docker-dev:
-  stage: release ⭐
-  tags:
-    - docker
-  extends: .template:docker_push_internal
-  needs: ["build-docker-dev"]
-  when: manual
-
-job_code_formatting:
-  stage: formatting
-  script:
-    - mvn spotless:check
-
-build-app:
-  stage: build 🔨
-  script:
-    - "mvn clean package"
-  artifacts:
-    untracked: true
-    paths:
-      - ./target/*.jar
-    
-    expire_in: 1 day
-
-build-docker:
-  stage: docker 👾
-  tags:
-    - docker
-  extends: .template:docker_build
+release-gitops-dev1:
+  stage: release-gitops
+  extends: .template:gitops-updater
   variables:
-    PATH_TO_DOCKERFILE: Dockerfile
-  only:
-    - tags
+    REPO: "https://gitlab.insee.fr/dsi/Compas/CompasGitops.git"
+    BRANCH: "master"
+    PATH_TO_VALUE: "apps/compas-api-dev1/values.yaml"
+    KEY_TO_CHANGE: "api-appli-compas.image.tag"
+    NEW_VALUE: "${CLEANED_TAG_AND_VERSION_NAME}"
+    USERNAME: "${GITOPS_USERNAME}"
+    PASSWORD_VAR: "${GITOPS_TOKEN}"
+    AUTOMERGE: "true"
 
-build-docker-dev:
-  stage: docker 👾
-  tags:
-    - docker
-  extends: .template:docker_build
-  variables:
-    PATH_TO_DOCKERFILE: Dockerfile
-  when: on_success
-
-test-docker:
-  stage: test 🙈
-  tags:
-    - docker
-  extends: .template:docker_check
-  variables:
-    SEVERITY_LEVELS: HIGH,CRITICAL
-    REPORT_NAME: gl-container-scanning-report-${CI_PROJECT_NAME}-${CI_COMMIT_REF_SLUG}.xml
-  allow_failure: true
-  only:
-    - tags
-
-release-docker:
-  stage: release ⭐
-  tags:
-    - docker
-  extends: .template:docker_push_internal
-  variables:
-    IMAGE_TAG: ${CI_COMMIT_REF_NAME}
-  only:
-    - tags
-
-release-docker-dev1:
-  extends: .template:release-docker-dev
-  variables:
-    IMAGE_TAG: dev1
-
-release-docker-dev2:
-  extends: .template:release-docker-dev
-  variables:
-    IMAGE_TAG: dev2
-
-release-docker-dev3:
-  extends: .template:release-docker-dev
-  variables:
-    IMAGE_TAG: dev3
-
-sonarqube:
-  stage: analyse
-  script:
-    - echo "Analyse SONAR et envoi sur $SONAR_URL du projet [${CI_PROJECT_PATH}], PROJECT_ID=[${CI_PROJECT_ID}]  ${CI_COMMIT_BRANCH}"
-    - mvn $MAVEN_CLI_OPTS clean verify sonar:sonar -Dsonar.host.url=$SONAR_URL -Dsonar.login=$SONAR_KEY
-  allow_failure: true
-
-sonarqube_mr:
-  stage: analyse
-  script:
-    - echo "Analyse SONAR et envoi sur $SONAR_URL du projet [${CI_PROJECT_PATH}], PROJECT_ID=[${CI_PROJECT_ID}]  ${CI_COMMIT_REF_NAME}"
-    - mvn clean verify sonar:sonar -Dsonar.host.url=$SONAR_URL -Dsonar.login=$SONAR_KEY -Dsonar.pullrequest.key=$CI_MERGE_REQUEST_IID -Dsonar.pullrequest.branch=${CI_COMMIT_REF_NAME} -Dsonar.pullrequest.base=main
   rules:
-    - if: '$CI_MERGE_REQUEST_IID'
-  allow_failure: true
+    - when: manual
 
-gitleaks:
-  image:
-    name: $GITLEAKS_IMAGE
-    entrypoint: [""]
-  stage: analyse
-  needs: []
+release-gitops-dev2:
+  stage: release-gitops
+  extends: .template:gitops-updater
   variables:
-    GIT_DEPTH: 0
-  before_script:
-    - mkdir -p -m 777 reports
-    - git config --global --add safe.directory "${CI_PROJECT_DIR}"
-  script:
-    - gitleaks git --report-path reports/gitleaks.native.json $GITLEAKS_ARGS .
-  artifacts:
-    name: "$CI_JOB_NAME artifacts from $CI_PROJECT_NAME on $CI_COMMIT_REF_SLUG"
-    when: always
-    paths:
-      - reports/gitleaks.
-  allow_failure: true
+    REPO: "https://gitlab.insee.fr/dsi/Compas/CompasGitops.git"
+    BRANCH: "master"
+    PATH_TO_VALUE: "apps/compas-api-dev2/values.yaml"
+    KEY_TO_CHANGE: "api-appli-compas.image.tag"
+    NEW_VALUE: "${CLEANED_TAG_AND_VERSION_NAME}"
+    USERNAME: "${GITOPS_USERNAME}"
+    PASSWORD_VAR: "${GITOPS_TOKEN}"
+    AUTOMERGE: "true"
+  rules:
+    - when: manual
+
+release-gitops-dev3:
+  stage: release-gitops
+  extends: .template:gitops-updater
+  variables:
+    REPO: "https://gitlab.insee.fr/dsi/Compas/CompasGitops.git"
+    BRANCH: "master"
+    PATH_TO_VALUE: "apps/compas-api-dev3/values.yaml"
+    KEY_TO_CHANGE: "api-appli-compas.image.tag"
+    NEW_VALUE: "${CLEANED_TAG_AND_VERSION_NAME}"
+    USERNAME: "${GITOPS_USERNAME}"
+    PASSWORD_VAR: "${GITOPS_TOKEN}"
+    AUTOMERGE: "true"
+  rules:
+    - when: manual
+
+
+release-gitops-prod:
+  stage: release-gitops
+  extends: .template:gitops-updater
+  variables:
+    REPO: "https://gitlab.insee.fr/dsi/Compas/Compas-gitops-production.git"
+    BRANCH: "main"
+    PATH_TO_VALUE: "apps/compas-api/values.yaml"
+    KEY_TO_CHANGE: "api-appli-compas.image.tag"
+    NEW_VALUE: "${CLEANED_TAG_AND_VERSION_NAME}"
+    USERNAME: "${GITOPS_USERNAME_PROD}"
+    PASSWORD_VAR: "${GITOP_TOKEN_PROD_TAG}"
+    AUTOMERGE: "true"
+  rules:
+    - if: '$CI_COMMIT_TAG && $CI_COMMIT_REF_NAME =~ /^main/'
+      when: manual

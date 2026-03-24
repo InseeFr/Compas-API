@@ -20,6 +20,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
+import fr.insee.compas.service.gitservice.GithubService;
+
 class GithubServiceTest {
 
     @Mock private RestTemplate restTemplate;

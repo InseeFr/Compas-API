@@ -1,6 +1,6 @@
 package fr.insee.compas.service;
 
-import static fr.insee.compas.util.GitLabMarkdownConstantes.INDICATEURS_MD;
+import static fr.insee.compas.util.GitLabConstantes.INDICATEURS_MD;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -17,18 +17,22 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URI;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import fr.insee.compas.dto.MarkdownResultGitlabDto;
+import fr.insee.compas.dto.gitlab.MarkdownResultGitlabDto;
+import fr.insee.compas.dto.gitlab.TagsGitLabDto;
 import fr.insee.compas.exception.GitLabException;
+import fr.insee.compas.service.gitservice.GitlabService;
 
 class GitlabServiceTest {
 
@@ -46,6 +50,58 @@ class GitlabServiceTest {
         java.lang.reflect.Field headersField = GitlabService.class.getDeclaredField("headers");
         headersField.setAccessible(true);
         headersField.set(service, headers);
+    }
+
+    @Test
+    void shouldReturnLatestTags() {
+        // GIVEN
+        TagsGitLabDto.TagApi apiTag = new TagsGitLabDto.TagApi("v1.0.0", "2024-01-01T10:00:00Z");
+        TagsGitLabDto.TagIhm ihmTag = new TagsGitLabDto.TagIhm("v2.0.0", "2024-02-01T10:00:00Z");
+
+        ResponseEntity<List<TagsGitLabDto.TagApi>> apiResponse =
+                new ResponseEntity<>(List.of(apiTag), HttpStatus.OK);
+
+        ResponseEntity<List<TagsGitLabDto.TagIhm>> ihmResponse =
+                new ResponseEntity<>(List.of(ihmTag), HttpStatus.OK);
+
+        when(restTemplate.exchange(
+                        any(),
+                        eq(HttpMethod.GET),
+                        any(HttpEntity.class),
+                        any(ParameterizedTypeReference.class)))
+                .thenReturn(apiResponse)
+                .thenReturn(ihmResponse);
+
+        // WHEN
+        TagsGitLabDto result = service.getLatestTags();
+
+        // THEN
+        assertThat(result).isNotNull();
+        assertThat(result.getApiTag().name()).isEqualTo("v1.0.0");
+        assertThat(result.getIhmTag().name()).isEqualTo("v2.0.0");
+    }
+
+    @Test
+    void shouldReturnNullWhenNoTags() {
+        ResponseEntity<List<TagsGitLabDto.TagApi>> emptyResponse =
+                new ResponseEntity<>(List.of(), HttpStatus.OK);
+
+        when(restTemplate.exchange(any(), any(), any(), any(ParameterizedTypeReference.class)))
+                .thenReturn(emptyResponse)
+                .thenReturn(emptyResponse);
+
+        TagsGitLabDto result = service.getLatestTags();
+
+        assertThat(result).isNull();
+    }
+
+    @Test
+    void shouldThrowExceptionWhenGitlabFails() {
+        when(restTemplate.exchange(any(), any(), any(), any(ParameterizedTypeReference.class)))
+                .thenThrow(new HttpClientErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
+
+        org.junit.jupiter.api.Assertions.assertThrows(
+                GitLabException.class, () -> service.getLatestTags());
     }
 
     @Test
