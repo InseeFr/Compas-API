@@ -6,12 +6,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.validation.Valid;
+
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import fr.insee.compas.dto.meteo.DemandeCreationStrategieCloud;
+import fr.insee.compas.dto.maturite.DemandeCreationStrategieCloud;
 import fr.insee.compas.model.compas.ApplicationTip;
 import fr.insee.compas.repository.ApplicationTipsRepository;
 import fr.insee.compas.repository.MaturiteCloudRepository;
@@ -21,7 +23,6 @@ import fr.insee.compas.service.maturitecloud.indicateur.CloudCreationService;
 import fr.insee.compas.service.maturitecloud.indicateur.ICloudCreation;
 import fr.insee.compas.service.maturitecloud.indicateur.IMaturiteIndicateur;
 import fr.insee.compas.service.maturitecloud.indicateur.MaturiteIndicateurService;
-import fr.insee.compas.util.UtilsDemande;
 import fr.insee.compas.view.IndicateurApplicationMaturiteCloud;
 import fr.insee.compas.view.IndicateurMaturiteView;
 
@@ -191,9 +192,7 @@ public class MaturiteCloudController {
                         content = @Content)
             })
     public ResponseEntity<List<Long>> saisirStrategieCloud(
-            @RequestBody DemandeCreationStrategieCloud demande) {
-
-        UtilsDemande.validateDemande(demande);
+            @Valid @RequestBody DemandeCreationStrategieCloud demande) {
 
         List<Long> idsFaits = cloudCreationService.creerStrategieCloud(demande);
 

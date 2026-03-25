@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import fr.insee.compas.dto.meteo.DemandeCreationStrategieCloud;
+import fr.insee.compas.dto.maturite.DemandeCreationStrategieCloud;
 import fr.insee.compas.exception.StrategieCloudException;
 import fr.insee.compas.model.compas.TableFaits;
 import fr.insee.compas.model.oscar.Module;

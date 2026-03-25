@@ -10,19 +10,17 @@ include:
         -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
         -Dsonar.exclusions=**/test/**,**/*Test*.java,**/*Tests*.java,**/*TestCase*.java
         -Dsonar.junit.reportPaths=target/surefire-reports/*.xml
+        -Dsonar.issue.ignore.multicriteria=e1
+        -Dsonar.issue.ignore.multicriteria.e1.ruleKey=java:S1068
+        -Dsonar.issue.ignore.multicriteria.e1.resourceKey=**/dto/**/*.java
       maven_java_version: 25
       maven_build_args_opts: -Drevision=${CLEANED_TAG_AND_VERSION_NAME}
       trivy_path_to_trivyignore: "${CI_PROJECT_DIR}/.trivyignore"
-  - project: 'ressources-humaines/outils/ci-templates'
+      auto_tags_with_semver: false
+  - project: 'kubernetes/kubeapp/ci-templates'
     ref: main
     file:
-      - '/templates/workflow.yaml'
-      - 'templates/formatting.yaml'
-      - 'templates/build-test.yaml'
-      - '/templates/quality.yaml'
-      - '/templates/pages.yaml'
-      - '/templates/kube/docker.yaml'
-      - '/templates/kube/deploy.yaml'
+      - '/utils.yaml'
 
 
 stages:
@@ -40,7 +38,7 @@ stages:
 
 release-gitops-dev1:
   stage: release-gitops
-  extends: .template:gitops-updater
+  extends: .template:gitops-updater-v2
   variables:
     REPO: "https://gitlab.insee.fr/dsi/Compas/CompasGitops.git"
     BRANCH: "master"
@@ -56,7 +54,7 @@ release-gitops-dev1:
 
 release-gitops-dev2:
   stage: release-gitops
-  extends: .template:gitops-updater
+  extends: .template:gitops-updater-v2
   variables:
     REPO: "https://gitlab.insee.fr/dsi/Compas/CompasGitops.git"
     BRANCH: "master"
@@ -71,7 +69,7 @@ release-gitops-dev2:
 
 release-gitops-dev3:
   stage: release-gitops
-  extends: .template:gitops-updater
+  extends: .template:gitops-updater-v2
   variables:
     REPO: "https://gitlab.insee.fr/dsi/Compas/CompasGitops.git"
     BRANCH: "master"
@@ -88,7 +86,7 @@ release-gitops-dev3:
 
 release-gitops-prod:
   stage: release-gitops
-  extends: .template:gitops-updater
+  extends: .template:gitops-updater-v2
   variables:
     REPO: "https://gitlab.insee.fr/dsi/Compas/Compas-gitops-production.git"
     BRANCH: "main"
@@ -99,5 +97,5 @@ release-gitops-prod:
     PASSWORD_VAR: "${GITOP_TOKEN_PROD_TAG}"
     AUTOMERGE: "true"
   rules:
-    - if: '$CI_COMMIT_REF_NAME == "main"'
+    - if: '$CI_COMMIT_TAG'
       when: manual

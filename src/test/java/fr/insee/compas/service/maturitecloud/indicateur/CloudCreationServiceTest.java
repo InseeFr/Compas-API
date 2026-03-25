@@ -14,7 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import fr.insee.compas.dto.meteo.DemandeCreationStrategieCloud;
+import fr.insee.compas.dto.maturite.DemandeCreationStrategieCloud;
 import fr.insee.compas.model.compas.TableFaits;
 import fr.insee.compas.model.oscar.Module;
 import fr.insee.compas.repository.TableFaitsRepository;
