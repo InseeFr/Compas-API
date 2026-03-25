@@ -93,17 +93,17 @@
 		<dependency>
 			<groupId>io.github.openfeign</groupId>
 			<artifactId>feign-okhttp</artifactId>
-			<version>13.8</version>
+			<version>13.11</version>
 		</dependency>
 		<dependency>
 			<groupId>io.github.openfeign</groupId>
 			<artifactId>feign-httpclient</artifactId>
-			<version>13.8</version>
+			<version>13.11</version>
 		</dependency>
 		<dependency>
 			<groupId>io.github.openfeign</groupId>
 			<artifactId>feign-slf4j</artifactId>
-			<version>13.8</version>
+			<version>13.11</version>
 		</dependency>
 		<dependency>
 			<groupId>org.json</groupId>
