@@ -120,7 +120,7 @@ public class RecuperationIndicateurSonarService {
         for (Map.Entry<Application, Set<String>> entry : applications.entrySet()) {
             Set<String> keysSonar = entry.getValue();
             RecuperationMeasures sommeMesures = new RecuperationMeasures();
-            if (!keysSonar.isEmpty() && keysSonar.stream().allMatch(s -> s.equals(SANS_OBJET))) {
+            if (!keysSonar.isEmpty() && keysSonar.stream().allMatch(SANS_OBJET::equals)) {
                 Component component = new Component();
                 Measure ligneNegative = new Measure("lines_to_cover", "-1");
                 component.setMeasures(new ArrayList<>(List.of(ligneNegative)));
