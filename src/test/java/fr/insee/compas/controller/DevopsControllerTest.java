@@ -18,7 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import fr.insee.compas.service.devops.IndicatorDevopsApplicationService;
 import fr.insee.compas.service.devops.IndicatorDevopsModuleService;
-import fr.insee.compas.service.devops.UpdateIndicatorDevopsService;
+import fr.insee.compas.service.devops.update.UpdateIndicatorDevopsService;
 import fr.insee.compas.view.IndicateurDevopsView;
 
 @WebMvcTest(DevopsController.class)

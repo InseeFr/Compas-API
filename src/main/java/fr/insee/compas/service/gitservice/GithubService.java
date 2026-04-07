@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -22,6 +21,7 @@ import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import fr.insee.compas.dto.devops.AuthorsDto;
 import fr.insee.compas.util.DevopsConstantes;
 
 import lombok.extern.slf4j.Slf4j;
@@ -73,7 +73,7 @@ public class GithubService {
      * @return un ensemble d'adresses email d'auteurs valides
      * @throws IOException en cas d'erreur lors de la récupération ou du parsing des commits
      */
-    public Set<String> getGithubAuthorsForRepo(
+    public Set<AuthorsDto> getGithubAuthorsForRepo(
             String owner, String repo, LocalDateTime start, LocalDateTime end) throws IOException {
 
         boolean isAllowed =
@@ -150,7 +150,7 @@ public class GithubService {
      * @return ensemble d'emails d'auteurs valides
      * @throws IOException en cas d'erreur lors du parsing JSON
      */
-    private Set<String> parseAuthorsFromResponse(String responseBody) throws IOException {
+    private Set<AuthorsDto> parseAuthorsFromResponse(String responseBody) throws IOException {
         JsonNode refs =
                 objectMapper
                         .readTree(responseBody)
@@ -172,7 +172,7 @@ public class GithubService {
                 .map(commit -> commit.path(DevopsConstantes.FIELD_AUTHOR))
                 .map(
                         authorNode ->
-                                Map.entry(
+                                new AuthorsDto(
                                         authorNode
                                                 .path(DevopsConstantes.FIELD_EMAIL)
                                                 .asText("")
@@ -181,8 +181,7 @@ public class GithubService {
                                                 .path(DevopsConstantes.FIELD_NAME)
                                                 .asText("")
                                                 .toLowerCase()))
-                .filter(entry -> isValidAuthor(entry.getKey(), entry.getValue()))
-                .map(Map.Entry::getKey)
+                .filter(author -> isValidAuthor(author.email(), author.name()))
                 .collect(Collectors.toSet());
     }
 

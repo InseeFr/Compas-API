@@ -4,4 +4,8 @@ public class GitLabException extends RuntimeException {
     public GitLabException(String message, Throwable cause) {
         super(message, cause);
     }
+
+    public GitLabException(String message) {
+        super(message);
+    }
 }

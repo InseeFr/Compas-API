@@ -4,16 +4,10 @@ import static fr.insee.compas.util.GitLabConstantes.INDICATEURS_MD;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
-import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URI;
 import java.time.LocalDateTime;
@@ -29,10 +23,16 @@ import org.springframework.http.*;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import fr.insee.compas.dto.devops.AuthorsDto;
 import fr.insee.compas.dto.gitlab.MarkdownResultGitlabDto;
 import fr.insee.compas.dto.gitlab.TagsGitLabDto;
 import fr.insee.compas.exception.GitLabException;
 import fr.insee.compas.service.gitservice.GitlabService;
+import fr.insee.compas.util.DevopsConstantes;
+
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 class GitlabServiceTest {
 
@@ -105,41 +105,178 @@ class GitlabServiceTest {
     }
 
     @Test
-    void testGetGitlabAuthorsForProject() throws IOException {
+    void testGetGitlabAuthorsForProject_returnsUniqueValidAuthors() {
         // GIVEN
         String projectPath = "namespace/projet";
         LocalDateTime start = LocalDateTime.now().minusDays(5);
         LocalDateTime end = LocalDateTime.now();
 
-        // Création d'un JSON simulant la réponse de GitLab
-        String jsonResponse =
-                "[{\"author_email\":\"dev1@example.com\",\"author_name\":\"Dev One\"},"
-                        + "{\"author_email\":\"dev2@example.com\",\"author_name\":\"Dev Two\"}]";
+        // JSON simulant une page de commits GitLab — champs committer_* attendus par
+        // l'implémentation
+        String jsonBody =
+                """
+                [
+                  { "committer_email": "dev1@example.com", "committer_name": "Dev One" },
+                  { "committer_email": "dev2@example.com", "committer_name": "Dev Two" },
+                  { "committer_email": "noreply@github.com", "committer_name": "Bot" }
+                ]
+                """;
 
-        ResponseEntity<String> responseEntity = new ResponseEntity<>(jsonResponse, HttpStatus.OK);
+        List<JsonNode> nodes = parseJsonNodes(jsonBody);
 
-        // WHEN : mock du RestTemplate pour retourner la page
-        when(restTemplate.exchange(any(), any(), any(HttpEntity.class), eq(String.class)))
+        // En-tête de pagination : une seule page
+        HttpHeaders responseHeaders = new HttpHeaders();
+        responseHeaders.set(DevopsConstantes.FIELD_X_TOTAL_PAGE, "1");
+
+        ResponseEntity<List<JsonNode>> responseEntity =
+                new ResponseEntity<>(nodes, responseHeaders, HttpStatus.OK);
+
+        when(restTemplate.exchange(
+                        any(URI.class),
+                        eq(HttpMethod.GET),
+                        any(HttpEntity.class),
+                        any(ParameterizedTypeReference.class)))
                 .thenReturn(responseEntity);
 
-        // WHEN : appel de la méthode
-        Set<String> authors = service.getGitlabAuthorsForProject(projectPath, start, end);
+        // WHEN
+        Set<AuthorsDto> authors = service.getGitlabAuthorsForProject(projectPath, start, end);
 
-        // THEN : vérifie que les auteurs uniques sont récupérés
+        // THEN — le bot noreply doit être filtré, les deux humains conservés
+        assertNotNull(authors);
         assertEquals(2, authors.size());
-        assertTrue(authors.contains("dev1@example.com"));
-        assertTrue(authors.contains("dev2@example.com"));
+        assertTrue(
+                authors.stream().anyMatch(a -> a.email().equals("dev1@example.com")),
+                "dev1 devrait être présent");
+        assertTrue(
+                authors.stream().anyMatch(a -> a.email().equals("dev2@example.com")),
+                "dev2 devrait être présent");
+        assertFalse(
+                authors.stream().anyMatch(a -> a.email().contains("noreply")),
+                "les adresses noreply doivent être exclues");
+    }
 
-        // THEN : capture l'entité envoyée au RestTemplate
-        ArgumentCaptor<HttpEntity<Void>> captor =
-                (ArgumentCaptor<HttpEntity<Void>>)
-                        (ArgumentCaptor<?>) ArgumentCaptor.forClass(HttpEntity.class);
+    @Test
+    void testGetGitlabAuthorsForProject_withMultiplePages_fetchesAllPages() {
+        // GIVEN
+        String projectPath = "namespace/projet";
+        LocalDateTime start = LocalDateTime.now().minusDays(5);
+        LocalDateTime end = LocalDateTime.now();
 
-        verify(restTemplate).exchange(any(), any(), captor.capture(), eq(String.class));
+        String page1Json =
+                """
+                [{ "committer_email": "dev1@example.com", "committer_name": "Dev One" }]
+                """;
+        String page2Json =
+                """
+                [{ "committer_email": "dev2@example.com", "committer_name": "Dev Two" }]
+                """;
 
-        HttpEntity<Void> capturedEntity = captor.getValue();
-        assertNotNull(capturedEntity.getHeaders().getFirst("Private-Token"));
-        assertEquals("dummy-token", capturedEntity.getHeaders().getFirst("Private-Token"));
+        HttpHeaders headersPage1 = new HttpHeaders();
+        headersPage1.set(DevopsConstantes.FIELD_X_TOTAL_PAGE, "2");
+
+        HttpHeaders headersPage2 = new HttpHeaders();
+        headersPage2.set(DevopsConstantes.FIELD_X_TOTAL_PAGE, "2");
+
+        // Guard against null URI before calling toString()
+        when(restTemplate.exchange(
+                        argThat(uri -> uri != null && uri.toString().contains("page=1")),
+                        eq(HttpMethod.GET),
+                        any(HttpEntity.class),
+                        any(ParameterizedTypeReference.class)))
+                .thenReturn(
+                        new ResponseEntity<>(
+                                parseJsonNodes(page1Json), headersPage1, HttpStatus.OK));
+
+        when(restTemplate.exchange(
+                        argThat(uri -> uri != null && uri.toString().contains("page=2")),
+                        eq(HttpMethod.GET),
+                        any(HttpEntity.class),
+                        any(ParameterizedTypeReference.class)))
+                .thenReturn(
+                        new ResponseEntity<>(
+                                parseJsonNodes(page2Json), headersPage2, HttpStatus.OK));
+
+        // WHEN
+        Set<AuthorsDto> authors = service.getGitlabAuthorsForProject(projectPath, start, end);
+
+        // THEN
+        assertEquals(2, authors.size());
+        assertTrue(authors.stream().anyMatch(a -> a.email().equals("dev1@example.com")));
+        assertTrue(authors.stream().anyMatch(a -> a.email().equals("dev2@example.com")));
+
+        // Vérifie que les deux pages ont bien été appelées
+        verify(restTemplate, times(2))
+                .exchange(
+                        argThat(uri -> uri != null && uri.toString().contains("page=1")),
+                        eq(HttpMethod.GET),
+                        any(HttpEntity.class),
+                        any(ParameterizedTypeReference.class));
+
+        verify(restTemplate, times(1))
+                .exchange(
+                        argThat(uri -> uri != null && uri.toString().contains("page=2")),
+                        eq(HttpMethod.GET),
+                        any(HttpEntity.class),
+                        any(ParameterizedTypeReference.class));
+    }
+
+    @Test
+    void testGetGitlabAuthorsForProject_returns404_givesEmptySet() {
+        // GIVEN
+        String projectPath = "namespace/introuvable";
+        LocalDateTime start = LocalDateTime.now().minusDays(5);
+        LocalDateTime end = LocalDateTime.now();
+
+        when(restTemplate.exchange(
+                        any(URI.class),
+                        eq(HttpMethod.GET),
+                        any(HttpEntity.class),
+                        any(ParameterizedTypeReference.class)))
+                .thenThrow(
+                        HttpClientErrorException.NotFound.create(
+                                HttpStatus.NOT_FOUND, "Not Found", HttpHeaders.EMPTY, null, null));
+
+        // WHEN
+        Set<AuthorsDto> authors = service.getGitlabAuthorsForProject(projectPath, start, end);
+
+        // THEN — 404 doit retourner un ensemble vide sans lever d'exception
+        assertNotNull(authors);
+        assertTrue(authors.isEmpty(), "Un projet 404 doit retourner un ensemble vide");
+    }
+
+    @Test
+    void testGetGitlabAuthorsForProject_privateTokenHeaderIsSent() {
+        // GIVEN
+        String projectPath = "namespace/projet";
+        LocalDateTime start = LocalDateTime.now().minusDays(5);
+        LocalDateTime end = LocalDateTime.now();
+
+        HttpHeaders responseHeaders = new HttpHeaders();
+        responseHeaders.set(DevopsConstantes.FIELD_X_TOTAL_PAGE, "1");
+
+        when(restTemplate.exchange(
+                        any(URI.class),
+                        eq(HttpMethod.GET),
+                        any(HttpEntity.class),
+                        any(ParameterizedTypeReference.class)))
+                .thenReturn(new ResponseEntity<>(List.of(), responseHeaders, HttpStatus.OK));
+
+        // WHEN
+        service.getGitlabAuthorsForProject(projectPath, start, end);
+
+        // THEN — capture et vérifie le header Private-Token
+        ArgumentCaptor<HttpEntity<Void>> captor = ArgumentCaptor.forClass((Class) HttpEntity.class);
+        verify(restTemplate)
+                .exchange(
+                        any(URI.class),
+                        eq(HttpMethod.GET),
+                        captor.capture(),
+                        any(ParameterizedTypeReference.class));
+
+        HttpHeaders sentHeaders = captor.getValue().getHeaders();
+        assertNotNull(
+                sentHeaders.getFirst("Private-Token"), "Le header Private-Token doit être présent");
+        assertEquals("dummy-token", sentHeaders.getFirst("Private-Token"));
     }
 
     @Test
@@ -205,5 +342,11 @@ class GitlabServiceTest {
 
         Map<String, String> result = service.getMarkdownIndicators();
         assertThat(result).isEmpty();
+    }
+
+    // --- Helper ----------------------------------------------------------------
+
+    private List<JsonNode> parseJsonNodes(String json) {
+        return new ObjectMapper().readValue(json, new TypeReference<>() {});
     }
 }

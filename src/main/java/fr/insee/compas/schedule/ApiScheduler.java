@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 import fr.insee.compas.model.sonar.RecuperationMeasures;
 import fr.insee.compas.service.OscarService;
 import fr.insee.compas.service.a11y.A11yMajService;
-import fr.insee.compas.service.devops.UpdateIndicatorDevopsService;
+import fr.insee.compas.service.devops.update.UpdateIndicatorDevopsService;
 import fr.insee.compas.service.meteo.alerte.MeteoAlerteService;
 import fr.insee.compas.service.qualite.RecuperationIndicateurSonarService;
 import fr.insee.compas.service.securite.RecupCveSecuriteService;

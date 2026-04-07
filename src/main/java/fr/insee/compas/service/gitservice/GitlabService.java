@@ -2,15 +2,16 @@ package fr.insee.compas.service.gitservice;
 
 import static fr.insee.compas.util.GitLabConstantes.*;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import jakarta.annotation.PostConstruct;
 
@@ -23,6 +24,7 @@ import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import fr.insee.compas.dto.devops.AuthorsDto;
 import fr.insee.compas.dto.gitlab.MarkdownResultGitlabDto;
 import fr.insee.compas.dto.gitlab.TagsGitLabDto;
 import fr.insee.compas.exception.GitLabException;
@@ -30,7 +32,6 @@ import fr.insee.compas.util.DevopsConstantes;
 
 import lombok.extern.slf4j.Slf4j;
 import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
 
 /**
  * Service pour interagir avec l'API GitLab. Permet de récupérer les commits d'un projet et
@@ -46,7 +47,6 @@ public class GitlabService implements IGitlabService {
     private HttpHeaders headers;
 
     private final RestTemplate restTemplate;
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public GitlabService(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
@@ -156,40 +156,48 @@ public class GitlabService implements IGitlabService {
      * @param startDate date de début pour le filtrage des commits
      * @param endDate date de fin pour le filtrage des commits
      * @return un ensemble d'adresses email des auteurs valides
-     * @throws IOException si une erreur HTTP ou JSON survient
      */
-    public Set<String> getGitlabAuthorsForProject(
-            String pathWithNamespace, LocalDateTime startDate, LocalDateTime endDate)
-            throws IOException {
+    public Set<AuthorsDto> getGitlabAuthorsForProject(
+            String pathWithNamespace, LocalDateTime startDate, LocalDateTime endDate) {
 
-        Set<String> uniqueAuthors = new HashSet<>();
         String since = encodeDate(startDate);
         String until = encodeDate(endDate);
 
-        int page = 1;
-        boolean hasMore = true;
+        ResponseEntity<List<AuthorsDto>> firstResponse =
+                fetchCommitsPage(pathWithNamespace, since, until, 1);
 
-        while (hasMore) {
-            ResponseEntity<String> response =
-                    fetchCommitsPage(pathWithNamespace, since, until, page);
-
-            JsonNode commitsPage = objectMapper.readTree(response.getBody());
-
-            if (commitsPage == null || !commitsPage.isArray() || commitsPage.isEmpty()) {
-                break;
-            }
-
-            uniqueAuthors.addAll(extractAuthorsFromCommits(commitsPage));
-
-            String nextPage = response.getHeaders().getFirst(DevopsConstantes.FIELD_X_NEXT_PAGE);
-            if (nextPage == null || nextPage.isBlank()) {
-                hasMore = false;
-            } else {
-                page = Integer.parseInt(nextPage);
-            }
+        if (firstResponse.getBody() == null || firstResponse.getBody().isEmpty()) {
+            return Set.of();
         }
 
-        return uniqueAuthors;
+        String totalPagesHeader =
+                firstResponse.getHeaders().getFirst(DevopsConstantes.FIELD_X_TOTAL_PAGE);
+        int totalPages =
+                (totalPagesHeader != null && !totalPagesHeader.isBlank())
+                        ? Integer.parseInt(totalPagesHeader)
+                        : 1;
+
+        Stream<AuthorsDto> firstPage = firstResponse.getBody().stream();
+
+        Stream<AuthorsDto> remainingPages =
+                totalPages > 1
+                        ? IntStream.rangeClosed(2, totalPages)
+                                .parallel()
+                                .mapToObj(
+                                        page ->
+                                                fetchCommitsPage(
+                                                        pathWithNamespace, since, until, page))
+                                .filter(response -> response.getBody() != null)
+                                .flatMap(response -> response.getBody().stream())
+                        : Stream.empty();
+
+        return Stream.concat(firstPage, remainingPages)
+                .collect(
+                        Collectors.toMap(
+                                AuthorsDto::email, Function.identity(), (existing, k) -> existing))
+                .values()
+                .stream()
+                .collect(Collectors.toUnmodifiableSet());
     }
 
     /**
@@ -203,10 +211,9 @@ public class GitlabService implements IGitlabService {
      * @param until date de fin encodée en ISO-8601
      * @param page numéro de la page à récupérer
      * @return ResponseEntity contenant le corps JSON et les headers HTTP
-     * @throws IOException si une erreur HTTP survient
      */
-    private ResponseEntity<String> fetchCommitsPage(
-            String pathWithNamespace, String since, String until, int page) throws IOException {
+    private ResponseEntity<List<AuthorsDto>> fetchCommitsPage(
+            String pathWithNamespace, String since, String until, int page) {
 
         HttpEntity<Void> entity = new HttpEntity<>(headers);
         URI url =
@@ -221,45 +228,46 @@ public class GitlabService implements IGitlabService {
                                 page));
 
         try {
-            ResponseEntity<String> response =
-                    restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+            ResponseEntity<List<JsonNode>> response =
+                    restTemplate.exchange(
+                            url, HttpMethod.GET, entity, new ParameterizedTypeReference<>() {});
 
-            if (response.getStatusCode() == HttpStatus.NOT_FOUND) {
+            if (response.getBody() == null) {
                 log.warn("Aucun commit trouvé pour {}", pathWithNamespace);
-            } else if (response.getStatusCode() != HttpStatus.OK) {
-                throw new IOException(
+                return ResponseEntity.ok(List.of());
+            }
+            if (response.getStatusCode() != HttpStatus.OK) {
+                throw new GitLabException(
                         "Erreur récupération commits GitLab : " + response.getStatusCode());
             }
 
-            return response;
+            List<AuthorsDto> filtered =
+                    response.getBody().stream()
+                            .map(
+                                    node ->
+                                            new AuthorsDto(
+                                                    node.path("committer_email")
+                                                            .asString("")
+                                                            .toLowerCase(),
+                                                    node.path("committer_name")
+                                                            .asString("")
+                                                            .toLowerCase()))
+                            .filter(author -> isValidAuthor(author.email(), author.name()))
+                            .toList();
+
+            return ResponseEntity.status(response.getStatusCode())
+                    .headers(response.getHeaders())
+                    .body(filtered);
+
+        } catch (HttpClientErrorException.NotFound e) {
+            log.warn("Projet GitLab introuvable (404) : {}", pathWithNamespace);
+            return ResponseEntity.ok(List.of());
 
         } catch (HttpClientErrorException e) {
-            throw new IOException(
+            throw new GitLabException(
                     "Erreur HTTP lors de la récupération des commits GitLab : " + e.getStatusCode(),
                     e);
         }
-    }
-
-    /**
-     * Extrait les adresses email des auteurs valides depuis une page de commits JSON.
-     *
-     * @param commits JsonNode contenant les commits d'une page
-     * @return ensemble d'adresses email filtrées
-     */
-    private Set<String> extractAuthorsFromCommits(JsonNode commits) {
-        return StreamSupport.stream(commits.spliterator(), false)
-                .map(
-                        commit ->
-                                Map.entry(
-                                        commit.path(DevopsConstantes.FIELD_AUTHOR_EMAIL)
-                                                .asText("")
-                                                .toLowerCase(),
-                                        commit.path(DevopsConstantes.FIELD_AUTHOR_NAME)
-                                                .asText("")
-                                                .toLowerCase()))
-                .filter(entry -> isValidAuthor(entry.getKey(), entry.getValue()))
-                .map(Map.Entry::getKey)
-                .collect(Collectors.toSet());
     }
 
     /**

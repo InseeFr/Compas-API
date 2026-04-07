@@ -4,15 +4,15 @@ include:
       sonar_token: ${SONAR_KEY}
       sonar_project_key: ${SONAR_PROJECT_KEY}
       sonar_props_java: >
-        -Dsonar.coverage.exclusions=src/test/java/**
-        -Dsonar.java.binaries=target/classes
-        -Dsonar.java.coveragePlugin=jacoco
-        -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
-        -Dsonar.exclusions=**/test/**,**/*Test*.java,**/*Tests*.java,**/*TestCase*.java
-        -Dsonar.junit.reportPaths=target/surefire-reports/*.xml
-        -Dsonar.issue.ignore.multicriteria=e1
-        -Dsonar.issue.ignore.multicriteria.e1.ruleKey=java:S1068
-        -Dsonar.issue.ignore.multicriteria.e1.resourceKey=**/dto/**/*.java
+          -Dsonar.coverage.exclusions=src/test/java/**
+          -Dsonar.java.binaries=target/classes
+          -Dsonar.java.coveragePlugin=jacoco
+          -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+          -Dsonar.exclusions=**/test/**,**/*Test*.java,**/*Tests*.java,**/*TestCase*.java
+          -Dsonar.junit.reportPaths=target/surefire-reports/*.xml
+          -Dsonar.issue.ignore.multicriteria=e1
+          -Dsonar.issue.ignore.multicriteria.e1.ruleKey=java:S1068
+          -Dsonar.issue.ignore.multicriteria.e1.resourceKey=**/dto/**/*.java
       maven_java_version: 25
       maven_build_args_opts: -Drevision=${CLEANED_TAG_AND_VERSION_NAME}
       trivy_path_to_trivyignore: "${CI_PROJECT_DIR}/.trivyignore"
@@ -81,7 +81,6 @@ release-gitops-dev3:
     AUTOMERGE: "true"
   rules:
     - when: manual
-
 
 
 release-gitops-prod:

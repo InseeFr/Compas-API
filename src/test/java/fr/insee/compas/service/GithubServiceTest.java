@@ -20,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
+import fr.insee.compas.dto.devops.AuthorsDto;
 import fr.insee.compas.service.gitservice.GithubService;
 
 class GithubServiceTest {
@@ -83,14 +84,13 @@ class GithubServiceTest {
         LocalDateTime end = LocalDateTime.now();
 
         // WHEN: appel de la méthode
-        Set<String> authors = githubService.getGithubAuthorsForRepo(owner, repo, start, end);
+        Set<AuthorsDto> authors = githubService.getGithubAuthorsForRepo(owner, repo, start, end);
 
         // THEN: vérifie que seuls les auteurs valides sont conservés
         assertNotNull(authors);
         assertEquals(2, authors.size());
-        assertTrue(authors.contains("author1@example.com"));
-        assertTrue(authors.contains("author2@example.com"));
-        assertFalse(authors.contains("noreply@example.com"));
+        assertTrue(authors.stream().anyMatch(l -> l.email().contains("author2@example.com")));
+        assertFalse(authors.stream().anyMatch(l -> l.email().contains("noreply@example.com")));
 
         // Vérifie que RestTemplate a été appelé exactement 1 fois
         ArgumentCaptor<HttpEntity<String>> captor =

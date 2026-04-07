@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import fr.insee.compas.service.devops.IndicatorDevopsApplicationService;
 import fr.insee.compas.service.devops.IndicatorDevopsModuleService;
-import fr.insee.compas.service.devops.UpdateIndicatorDevopsService;
+import fr.insee.compas.service.devops.update.UpdateIndicatorDevopsService;
 import fr.insee.compas.view.IndicateurDevopsView;
 
 import io.swagger.v3.oas.annotations.Operation;
