@@ -52,7 +52,7 @@ public class A11yMajService {
         List<Module> modules = oscarService.getModules();
         LocalDate now = LocalDate.now();
         for (Module module : modules) {
-            if (module.getTypeLivrable().contains("IHM")
+            if (module.getTypeLivrable()!=null && module.getKeySonar()!=null && module.getTypeLivrable().contains("IHM")
                     && !"null".equals(module.getKeySonar())
                     && !module.getKeySonar().equals("Sans objet")) {
                 String issue =
