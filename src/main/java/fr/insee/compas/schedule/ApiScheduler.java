@@ -84,7 +84,7 @@ public class ApiScheduler {
 
         log.info("Début de l’envoi hebdomadaire des alertes météo (lundi {})", LocalDate.now());
         try {
-            meteoAlerteService.sendAlerteMeteo(23, false);
+            meteoAlerteService.sendAlerteMeteo(26, false);
             log.info("Fin de l’envoi hebdomadaire des alertes météo.");
         } catch (Exception e) {
             log.error("Erreur lors de l’envoi des alertes météo : ", e);
