@@ -154,6 +154,11 @@
 			<artifactId>spring-boot-data-jpa-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.tomcat.embed</groupId>
+			<artifactId>tomcat-embed-core</artifactId>
+			<version>11.0.21</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<resources>
