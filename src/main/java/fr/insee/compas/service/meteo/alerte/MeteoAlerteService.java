@@ -31,7 +31,7 @@ public class MeteoAlerteService extends MeteoExtendAlerteService implements ISen
     }
 
     /**
-     * Envoie des mails par couple (RGA, BALF métier) : - RAPPEL : dernière météo >= 23 jours et < 1
+     * Envoie des mails par couple (RGA, BALF métier) : - RAPPEL : dernière météo >= 26 jours et < 1
      * mois - RETARD : dernière météo >= 1 mois (ou absente) Le paramètre ageMinJours sert à
      * préfiltrer (ex. 23).
      */
@@ -48,6 +48,6 @@ public class MeteoAlerteService extends MeteoExtendAlerteService implements ISen
         LocalDate today = LocalDate.now(TZ_PARIS);
         destinataireListMap.forEach(
                 (destinataire, meteos1) ->
-                        this.processusEnvoie(destinataire, meteos1, today, test));
+                        this.processusEnvoie(destinataire, meteos1, today, test, ageMinJours));
     }
 }

@@ -78,7 +78,8 @@ class MeteoAlerteServiceTest {
                         anyString(),
                         anyString(),
                         nullable(String.class),
-                        any(MeteoAlerteUtils.AlerteType.class)))
+                        any(MeteoAlerteUtils.AlerteType.class),
+                        anyInt()))
                 .thenAnswer(
                         invocation -> {
                             String emailRga = invocation.getArgument(0);
@@ -173,7 +174,8 @@ class MeteoAlerteServiceTest {
                         anyString(),
                         anyString(),
                         nullable(String.class),
-                        any(MeteoAlerteUtils.AlerteType.class)))
+                        any(MeteoAlerteUtils.AlerteType.class),
+                        anyInt()))
                 .thenAnswer(
                         invocation -> {
                             String emailRga = invocation.getArgument(0);

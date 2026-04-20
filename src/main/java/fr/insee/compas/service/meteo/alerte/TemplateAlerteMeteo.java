@@ -33,7 +33,8 @@ public class TemplateAlerteMeteo {
             String emailResponsable,
             String emailAdjResponsable,
             String balfMetier,
-            AlerteType type) {
+            AlerteType type,
+            int ageMinJours) {
         LocalDate today = LocalDate.now(TZ_PARIS);
         StringBuilder sb = new StringBuilder();
 
@@ -67,11 +68,10 @@ public class TemplateAlerteMeteo {
                     .append(BR)
                     .append(BR);
         } else {
-            sb.append(
-                            "Vos applications ci-dessous ont une météo à bientôt mettre à jour"
-                                    + " (≥ 23 jours).")
-                    .append(BR)
-                    .append(BR);
+            sb.append("Vos applications ci-dessous ont une météo à bientôt mettre à jour (≥ ")
+                    .append(ageMinJours)
+                    .append(" jours).")
+                    .append(BR).append(BR);
         }
 
         apps.stream()

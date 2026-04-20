@@ -16,4 +16,5 @@ public class MailAlerteMeteo {
     Boolean isTest;
     Optional<String> responsableEmail;
     Optional<String> responsableAdjEmail;
+    private int ageMinJours;
 }

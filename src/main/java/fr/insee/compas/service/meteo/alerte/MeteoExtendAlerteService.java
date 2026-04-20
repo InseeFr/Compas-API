@@ -67,7 +67,7 @@ public class MeteoExtendAlerteService {
      * Traite un couple (RGA, BALF) : classe en RAPPEL/RETARD et envoie les mails correspondants.
      */
     protected void processusEnvoie(
-            Destinataire destinataire, List<Meteo> meteos, LocalDate today, boolean test) {
+            Destinataire destinataire, List<Meteo> meteos, LocalDate today, boolean test, int ageMinJours) {
 
         if (meteos == null || meteos.isEmpty()) {
             log.warn("Aucune météo à traiter pour le destinataire: {}", destinataire.rgaEmail());
@@ -100,7 +100,8 @@ public class MeteoExtendAlerteService {
                     destinataire,
                     responsableEmail,
                     responsableEmailAdj,
-                    test);
+                    test,
+                    ageMinJours);
         }
 
         if (!retardApps.isEmpty()) {
@@ -111,7 +112,8 @@ public class MeteoExtendAlerteService {
                     destinataire,
                     responsableEmail,
                     responsableEmailAdj,
-                    test);
+                    test,
+                    ageMinJours);
         }
     }
 
@@ -121,7 +123,8 @@ public class MeteoExtendAlerteService {
             Destinataire destinataire,
             String responsableEmail,
             String responsableEmailAdj,
-            boolean test) {
+            boolean test,
+            int ageMinJours) {
 
         MailAlerteMeteo mailAlerteMeteo =
                 MailAlerteMeteo.builder()
@@ -130,6 +133,7 @@ public class MeteoExtendAlerteService {
                         .type(type)
                         .responsableEmail(Optional.ofNullable(responsableEmail))
                         .responsableAdjEmail(Optional.ofNullable(responsableEmailAdj))
+                        .ageMinJours(ageMinJours)
                         .build();
 
         envoieMailPourGroupeRgaEtBalf(mailAlerteMeteo, destinataire);
@@ -195,7 +199,8 @@ public class MeteoExtendAlerteService {
                 responsableMail,
                 responsableAdj,
                 destinataire.balfMetier(),
-                mailAlerteMeteo.getType());
+                mailAlerteMeteo.getType(),
+                mailAlerteMeteo.getAgeMinJours());
     }
 
     private MailRecipients buildMailRecipients(
