@@ -71,7 +71,8 @@ public class TemplateAlerteMeteo {
             sb.append("Vos applications ci-dessous ont une météo à bientôt mettre à jour (≥ ")
                     .append(ageMinJours)
                     .append(" jours).")
-                    .append(BR).append(BR);
+                    .append(BR)
+                    .append(BR);
         }
 
         apps.stream()

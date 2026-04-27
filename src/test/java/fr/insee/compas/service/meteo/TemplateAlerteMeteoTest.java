@@ -66,7 +66,14 @@ class TemplateAlerteMeteoTest {
 
         String body =
                 template.getTemplateBody(
-                        rgaEmail, List.of(m1), true, emailResp, emailAdj, balf, AlerteType.RETARD, 26);
+                        rgaEmail,
+                        List.of(m1),
+                        true,
+                        emailResp,
+                        emailAdj,
+                        balf,
+                        AlerteType.RETARD,
+                        26);
 
         assertTrue(body.contains("⚠️ MODE TEST"));
         assertTrue(body.contains(rgaEmail));
@@ -96,7 +103,14 @@ class TemplateAlerteMeteoTest {
 
         String body =
                 template.getTemplateBody(
-                        rgaEmail, List.of(m1), false, emailResp, emailAdj, balf, AlerteType.RAPPEL, 26);
+                        rgaEmail,
+                        List.of(m1),
+                        false,
+                        emailResp,
+                        emailAdj,
+                        balf,
+                        AlerteType.RAPPEL,
+                        26);
 
         assertFalse(body.contains("MODE TEST"));
         assertTrue(

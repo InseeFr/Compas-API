@@ -10,9 +10,7 @@ include:
           -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
           -Dsonar.exclusions=**/test/**,**/*Test*.java,**/*Tests*.java,**/*TestCase*.java
           -Dsonar.junit.reportPaths=target/surefire-reports/*.xml
-          -Dsonar.issue.ignore.multicriteria=e1
-          -Dsonar.issue.ignore.multicriteria.e1.ruleKey=java:S1068
-          -Dsonar.issue.ignore.multicriteria.e1.resourceKey=**/dto/**/*.java
+          -Dsonar.java.libraries=target/dependency/*.jar
       maven_java_version: 25
       maven_build_args_opts: -Drevision=${CLEANED_TAG_AND_VERSION_NAME}
       trivy_path_to_trivyignore: "${CI_PROJECT_DIR}/.trivyignore"

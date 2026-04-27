@@ -67,7 +67,11 @@ public class MeteoExtendAlerteService {
      * Traite un couple (RGA, BALF) : classe en RAPPEL/RETARD et envoie les mails correspondants.
      */
     protected void processusEnvoie(
-            Destinataire destinataire, List<Meteo> meteos, LocalDate today, boolean test, int ageMinJours) {
+            Destinataire destinataire,
+            List<Meteo> meteos,
+            LocalDate today,
+            boolean test,
+            int ageMinJours) {
 
         if (meteos == null || meteos.isEmpty()) {
             log.warn("Aucune météo à traiter pour le destinataire: {}", destinataire.rgaEmail());
