@@ -141,6 +141,7 @@ public class RecuperationIndicateurSonarService {
 
     private boolean hasValidSonarKey(Module module) {
         return module.getKeySonar() != null
+                && !module.getKeySonar().isEmpty()
                 && !"null".equals(module.getKeySonar())
                 && !SANS_OBJET.equals(module.getKeySonar());
     }
