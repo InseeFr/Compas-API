@@ -25,8 +25,14 @@ public class A11yController {
     private A11yMajService a11yMajService;
 
     @GetMapping(value = "/modules", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Lister tous les modules et informations accessibilité")
+    @Operation(summary = "Lister tous les modules et informations accessibilité pour les IHM")
     public List<IndicateursModuleA11Y> listerModulesA11y() {
+        return a11yAffichageService.listerModulesIHMA11y();
+    }
+
+    @GetMapping(value = "/modules-all", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Lister tous les modules et informations accessibilité")
+    public List<IndicateursModuleA11Y> listerModulesALL11y() {
         return a11yAffichageService.listerModulesA11y();
     }
 

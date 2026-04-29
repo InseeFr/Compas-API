@@ -58,7 +58,7 @@ class A11yAffichageServiceTest {
         when(a11yMajService.getIndicateutA11y()).thenReturn(Map.of());
         when(tableFaitsService.getMapMetricByModule(anyInt())).thenReturn(Map.of());
 
-        List<IndicateursModuleA11Y> out = service.listerModulesA11y();
+        List<IndicateursModuleA11Y> out = service.listerModulesIHMA11y();
 
         assertThat(out).hasSize(2);
         // module 1
@@ -67,11 +67,11 @@ class A11yAffichageServiceTest {
         assertThat(v1.getModName()).isEqualTo("M1");
         assertThat(v1.getDomaineSndi()).isEqualTo("DomA");
         assertThat(v1.getSndi()).isEqualTo("SNDI-A");
-        assertThat(v1.getNotation()).isEqualTo(Notation.NR);
+        assertThat(v1.getNotation()).isEqualTo(Notation.H);
         // module 2
         IndicateursModuleA11Y v2 = out.get(1);
         assertThat(v2.getIdModule()).isEqualTo(2);
-        assertThat(v2.getNotation()).isEqualTo(Notation.NR);
+        assertThat(v2.getNotation()).isEqualTo(Notation.H);
     }
 
     @Test
@@ -103,7 +103,7 @@ class A11yAffichageServiceTest {
         when(a11yMajService.getIndicateutA11y()).thenReturn(map);
         when(tableFaitsService.getMapMetricByModule(anyInt())).thenReturn(Map.of());
 
-        List<IndicateursModuleA11Y> out = service.listerModulesA11y();
+        List<IndicateursModuleA11Y> out = service.listerModulesIHMA11y();
 
         assertThat(out).hasSize(4);
 
@@ -148,7 +148,7 @@ class A11yAffichageServiceTest {
         when(a11yMajService.getIndicateutA11y()).thenReturn(Map.of(10, info));
         when(tableFaitsService.getMapMetricByModule(anyInt())).thenReturn(Map.of());
 
-        List<IndicateursModuleA11Y> out = service.listerModulesA11y();
+        List<IndicateursModuleA11Y> out = service.listerModulesIHMA11y();
         assertThat(out).hasSize(1);
         assertThat(out.getFirst().getNotation()).isEqualTo(Notation.G);
         assertThat(out.getFirst().getTypeAuditLibelle()).isEqualTo("Aucun audit");

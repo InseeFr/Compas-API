@@ -4,6 +4,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import fr.insee.compas.model.oscar.Module;
 import org.springframework.stereotype.Service;
 
 import fr.insee.compas.model.a11y.IndicateursModuleA11Y;
@@ -29,7 +30,7 @@ public class A11yAffichageService {
     private TableFaitsService tableFaitsService;
     private ConversionService convertService;
 
-    public List<IndicateursModuleA11Y> listerModulesA11y() {
+    public List<IndicateursModuleA11Y> listerModulesIHMA11y() {
         Map<Integer, InfosSaisiesA11yEntity> mapMetric = a11yMajService.getIndicateutA11y();
         Map<Integer, TableFaits> mapIssueSonar =
                 tableFaitsService.getMapMetricByModule(
@@ -45,7 +46,7 @@ public class A11yAffichageService {
                                             .modName(module.getModName())
                                             .domaineSndi(module.getDomaineSndi())
                                             .sndi(module.getSndi())
-                                            .notation(Notation.NR)
+                                            .notation(Notation.H)
                                             .build();
                             if (mapMetric.containsKey(module.getId())) {
                                 InfosSaisiesA11yEntity infos = mapMetric.get(module.getId());
@@ -79,11 +80,35 @@ public class A11yAffichageService {
                 .toList();
     }
 
+    public List<IndicateursModuleA11Y> listerModulesA11y(){
+        List<IndicateursModuleA11Y> result = new ArrayList<>(listerModulesIHMA11y());
+        List<Module> modules=oscarService.getModules();
+        Set<Integer> idsExistants = result.stream()
+                .map(IndicateursModuleA11Y::getIdModule)
+                .collect(Collectors.toSet());
+
+        for (Module module : modules) {
+            if (!idsExistants.contains(module.getId())) {
+                IndicateursModuleA11Y indicateur = IndicateursModuleA11Y.builder()
+                        .idModule(module.getId())
+                        .idApplication(module.getIdApplication())
+                        .modName(module.getModName())
+                        .domaineSndi(module.getDomaineSndi())
+                        .sndi(module.getSndi())
+                        .notation(Notation.SO)
+                        .build();
+                result.add(indicateur);
+            }
+        }
+        return result;
+    }
+
+
     public List<IndicateursModuleA11Y> listerApplicationsA11y() {
         List<IndicateursModuleA11Y> retour = new ArrayList<>();
         Map<Application, Set<Integer>> mapApplicationsWithModules =
                 oscarService.mapApplicationsWithModules();
-        List<IndicateursModuleA11Y> listeDonneesA11y = listerModulesA11y();
+        List<IndicateursModuleA11Y> listeDonneesA11y = listerModulesIHMA11y();
         Map<Integer, IndicateursModuleA11Y> mapMetricA11iy =
                 listeDonneesA11y.stream()
                         .collect(
@@ -96,7 +121,7 @@ public class A11yAffichageService {
                             .idModule(null)
                             .idApplication(app.getIdApplication())
                             .nameApplication(app.getAppName())
-                            .notation(Notation.NR)
+                            .notation(Notation.SO)
                             .build();
             Set<Integer> moduleIds = entry.getValue();
             Optional<IndicateursModuleA11Y> meilleurIndicateur =
@@ -139,22 +164,13 @@ public class A11yAffichageService {
 
     /** Calcule le Notation en fonction du type d'audit et du score. */
 
-    /* todo gerer les codes indicateurs via une enum ou table */
-    private Notation calculerNotation(InfosSaisiesA11yEntity infos) {
-        if (infos == null) {
-            return Notation.NR; // Aucune info.Indicateur Sonar todo si aucune remontée sonar
-        }
-
+   private Notation calculerNotation(InfosSaisiesA11yEntity infos) {
         boolean hasDeclaration = infos.getIsDeclaration();
         int typeAudit = infos.getIdIndicateurTypeAudit();
         float score = infos.getScoreAudit();
 
         if (!hasDeclaration) {
-            /*  if (infos.IndicateurSonar == null) {
-                return Notation.NR; // Aucune info.IndicateurSonar todo si aucune remontée sonar
-            }*/
-
-            return Notation.H; // Pas de déclaration mais IndicateurSonar
+            return Notation.H; // Pas de déclaration
         }
 
         if (typeAudit == 510) {
