@@ -1,5 +1,6 @@
 package fr.insee.compas.builder;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDate;
@@ -7,6 +8,7 @@ import java.time.LocalDate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import fr.insee.compas.client.view.ApplicationTechnique;
 import fr.insee.compas.model.oscar.Application;
 import fr.insee.compas.model.oscar.Module;
 
@@ -133,5 +135,26 @@ class OscarBuilderTest {
         assertEquals("TestSndi", application.getSndi());
         assertEquals("TestDomaineFonctionnel", application.getDomaineFonctionnel());
         assertEquals("TestDomaineSndi", application.getDomaineSndi());
+    }
+
+    @Test
+    void testBuildApplicationTechnique_Success() {
+        // Arrange
+        String json =
+                """
+                {
+                    "id": 1,
+                    "nom": "app1"
+                }
+                """;
+        JsonNode noeud = objectMapper.readTree(json);
+
+        // Act
+        ApplicationTechnique result = oscarBuilder.buildApplicationTechnique(noeud);
+
+        // Assert
+        assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo(1);
+        assertThat(result.getNom()).isEqualTo("app1");
     }
 }

@@ -38,4 +38,7 @@ public interface OscarClient {
 
     @GetMapping("/applicationsNamespaces")
     ResponseEntity<List<KubeOscarView>> getAllNamespacesOscar();
+
+    @GetMapping("/applications_techniques")
+    ResponseEntity<String> getApplicationsTechniques();
 }

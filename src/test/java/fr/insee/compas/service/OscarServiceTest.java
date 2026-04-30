@@ -1,5 +1,6 @@
 package fr.insee.compas.service;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -21,6 +22,7 @@ import org.springframework.web.client.RestTemplate;
 
 import fr.insee.compas.builder.OscarBuilder;
 import fr.insee.compas.client.OscarClient;
+import fr.insee.compas.client.view.ApplicationTechnique;
 import fr.insee.compas.model.oscar.Application;
 import fr.insee.compas.model.oscar.Module;
 import fr.insee.compas.model.oscar.ModuleHistorique;
@@ -184,5 +186,47 @@ class OscarServiceTest {
                 .getModuleHistoriqueOscar(); // Vérifiez qu'il y a un appel à l'API
         verify(oscarBuilder, never())
                 .buildModuleHistorique(any(JsonNode.class)); // Aucun objet ne doit être créé
+    }
+
+    @Test
+    void testGetApplicationsTechniques() throws Exception {
+        // Arrange
+        String jsonResponse =
+                """
+                [
+                    {"id": 1, "nom": "App1"},
+                    {"id": 2, "nom": "App2"}
+                ]
+                """;
+
+        ResponseEntity<String> responseEntity = new ResponseEntity<>(jsonResponse, HttpStatus.OK);
+        when(oscarClient.getApplicationsTechniques()).thenReturn(responseEntity);
+
+        // Mock les JsonNode
+        JsonNode mockNode1 = mock(JsonNode.class);
+        JsonNode mockNode2 = mock(JsonNode.class);
+        JsonNode mockRoot = mock(JsonNode.class);
+
+        when(objectMapper.readTree(jsonResponse)).thenReturn(mockRoot);
+        when(mockRoot.iterator()).thenReturn(java.util.List.of(mockNode1, mockNode2).iterator());
+
+        ApplicationTechnique app1 = new ApplicationTechnique();
+        app1.setId(1);
+        app1.setNom("App1");
+
+        ApplicationTechnique app2 = new ApplicationTechnique();
+        app2.setId(2);
+        app2.setNom("App2");
+
+        when(oscarBuilder.buildApplicationTechnique(mockNode1)).thenReturn(app1);
+        when(oscarBuilder.buildApplicationTechnique(mockNode2)).thenReturn(app2);
+
+        // Act
+        List<ApplicationTechnique> result = oscarService.getApplicationsTechniques();
+
+        // Assert
+        assertThat(result).hasSize(2).containsExactly(app1, app2);
+        verify(oscarClient).getApplicationsTechniques();
+        verify(oscarBuilder, times(2)).buildApplicationTechnique(any());
     }
 }

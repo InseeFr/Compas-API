@@ -4,7 +4,6 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import fr.insee.compas.model.oscar.Module;
 import org.springframework.stereotype.Service;
 
 import fr.insee.compas.model.a11y.IndicateursModuleA11Y;
@@ -13,6 +12,7 @@ import fr.insee.compas.model.compas.IndicateurType;
 import fr.insee.compas.model.compas.Notation;
 import fr.insee.compas.model.compas.TableFaits;
 import fr.insee.compas.model.oscar.Application;
+import fr.insee.compas.model.oscar.Module;
 import fr.insee.compas.service.OscarService;
 import fr.insee.compas.service.TableFaitsService;
 import fr.insee.compas.service.conversion.ConversionService;
@@ -80,29 +80,28 @@ public class A11yAffichageService {
                 .toList();
     }
 
-    public List<IndicateursModuleA11Y> listerModulesA11y(){
+    public List<IndicateursModuleA11Y> listerModulesA11y() {
         List<IndicateursModuleA11Y> result = new ArrayList<>(listerModulesIHMA11y());
-        List<Module> modules=oscarService.getModules();
-        Set<Integer> idsExistants = result.stream()
-                .map(IndicateursModuleA11Y::getIdModule)
-                .collect(Collectors.toSet());
+        List<Module> modules = oscarService.getModules();
+        Set<Integer> idsExistants =
+                result.stream().map(IndicateursModuleA11Y::getIdModule).collect(Collectors.toSet());
 
         for (Module module : modules) {
             if (!idsExistants.contains(module.getId())) {
-                IndicateursModuleA11Y indicateur = IndicateursModuleA11Y.builder()
-                        .idModule(module.getId())
-                        .idApplication(module.getIdApplication())
-                        .modName(module.getModName())
-                        .domaineSndi(module.getDomaineSndi())
-                        .sndi(module.getSndi())
-                        .notation(Notation.SO)
-                        .build();
+                IndicateursModuleA11Y indicateur =
+                        IndicateursModuleA11Y.builder()
+                                .idModule(module.getId())
+                                .idApplication(module.getIdApplication())
+                                .modName(module.getModName())
+                                .domaineSndi(module.getDomaineSndi())
+                                .sndi(module.getSndi())
+                                .notation(Notation.SO)
+                                .build();
                 result.add(indicateur);
             }
         }
         return result;
     }
-
 
     public List<IndicateursModuleA11Y> listerApplicationsA11y() {
         List<IndicateursModuleA11Y> retour = new ArrayList<>();
@@ -163,8 +162,7 @@ public class A11yAffichageService {
     }
 
     /** Calcule le Notation en fonction du type d'audit et du score. */
-
-   private Notation calculerNotation(InfosSaisiesA11yEntity infos) {
+    private Notation calculerNotation(InfosSaisiesA11yEntity infos) {
         boolean hasDeclaration = infos.getIsDeclaration();
         int typeAudit = infos.getIdIndicateurTypeAudit();
         float score = infos.getScoreAudit();

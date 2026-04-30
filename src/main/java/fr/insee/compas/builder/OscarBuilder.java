@@ -6,6 +6,7 @@ import java.time.ZoneId;
 
 import org.springframework.stereotype.Component;
 
+import fr.insee.compas.client.view.ApplicationTechnique;
 import fr.insee.compas.model.oscar.Application;
 import fr.insee.compas.model.oscar.Module;
 import fr.insee.compas.model.oscar.ModuleHistorique;
@@ -103,5 +104,12 @@ public class OscarBuilder {
 
     private static JsonNode getPathApplication(JsonNode noeud) {
         return noeud.path("applicationTechnique").path("application");
+    }
+
+    public ApplicationTechnique buildApplicationTechnique(JsonNode noeud) {
+        ApplicationTechnique appTechnique = new ApplicationTechnique();
+        appTechnique.setId(noeud.path("id").asInt());
+        appTechnique.setNom(noeud.path("nom").asText(null));
+        return appTechnique;
     }
 }

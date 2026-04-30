@@ -11,6 +11,7 @@ import org.springframework.web.client.RestTemplate;
 
 import fr.insee.compas.builder.OscarBuilder;
 import fr.insee.compas.client.OscarClient;
+import fr.insee.compas.client.view.ApplicationTechnique;
 import fr.insee.compas.exception.JsonProcessingExceptionWrapper;
 import fr.insee.compas.model.oscar.Application;
 import fr.insee.compas.model.oscar.Module;
@@ -197,5 +198,22 @@ public class OscarService {
         }
 
         return appWithModules;
+    }
+
+    public List<ApplicationTechnique> getApplicationsTechniques() {
+        List<ApplicationTechnique> applicationsTechniques = new ArrayList<>();
+
+        ResponseEntity<String> response = oscarClient.getApplicationsTechniques();
+
+        try {
+            JsonNode root = objectMapper.readTree(response.getBody());
+            for (JsonNode noeud : root) {
+                applicationsTechniques.add(oscarBuilder.buildApplicationTechnique(noeud));
+            }
+        } catch (JacksonException e) {
+            log.error("Erreur de traitement JSON : {}", e.getMessage());
+        }
+
+        return applicationsTechniques;
     }
 }

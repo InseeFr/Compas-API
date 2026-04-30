@@ -118,7 +118,7 @@ public class IndicateurQualiteModuleService {
 
         if (StringUtils.isNotEmpty(viewModule.getNbLigneCode())
                 && Double.parseDouble(viewModule.getNbLigneCode()) > 0) {
-            // Calculer le pourcentage
+            // Calculer le pourcentage...
             int ligne = (int) Double.parseDouble(viewModule.getNbLigneCode());
             int ligneNonTeste = (int) Double.parseDouble(viewModule.getNbLigneCodeNonTeste());
             double percentage = utilsService.calculPourcentageCouvertureTest(ligne, ligneNonTeste);
