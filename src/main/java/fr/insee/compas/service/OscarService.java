@@ -216,4 +216,42 @@ public class OscarService {
 
         return applicationsTechniques;
     }
+
+    public ApplicationTechnique findApplicationByName(String nom) {
+        if (nom == null || nom.isBlank()) {
+            return null;
+        }
+
+        try {
+            String url = urlOscar + "applications?nom=" + nom.trim();
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+            HttpEntity<String> request = new HttpEntity<>(headers);
+
+            ResponseEntity<String> response =
+                    restTemplate.exchange(url, HttpMethod.GET, request, String.class);
+
+            JsonNode root = objectMapper.readTree(response.getBody());
+
+            if (root.isArray() && !root.isEmpty()) {
+                String nomRecherche = nom.trim().toLowerCase();
+
+                for (JsonNode node : root) {
+                    ApplicationTechnique app = oscarBuilder.buildApplicationTechnique(node);
+                    if (app.getNom() != null && app.getNom().toLowerCase().equals(nomRecherche)) {
+                        return app;
+                    }
+                }
+
+                return oscarBuilder.buildApplicationTechnique(root.get(0));
+            }
+
+            return null;
+
+        } catch (Exception e) {
+            log.error("Erreur lors de la recherche de l'application '{}' dans Oscar", nom, e);
+            return null;
+        }
+    }
 }

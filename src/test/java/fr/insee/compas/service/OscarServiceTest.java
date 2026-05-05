@@ -229,4 +229,94 @@ class OscarServiceTest {
         verify(oscarClient).getApplicationsTechniques();
         verify(oscarBuilder, times(2)).buildApplicationTechnique(any());
     }
+
+    @Test
+    void getApplicationsTechniques_retourneListeVide() throws Exception {
+
+        String invalidJson = "invalid json";
+        ResponseEntity<String> responseEntity = new ResponseEntity<>(invalidJson, HttpStatus.OK);
+
+        when(oscarClient.getApplicationsTechniques()).thenReturn(responseEntity);
+        when(objectMapper.readTree(invalidJson))
+                .thenThrow(new JacksonException("JSON invalide") {});
+
+        List<ApplicationTechnique> result = oscarService.getApplicationsTechniques();
+
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void testFindApplicationByName() throws Exception {
+
+        String jsonResponse = "[{\"id\":4,\"nom\":\"test\"},{\"id\":234,\"nom\":\"test2\"}]";
+
+        ResponseEntity<String> responseEntity = new ResponseEntity<>(jsonResponse, HttpStatus.OK);
+        when(restTemplate.exchange(
+                        anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
+                .thenReturn(responseEntity);
+
+        ObjectMapper realMapper = new ObjectMapper();
+        when(objectMapper.readTree(jsonResponse)).thenReturn(realMapper.readTree(jsonResponse));
+
+        ApplicationTechnique appArc = new ApplicationTechnique();
+        appArc.setId(4);
+        appArc.setNom("test");
+
+        ApplicationTechnique appParcours = new ApplicationTechnique();
+        appParcours.setId(234);
+        appParcours.setNom("test2");
+
+        when(oscarBuilder.buildApplicationTechnique(any()))
+                .thenReturn(appArc)
+                .thenReturn(appParcours);
+
+        ApplicationTechnique result = oscarService.findApplicationByName("test");
+
+        assertNotNull(result);
+        assertEquals(4, result.getId());
+        assertEquals("test", result.getNom());
+    }
+
+    @Test
+    void findApplicationByName_retourneNull() throws Exception {
+
+        String invalidJson = "invalid json";
+
+        ResponseEntity<String> responseEntity = new ResponseEntity<>(invalidJson, HttpStatus.OK);
+        when(restTemplate.exchange(
+                        anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
+                .thenReturn(responseEntity);
+
+        when(objectMapper.readTree(invalidJson)).thenThrow(new RuntimeException("JSON invalide"));
+
+        ApplicationTechnique result = oscarService.findApplicationByName("test");
+
+        assertNull(result);
+    }
+
+    @Test
+    void findApplicationByName_aucunMatch() throws Exception {
+
+        String jsonResponse = "[{\"id\":234,\"nom\":\"parcours\"},{\"id\":8,\"nom\":\"archimed\"}]";
+
+        ResponseEntity<String> responseEntity = new ResponseEntity<>(jsonResponse, HttpStatus.OK);
+        when(restTemplate.exchange(
+                        anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
+                .thenReturn(responseEntity);
+
+        ObjectMapper realMapper = new ObjectMapper();
+        when(objectMapper.readTree(jsonResponse)).thenReturn(realMapper.readTree(jsonResponse));
+
+        ApplicationTechnique appParcours = new ApplicationTechnique();
+        appParcours.setId(234);
+        appParcours.setNom("parcours");
+
+        when(oscarBuilder.buildApplicationTechnique(any())).thenReturn(appParcours);
+
+        ApplicationTechnique result = oscarService.findApplicationByName("arc");
+
+        assertNotNull(result);
+        assertEquals(234, result.getId());
+        assertEquals("parcours", result.getNom());
+    }
 }

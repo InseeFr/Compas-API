@@ -89,7 +89,7 @@ release-gitops-prod:
     BRANCH: "main"
     PATH_TO_VALUE: "apps/compas-api/values.yaml"
     KEY_TO_CHANGE: "api-appli-compas.image.tag"
-    NEW_VALUE: "${NEXT_TAG}"
+    NEW_VALUE: "${CLEANED_TAG_AND_VERSION_NAME}"
     USERNAME: "${GITOPS_USERNAME_PROD}"
     PASSWORD_VAR: "${GITOP_TOKEN_PROD_TAG}"
     AUTOMERGE: "true"

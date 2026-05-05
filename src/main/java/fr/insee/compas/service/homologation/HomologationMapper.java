@@ -3,7 +3,6 @@ package fr.insee.compas.service.homologation;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -16,10 +15,8 @@ import org.springframework.web.client.RestTemplate;
 
 import com.opencsv.bean.CsvToBeanBuilder;
 
-import fr.insee.compas.client.view.ApplicationTechnique;
 import fr.insee.compas.exception.HomologationApiException;
 import fr.insee.compas.model.homologation.Homologation;
-import fr.insee.compas.service.OscarService;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,12 +29,9 @@ public class HomologationMapper {
     @Value("${fr.insee.compas.homologation.token.grist:}")
     private String gristToken;
 
-    private final OscarService oscarService;
-
     private final RestTemplate restTemplate;
 
-    public HomologationMapper(OscarService oscarService, RestTemplate restTemplate) {
-        this.oscarService = oscarService;
+    public HomologationMapper(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
     }
 
@@ -98,6 +92,7 @@ public class HomologationMapper {
         result.setApsOscar(app.trim());
         result.setSensitivity(h.getSensitivity());
         result.setHomologationSI(h.getStatutHomologation());
+        result.setNomSI(h.getNomSI());
 
         switch (h.getStatutHomologation()) {
             case "non" -> {
@@ -134,20 +129,5 @@ public class HomologationMapper {
         } else {
             result.setStatutHomologation("non");
         }
-    }
-
-    // mapping nom application à id Oscar
-    public Map<String, Integer> getApplicationMap() {
-        return oscarService.getApplicationsTechniques().stream()
-                .filter(app -> app.getNom() != null)
-                .collect(
-                        Collectors.toMap(
-                                app -> this.normalize(app.getNom()),
-                                ApplicationTechnique::getId,
-                                (existing, ignored) -> existing));
-    }
-
-    public String normalize(String value) {
-        return value == null ? null : value.toLowerCase().trim();
     }
 }

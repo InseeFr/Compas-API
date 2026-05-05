@@ -14,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import fr.insee.compas.dto.HomologationDoublonsGristDto;
 import fr.insee.compas.dto.HomologationDto;
 import fr.insee.compas.service.homologation.IHomologationService;
 
@@ -53,5 +54,35 @@ class HomologationControllerTest {
                 .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[0]").value("APP1"))
                 .andExpect(jsonPath("$[1]").value("APP2"));
+    }
+
+    @Test
+    void getApplicationGrist() throws Exception {
+        when(homologationService.getApplicationGrist()).thenReturn(List.of("app1", "app2", "app3"));
+
+        mockMvc.perform(get("/homologations/applications-grist"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.TEXT_PLAIN_VALUE + ";charset=UTF-8"))
+                .andExpect(content().string("app1, \napp2, \napp3"));
+    }
+
+    @Test
+    void getDoublonsGrist() throws Exception {
+        // Given
+        HomologationDoublonsGristDto dto =
+                HomologationDoublonsGristDto.builder()
+                        .nomApplication("arc")
+                        .nombreOccurrences(2)
+                        .listeSI(List.of("SI A", "SI B"))
+                        .build();
+
+        when(homologationService.getDoublonsGrist()).thenReturn(List.of(dto));
+
+        mockMvc.perform(get("/homologations/doublons-grist"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$[0].nomApplication").value("arc"))
+                .andExpect(jsonPath("$[0].nombreOccurrences").value(2))
+                .andExpect(jsonPath("$[0].listeSI[0]").value("SI A"));
     }
 }

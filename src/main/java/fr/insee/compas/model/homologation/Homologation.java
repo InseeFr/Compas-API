@@ -13,6 +13,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class Homologation {
 
+    @CsvBindByName(column = "Fonction_du_SI")
+    private String nomSI;
+
     @CsvBindByName(column = "Applications_Oscar")
     private String apsOscar;
 

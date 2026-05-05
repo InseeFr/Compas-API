@@ -22,16 +22,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
 
-import fr.insee.compas.client.view.ApplicationTechnique;
 import fr.insee.compas.model.homologation.Homologation;
-import fr.insee.compas.service.OscarService;
 import fr.insee.compas.service.homologation.HomologationMapper;
 
 @ExtendWith(MockitoExtension.class)
 public class HomologationMapperTest {
     Map<String, Integer> resultMap = new HashMap<>();
-
-    @Mock private OscarService oscarService;
 
     @Mock private RestTemplate restTemplate;
 
@@ -120,35 +116,6 @@ public class HomologationMapperTest {
         assertNull(result.getHomologationBeginDate());
         assertNull(result.getHomologationEndDate());
         assertEquals("", result.getHomologationRemarks());
-    }
-
-    @Test
-    void getApplicationMap_shouldMapCorrectly() {
-
-        ApplicationTechnique app1 = new ApplicationTechnique();
-        app1.setNom(" APP1 ");
-        app1.setId(1);
-
-        ApplicationTechnique app2 = new ApplicationTechnique();
-        app2.setNom("app2");
-        app2.setId(2);
-
-        ApplicationTechnique app3 = new ApplicationTechnique();
-        app3.setNom(null);
-
-        when(oscarService.getApplicationsTechniques()).thenReturn(List.of(app1, app2, app3));
-
-        Map<String, Integer> result = homologationMapper.getApplicationMap();
-
-        assertEquals(2, result.size());
-        assertEquals(1, result.get("app1"));
-        assertEquals(2, result.get("app2"));
-    }
-
-    @Test
-    void normalizeTest() {
-        String result = homologationMapper.normalize("TEST");
-        assertEquals("test", result);
     }
 
     @Test

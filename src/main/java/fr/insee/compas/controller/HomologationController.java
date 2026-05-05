@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import fr.insee.compas.dto.HomologationDoublonsGristDto;
 import fr.insee.compas.dto.HomologationDto;
 import fr.insee.compas.service.homologation.IHomologationService;
 
@@ -27,5 +28,16 @@ public class HomologationController {
     @GetMapping("/homologation/applications-absentes")
     public ResponseEntity<List<String>> getApplicationsAbsentesOscar() {
         return ResponseEntity.ok(homologationService.getAppliAbsentesOscar());
+    }
+
+    @GetMapping(value = "/applications-grist", produces = MediaType.TEXT_PLAIN_VALUE)
+    public String getApplicationGrist() {
+        List<String> applications = homologationService.getApplicationGrist();
+        return String.join(", \n", applications);
+    }
+
+    @GetMapping("/doublons-grist")
+    public ResponseEntity<List<HomologationDoublonsGristDto>> getDoublonsGrist() {
+        return ResponseEntity.ok(homologationService.getDoublonsGrist());
     }
 }
