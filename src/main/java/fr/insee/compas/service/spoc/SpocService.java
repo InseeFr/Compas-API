@@ -1,5 +1,7 @@
 package fr.insee.compas.service.spoc;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -11,6 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -32,6 +35,8 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @Slf4j
 public class SpocService {
+    private static final String APPLICATION_JSON = "application/json";
+    private static final String CRLF = "\r\n";
 
     private final String spocUsername;
     private final String spocPassword;
@@ -74,18 +79,12 @@ public class SpocService {
                         .build();
     }
 
-    /**
-     * Envoie un mail en complétant/écrasant les destinataires avec ceux par défaut selon la conf.
-     *
-     * @param mail objet mail (doit contenir subject, message, to/cc éventuellement)
-     */
     public void sendMail(Mail mail) {
         if (mail == null) {
             log.warn("Mail null : envoi annulé");
             return;
         }
 
-        // Récupération TO / CC depuis l'objet Mail
         List<String> to = new ArrayList<>(Optional.ofNullable(mail.getTo()).orElse(List.of()));
         List<String> cc = new ArrayList<>(Optional.ofNullable(mail.getCc()).orElse(List.of()));
 
@@ -97,59 +96,37 @@ public class SpocService {
             cc.addAll(defaultReceiverAdjMail);
         }
 
-        // Nettoyage basique TO/CC
-        to =
-                to.stream()
-                        .filter(Objects::nonNull)
-                        .map(String::trim)
-                        .filter(s -> !s.isBlank())
-                        .distinct()
-                        .collect(Collectors.toCollection(ArrayList::new));
+        to = cleanList(to);
+        cc = cleanList(cc);
 
-        cc =
-                cc.stream()
-                        .filter(Objects::nonNull)
-                        .map(String::trim)
-                        .filter(s -> !s.isBlank())
-                        .distinct()
-                        .collect(Collectors.toCollection(ArrayList::new));
-
-        // Vérification qu'il reste au moins un destinataire (TO ou CC)
-        List<String> allRecipientsForCheck =
-                java.util.stream.Stream.concat(to.stream(), cc.stream())
-                        .filter(Objects::nonNull)
-                        .map(String::trim)
-                        .filter(s -> !s.isBlank())
-                        .distinct()
-                        .toList();
-
-        if (allRecipientsForCheck.isEmpty()) {
-            log.warn("Aucun destinataire après application des règles -> envoi annulé");
+        if (Stream.concat(to.stream(), cc.stream()).filter(s -> !s.isBlank()).findAny().isEmpty()) {
+            log.warn("Aucun destinataire -> envoi annulé");
             return;
         }
 
+        List<File> files = Optional.ofNullable(mail.getAttachments()).orElse(List.of());
+        List<String> fileNames = files.stream().map(File::getName).toList();
+
         Map<String, Object> payload =
-                buildSpocPayload(senderMail, mail.getObject(), mail.getMessage(), to, cc);
+                buildSpocPayload(
+                        senderMail, mail.getObject(), mail.getMessage(), fileNames, to, cc);
 
         String bodyJson;
         try {
             bodyJson = objectMapper.writeValueAsString(payload);
         } catch (Exception e) {
-            log.error("Erreur de sérialisation JSON pour le corps SPOC", e);
+            log.error("Erreur sérialisation JSON SPOC", e);
             return;
         }
 
-        var request =
-                HttpRequest.newBuilder()
-                        .uri(URI.create(spocApiUrl))
-                        .timeout(Duration.ofSeconds(20))
-                        .header("Accept", "application/json")
-                        .header("Content-Type", "application/json")
-                        .header("Authorization", basicAuth(spocUsername, spocPassword))
-                        .POST(BodyPublishers.ofString(bodyJson, StandardCharsets.UTF_8))
-                        .build();
+        log.debug("Payload SPOC : {}", bodyJson);
 
         try {
+            HttpRequest request =
+                    files.isEmpty()
+                            ? buildJsonRequest(bodyJson)
+                            : buildMultipartRequest(bodyJson, files);
+
             var response = httpClient.send(request, BodyHandlers.ofString());
             log.info("SPOC -> HTTP {}", response.statusCode());
             log.debug("Réponse SPOC : {}", response.body());
@@ -168,17 +145,80 @@ public class SpocService {
         }
     }
 
-    /**
-     * Variante pratique : envoie directement à une liste de destinataires en TO (les défauts seront
-     * ajoutés selon la conf).
-     */
     public void sendMailTo(List<String> receivers, String subject, String content) {
         Mail mail = new Mail();
         mail.setObject(subject);
         mail.setMessage(content);
         mail.setTo(receivers == null ? List.of() : receivers);
-        mail.setCc(List.of()); // pas de CC explicite dans cette variante
+        mail.setCc(List.of());
         sendMail(mail);
+    }
+
+    private HttpRequest buildJsonRequest(String bodyJson) {
+        return HttpRequest.newBuilder()
+                .uri(URI.create(spocApiUrl))
+                .timeout(Duration.ofSeconds(20))
+                .header("Accept", APPLICATION_JSON)
+                .header("Content-Type", APPLICATION_JSON)
+                .header("Authorization", basicAuth(spocUsername, spocPassword))
+                .POST(BodyPublishers.ofString(bodyJson, StandardCharsets.UTF_8))
+                .build();
+    }
+
+    private HttpRequest buildMultipartRequest(String bodyJson, List<File> files)
+            throws IOException {
+        String boundary = "----Boundary" + System.currentTimeMillis();
+        byte[] multipartBody = buildMultipartBody(boundary, bodyJson, files);
+
+        return HttpRequest.newBuilder()
+                .uri(URI.create(spocApiUrl))
+                .timeout(Duration.ofSeconds(20))
+                .header("Accept", APPLICATION_JSON)
+                .header("Content-Type", "multipart/form-data; boundary=" + boundary)
+                .header("Authorization", basicAuth(spocUsername, spocPassword))
+                .POST(BodyPublishers.ofByteArray(multipartBody))
+                .build();
+    }
+
+    private byte[] buildMultipartBody(String boundary, String bodyJson, List<File> files)
+            throws IOException {
+        ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+
+        String dash = "--";
+
+        out.write((dash + boundary + CRLF).getBytes(StandardCharsets.UTF_8));
+        out.write(
+                ("Content-Disposition: form-data; name=\"request\"" + CRLF)
+                        .getBytes(StandardCharsets.UTF_8));
+        out.write(
+                ("Content-Type: application/json" + CRLF + CRLF).getBytes(StandardCharsets.UTF_8));
+        out.write(bodyJson.getBytes(StandardCharsets.UTF_8));
+        out.write(CRLF.getBytes(StandardCharsets.UTF_8));
+
+        for (File file : files) {
+            out.write((dash + boundary + CRLF).getBytes(StandardCharsets.UTF_8));
+            out.write(
+                    ("Content-Disposition: form-data; name=\"attachments\"; filename=\""
+                                    + file.getName()
+                                    + "\""
+                                    + CRLF)
+                            .getBytes(StandardCharsets.UTF_8));
+            out.write(("Content-Type: text/plain" + CRLF + CRLF).getBytes(StandardCharsets.UTF_8));
+            out.write(java.nio.file.Files.readAllBytes(file.toPath()));
+            out.write(CRLF.getBytes(StandardCharsets.UTF_8));
+        }
+
+        out.write((dash + boundary + dash + CRLF).getBytes(StandardCharsets.UTF_8));
+        return out.toByteArray();
+    }
+
+    private List<String> cleanList(List<String> list) {
+        return list.stream()
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .filter(s -> !s.isBlank())
+                .distinct()
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     private String basicAuth(String username, String password) {
@@ -190,41 +230,37 @@ public class SpocService {
             String sender,
             String subject,
             String content,
+            List<String> fileNames,
             Collection<String> to,
             Collection<String> cc) {
 
         Map<String, Object> root = new LinkedHashMap<>();
 
-        // ---------- MessageTemplate ----------
         Map<String, Object> messageTemplate = new LinkedHashMap<>();
+        if (cc != null && !cc.isEmpty()) {
+            List<Map<String, Object>> headers = new ArrayList<>();
+            Map<String, Object> ccHeader = new LinkedHashMap<>();
+            ccHeader.put("Name", "Cc");
+            ccHeader.put("Value", String.join(",", cc));
+            headers.add(ccHeader);
+            messageTemplate.put("Header", headers);
+        }
+
         messageTemplate.put("Sender", Optional.ofNullable(sender).orElse(""));
         messageTemplate.put("Subject", Optional.ofNullable(subject).orElse(""));
         messageTemplate.put("Content", Optional.ofNullable(content).orElse(""));
         messageTemplate.put("PlainTextContent", "");
         messageTemplate.put("ContentReference", "null");
 
-        // Headers (pour le Cc)
-        List<Map<String, Object>> headers = new ArrayList<>();
-        if (cc != null && !cc.isEmpty()) {
-            Map<String, Object> ccHeader = new LinkedHashMap<>();
-            ccHeader.put("Name", "Cc");
-            ccHeader.put("Value", String.join(",", cc)); // séparateur à adapter si besoin
-            headers.add(ccHeader);
-        }
-        if (!headers.isEmpty()) {
-            messageTemplate.put("Header", headers);
-        }
-
-        // ---------- Recipients ----------
         List<String> allRecipients =
-                (to == null
-                        ? List.<String>of()
+                to == null
+                        ? List.of()
                         : to.stream()
                                 .filter(Objects::nonNull)
                                 .map(String::trim)
                                 .filter(s -> !s.isBlank())
                                 .distinct()
-                                .toList());
+                                .toList();
 
         List<Map<String, Object>> recipientList =
                 allRecipients.stream()
@@ -233,7 +269,7 @@ public class SpocService {
                                     Map<String, Object> r = new LinkedHashMap<>();
                                     r.put("Address", addr);
                                     r.put("Properties", List.of());
-                                    r.put("Attachments", List.of());
+                                    r.put("Attachments", fileNames);
                                     return r;
                                 })
                         .toList();

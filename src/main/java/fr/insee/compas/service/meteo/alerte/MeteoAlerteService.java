@@ -11,6 +11,7 @@ import fr.insee.compas.model.meteo.Meteo;
 import fr.insee.compas.service.meteo.MeteoAffichageService;
 import fr.insee.compas.service.spoc.RgaResolverService;
 import fr.insee.compas.service.spoc.SpocService;
+import fr.insee.compas.util.mail.templates.TemplateAlerteMeteo;
 
 import lombok.extern.slf4j.Slf4j;
 

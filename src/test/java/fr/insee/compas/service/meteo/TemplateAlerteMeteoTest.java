@@ -10,8 +10,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import fr.insee.compas.model.meteo.Meteo;
-import fr.insee.compas.service.meteo.alerte.TemplateAlerteMeteo;
 import fr.insee.compas.util.MeteoAlerteUtils.AlerteType;
+import fr.insee.compas.util.mail.templates.TemplateAlerteMeteo;
 
 class TemplateAlerteMeteoTest {
 

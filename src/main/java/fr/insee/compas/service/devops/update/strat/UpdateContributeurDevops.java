@@ -25,6 +25,8 @@ import fr.insee.compas.service.gitservice.IGitlabService;
 import fr.insee.compas.util.DevopsConstantes;
 import fr.insee.compas.util.IndicatorSpecialValue;
 import fr.insee.compas.util.SaveTFByIndicator;
+import fr.insee.compas.util.observer.EventTypeObserver;
+import fr.insee.compas.util.observer.IEventManager;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +40,7 @@ public class UpdateContributeurDevops implements IUpdateDevopsStrategy {
     private final GithubService githubService;
     private final UtilsService utilsService;
     private final SaveTFByIndicator saveTFByIndicator;
+    private final IEventManager eventObserverManager;
 
     @Override
     public void updateDevops(
@@ -47,10 +50,28 @@ public class UpdateContributeurDevops implements IUpdateDevopsStrategy {
             Map<String, List<ModuleHistorique>> moduleHistoriques) {
         LocalDateTime[] dates = normalizeDates(startDate, endDate);
         if (modules == null || modules.isEmpty()) return;
-        Map<Module, AuthorResultDto> moduleAuthorResultDtoMap =
-                resultModuleIdAuthors(modules, dates);
+        Map<Module, AuthorResultDto> moduleAuthorResultDtoMap;
+        try {
+            moduleAuthorResultDtoMap = resultModuleIdAuthors(modules, dates);
+        } catch (Exception e) {
+            log.error("Erreur récupération auteurs modules : {}", e.getMessage());
+            eventObserverManager.notifyObservers(
+                    EventTypeObserver.EVENT_TYPE_ERROR,
+                    "Update-Devops-Contributeur : Erreur récupération auteurs : " + e.getMessage());
+            return;
+        }
 
-        Map<Integer, Integer> authorsByAppId = resultAuthorsByAppId(moduleAuthorResultDtoMap);
+        Map<Integer, Integer> authorsByAppId;
+        try {
+            authorsByAppId = resultAuthorsByAppId(moduleAuthorResultDtoMap);
+        } catch (Exception e) {
+            log.error("Erreur calcul auteurs par application : {}", e.getMessage());
+            eventObserverManager.notifyObservers(
+                    EventTypeObserver.EVENT_TYPE_ERROR,
+                    "Update-Devops-Contributeur : Erreur calcul auteurs par app : "
+                            + e.getMessage());
+            return;
+        }
         for (Map.Entry<Module, AuthorResultDto> entry : moduleAuthorResultDtoMap.entrySet()) {
             int value =
                     entry.getValue().isSpecial()
@@ -65,17 +86,37 @@ public class UpdateContributeurDevops implements IUpdateDevopsStrategy {
     }
 
     private void saveModule(Module module, BigDecimal value) {
-        saveTFByIndicator.saveByIndicator(
-                module.getId(),
-                module.getIdApplication(),
-                IndicateurType.NBR_CONTRIBUTIONS_PROJET,
-                value,
-                SourceType.OSCAR);
+        try {
+            saveTFByIndicator.saveByIndicator(
+                    module.getId(),
+                    module.getIdApplication(),
+                    IndicateurType.NBR_CONTRIBUTIONS_PROJET,
+                    value,
+                    SourceType.OSCAR);
+        } catch (Exception e) {
+            log.error("Erreur sauvegarde module {}", module.getId(), e);
+            eventObserverManager.notifyObservers(
+                    EventTypeObserver.EVENT_TYPE_ERROR,
+                    "Update-Devops-Contributeur :Erreur sauvegarde module "
+                            + module.getId()
+                            + " : "
+                            + e.getMessage());
+        }
     }
 
     private void saveApplication(Integer id, BigDecimal value) {
-        saveTFByIndicator.saveByIndicator(
-                null, id, IndicateurType.NBR_CONTRIBUTIONS_PROJET, value, SourceType.OSCAR);
+        try {
+            saveTFByIndicator.saveByIndicator(
+                    null, id, IndicateurType.NBR_CONTRIBUTIONS_PROJET, value, SourceType.OSCAR);
+        } catch (Exception e) {
+            log.error("Erreur sauvegarde application {}", id, e);
+            eventObserverManager.notifyObservers(
+                    EventTypeObserver.EVENT_TYPE_ERROR,
+                    "Update-Devops-Contributeur :Erreur sauvegarde application "
+                            + id
+                            + " : "
+                            + e.getMessage());
+        }
     }
 
     private Map<Integer, Integer> resultAuthorsByAppId(
@@ -143,12 +184,17 @@ public class UpdateContributeurDevops implements IUpdateDevopsStrategy {
             String sourceUrl, LocalDateTime startDate, LocalDateTime endDate) {
         try {
             return searchFromUrlSource(sourceUrl, startDate, endDate);
-        } catch (IllegalArgumentException e) {
-            log.warn("Scan ignoré (hors périmètre) pour l'URL {} : {}", sourceUrl, e.getMessage());
-            return AuthorResultDto.special(IndicatorSpecialValue.SO);
-
         } catch (IOException e) {
-            log.error("Erreur réseau lors récupération auteurs: {}", sourceUrl, e);
+            log.error(
+                    "Update-Devops-Contributeur :Erreur IoException lors récupération auteurs: {}",
+                    sourceUrl,
+                    e);
+            eventObserverManager.notifyObservers(
+                    EventTypeObserver.EVENT_TYPE_ERROR,
+                    "Update-Devops-Contributeur :Erreur IoException lors récupération auteurs: "
+                            + sourceUrl
+                            + " "
+                            + e);
             return AuthorResultDto.special(IndicatorSpecialValue.NR);
         }
     }
@@ -172,6 +218,11 @@ public class UpdateContributeurDevops implements IUpdateDevopsStrategy {
                                 parts[0], parts[1], startDate, endDate));
             }
             default -> {
+                log.warn("Scan ignoré (hors périmètre) pour l'URL {}", sourceUrl);
+                eventObserverManager.notifyObservers(
+                        EventTypeObserver.EVENT_TYPE_ERROR,
+                        "Update-Devops-Contributeur :Scan ignoré (hors périmètre) pour l'URL "
+                                + sourceUrl);
                 return AuthorResultDto.special(IndicatorSpecialValue.SO);
             }
         }

@@ -19,10 +19,10 @@ import fr.insee.compas.model.mail.Mail;
 import fr.insee.compas.model.mail.ReceiverMailProperties;
 import fr.insee.compas.model.meteo.Meteo;
 import fr.insee.compas.service.meteo.alerte.MeteoAlerteService;
-import fr.insee.compas.service.meteo.alerte.TemplateAlerteMeteo;
 import fr.insee.compas.service.spoc.RgaResolverService;
 import fr.insee.compas.service.spoc.SpocService;
 import fr.insee.compas.util.MeteoAlerteUtils;
+import fr.insee.compas.util.mail.templates.TemplateAlerteMeteo;
 
 @ExtendWith(MockitoExtension.class)
 class MeteoAlerteServiceTest {

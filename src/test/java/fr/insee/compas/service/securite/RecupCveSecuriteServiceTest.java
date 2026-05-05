@@ -32,6 +32,7 @@ import fr.insee.compas.model.analyzer.CveActivesAnalyzer;
 import fr.insee.compas.model.analyzer.ModuleAnalyzer;
 import fr.insee.compas.model.compas.TableFaits;
 import fr.insee.compas.repository.TableFaitsRepository;
+import fr.insee.compas.util.observer.IEventManager;
 
 @ExtendWith(MockitoExtension.class)
 @org.mockito.junit.jupiter.MockitoSettings(strictness = org.mockito.quality.Strictness.LENIENT)
@@ -41,6 +42,7 @@ class RecupCveSecuriteServiceTest {
     @Mock UtilsCveService utilService;
     @Mock RestTemplate restTemplate;
     @Mock AnalyzerAuthentification analyzerAuthentification;
+    @Mock IEventManager eventManager;
 
     @InjectMocks RecupCveSecuriteService service;
 

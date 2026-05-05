@@ -22,21 +22,35 @@ public interface TableFaitsRepository extends JpaRepository<TableFaits, Long> {
     @Query(
             value =
                     """
-                           SELECT DISTINCT
+                           SELECT
                                tf.id_module,
                                tf.id_application,
                                tf2.commentaire,
                                tf2.valeur,
                                tf2.id_indicateur
                            FROM (
-                               SELECT DISTINCT id_module, id_application\s
+                               SELECT DISTINCT id_module, id_application
                                FROM table_faits
                                WHERE id_module IS NOT NULL
                            ) tf
-                           LEFT JOIN table_faits tf2
-                               ON  tf.id_module      = tf2.id_module
-                               AND tf.id_application = tf2.id_application
-                               AND tf2.id_indicateur IN (:idIndicateurs)
+                           LEFT JOIN (
+                               SELECT DISTINCT ON (id_module, id_application, id_indicateur)
+                                   id_module,
+                                   id_application,
+                                   id_indicateur,
+                                   commentaire,
+                                   valeur
+                               FROM table_faits
+                               WHERE id_module IS NOT NULL
+                                 AND id_indicateur IN (:idIndicateurs)
+                               ORDER BY
+                                   id_module,
+                                   id_application,
+                                   id_indicateur,
+                                   date DESC
+                           ) tf2
+                               ON tf.id_module = tf2.id_module
+                              AND tf.id_application = tf2.id_application
                            ORDER BY tf.id_application, tf.id_module
                     """,
             nativeQuery = true)

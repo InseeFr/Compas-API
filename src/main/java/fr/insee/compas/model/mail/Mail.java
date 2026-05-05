@@ -1,5 +1,6 @@
 package fr.insee.compas.model.mail;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -13,6 +14,7 @@ public class Mail {
 
     private String object;
     private String message;
+    private List<File> attachments;
 
     /** Destinataires principaux (To) */
     private List<String> to = new ArrayList<>();
@@ -22,9 +24,15 @@ public class Mail {
 
     public Mail() {}
 
-    public Mail(String object, String message, Collection<String> to, Collection<String> cc) {
+    public Mail(
+            String object,
+            String message,
+            List<File> attachments,
+            Collection<String> to,
+            Collection<String> cc) {
         this.object = object;
         this.message = message;
+        this.attachments = attachments;
         this.to = new ArrayList<>(to);
         this.cc = new ArrayList<>(cc);
     }

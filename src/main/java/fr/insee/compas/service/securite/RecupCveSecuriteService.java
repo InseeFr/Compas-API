@@ -22,6 +22,8 @@ import fr.insee.compas.model.analyzer.ModuleAnalyzer;
 import fr.insee.compas.model.compas.SourceType;
 import fr.insee.compas.model.compas.TableFaits;
 import fr.insee.compas.repository.TableFaitsRepository;
+import fr.insee.compas.util.observer.EventTypeObserver;
+import fr.insee.compas.util.observer.IEventManager;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -38,15 +40,19 @@ public class RecupCveSecuriteService {
 
     private final AnalyzerAuthentification analyzerAuthentification;
 
+    private final IEventManager eventManager;
+
     public RecupCveSecuriteService(
             TableFaitsRepository tableFaitsRepository,
             UtilsCveService utilCveService,
             RestTemplate restTemplate,
-            AnalyzerAuthentification analyzerAuthentification) {
+            AnalyzerAuthentification analyzerAuthentification,
+            IEventManager eventManager) {
         this.tableFaitsRepository = tableFaitsRepository;
         this.utilService = utilCveService;
         this.restTemplate = restTemplate;
         this.analyzerAuthentification = analyzerAuthentification;
+        this.eventManager = eventManager;
     }
 
     /** Méthode principale pour récupérer et sauvegarder les CVE depuis l'API */
@@ -86,6 +92,9 @@ public class RecupCveSecuriteService {
         } catch (final Exception e) {
             log.error(
                     "Erreur lors de la récupération des CVE depuis l'API : {}", e.getMessage(), e);
+            eventManager.notifyObservers(
+                    EventTypeObserver.EVENT_TYPE_ERROR,
+                    "CVE- Erreur lors de la récupération des CVE depuis l'API : " + e.getMessage());
         }
     }
 

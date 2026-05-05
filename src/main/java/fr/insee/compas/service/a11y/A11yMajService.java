@@ -18,6 +18,8 @@ import fr.insee.compas.repository.InfosSaisiesA11yRepository;
 import fr.insee.compas.repository.TableFaitsRepository;
 import fr.insee.compas.service.OscarService;
 import fr.insee.compas.service.SonarService;
+import fr.insee.compas.util.observer.EventTypeObserver;
+import fr.insee.compas.util.observer.IEventManager;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +33,7 @@ public class A11yMajService {
     private SonarService sonarService;
     private OscarService oscarService;
     private TableFaitsRepository tableFaitsRepository;
+    private IEventManager eventManager;
 
     public long majInfosSaisiesA11y(InfosSaisiesA11yToSaveDTO infosSaisiesA11yToSaveDTO) {
 
@@ -52,32 +55,40 @@ public class A11yMajService {
         List<Module> modules = oscarService.getModules();
         LocalDate now = LocalDate.now();
         for (Module module : modules) {
-            if (module.getTypeLivrable() != null
-                    && module.getKeySonar() != null
-                    && module.getTypeLivrable().contains("IHM")
-                    && !"null".equals(module.getKeySonar())
-                    && !module.getKeySonar().equals("Sans objet")) {
-                String issue =
-                        sonarService.getNbIssueSonarAccessibility(
-                                module.getKeySonar(), "gitlab", module.getModName());
-                // Si c'est O ca peut être un 'vrai' 0 ou une analyse qui est sur github
-                if (issue != null && issue.equals("0")) {
-                    issue =
+            try {
+                if (module.getTypeLivrable() != null
+                        && module.getKeySonar() != null
+                        && module.getTypeLivrable().contains("IHM")
+                        && !"null".equals(module.getKeySonar())
+                        && !module.getKeySonar().equals("Sans objet")) {
+
+                    String issue =
                             sonarService.getNbIssueSonarAccessibility(
-                                    module.getKeySonar(), "github", module.getModName());
+                                    module.getKeySonar(), "gitlab", module.getModName());
+
+                    if (issue != null && issue.equals("0")) {
+                        issue =
+                                sonarService.getNbIssueSonarAccessibility(
+                                        module.getKeySonar(), "github", module.getModName());
+                    }
+
+                    if (StringUtils.isNotEmpty(issue)) {
+                        tableFaitsRepository.save(
+                                TableFaits.builder()
+                                        .idModule(module.getId())
+                                        .idApplication(module.getIdApplication())
+                                        .idIndicateur(IndicateurType.ISSUE_ACCESSIBILITY.getValue())
+                                        .date(now)
+                                        .valeur(new BigDecimal(issue))
+                                        .idSource(0)
+                                        .build());
+                    }
                 }
-                if (StringUtils.isNotEmpty(issue)) {
-                    log.info("Sauvegarde des nb issues sonar dans la table");
-                    tableFaitsRepository.save(
-                            TableFaits.builder()
-                                    .idModule(module.getId())
-                                    .idApplication(module.getIdApplication())
-                                    .idIndicateur(IndicateurType.ISSUE_ACCESSIBILITY.getValue())
-                                    .date(now)
-                                    .valeur(new BigDecimal(issue))
-                                    .idSource(0)
-                                    .build());
-                }
+            } catch (Exception e) {
+                log.error("Erreur module {} : {}", module.getId(), e.getMessage());
+                eventManager.notifyObservers(
+                        EventTypeObserver.EVENT_TYPE_ERROR,
+                        "A11y : Erreur module " + module.getId() + " : " + e.getMessage());
             }
         }
     }

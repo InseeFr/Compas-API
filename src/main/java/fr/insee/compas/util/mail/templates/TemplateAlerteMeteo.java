@@ -1,4 +1,4 @@
-package fr.insee.compas.service.meteo.alerte;
+package fr.insee.compas.util.mail.templates;
 
 import java.time.LocalDate;
 import java.time.ZoneId;

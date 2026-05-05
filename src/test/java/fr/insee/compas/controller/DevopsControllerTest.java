@@ -19,6 +19,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import fr.insee.compas.service.devops.IndicatorDevopsApplicationService;
 import fr.insee.compas.service.devops.IndicatorDevopsModuleService;
 import fr.insee.compas.service.devops.update.UpdateIndicatorDevopsService;
+import fr.insee.compas.service.scheduler.IMailErreurScheduler;
+import fr.insee.compas.util.observer.listener.FileErrorListener;
 import fr.insee.compas.view.IndicateurDevopsView;
 
 @WebMvcTest(DevopsController.class)
@@ -32,6 +34,10 @@ class DevopsControllerTest {
     @MockitoBean private IndicatorDevopsApplicationService indicatorDevopsApplicationService;
 
     @MockitoBean private IndicatorDevopsModuleService indicatorDevopsModuleService;
+
+    @MockitoBean private IMailErreurScheduler scheduler;
+
+    @MockitoBean private FileErrorListener fileErrorListener;
 
     @Test
     void updateIndicateursDevops_shouldCallServiceWithGivenDates() throws Exception {

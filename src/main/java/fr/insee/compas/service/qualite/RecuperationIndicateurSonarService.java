@@ -18,26 +18,22 @@ import fr.insee.compas.repository.TableFaitsRepository;
 import fr.insee.compas.service.OscarService;
 import fr.insee.compas.service.SonarService;
 import fr.insee.compas.service.UtilsService;
+import fr.insee.compas.util.observer.EventTypeObserver;
+import fr.insee.compas.util.observer.IEventManager;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class RecuperationIndicateurSonarService {
     private static final String SANS_OBJET = "Sans objet";
 
     private final OscarService oscarService;
     private final TableFaitsRepository tableFaitsRepository;
     private final SonarService sonarService;
-
-    public RecuperationIndicateurSonarService(
-            OscarService oscarService,
-            TableFaitsRepository tableFaitsRepository,
-            SonarService sonarService) {
-        this.oscarService = oscarService;
-        this.tableFaitsRepository = tableFaitsRepository;
-        this.sonarService = sonarService;
-    }
+    private final IEventManager eventManager;
 
     public Map<String, RecuperationMeasures> putIndicateursSonarModule() {
         List<Module> modules = oscarService.getModules();
@@ -48,22 +44,40 @@ public class RecuperationIndicateurSonarService {
         int withoutValidAnalysis = 0;
 
         for (Module module : modules) {
-
-            if (isSansObjet(module)) {
-                saveSansObjetIndicator(module, now);
-                continue;
-            }
-
-            if (hasValidSonarKey(module)) {
-                withProjectKey++;
-
-                boolean hasAnalysis = processSonarAnalysis(module, now, result);
-
-                if (!hasAnalysis) {
-                    log.warn(
-                            "Le projet {} n'a pas une analyse Sonar correcte", module.getModName());
-                    withoutValidAnalysis++;
+            try {
+                if (isSansObjet(module)) {
+                    saveSansObjetIndicator(module, now);
+                    continue;
                 }
+
+                if (hasValidSonarKey(module)) {
+                    withProjectKey++;
+
+                    boolean hasAnalysis = processSonarAnalysis(module, now, result);
+
+                    if (!hasAnalysis) {
+                        log.warn(
+                                "Le projet {} n'a pas une analyse Sonar correcte",
+                                module.getModName());
+                        eventManager.notifyObservers(
+                                EventTypeObserver.EVENT_TYPE_ERROR,
+                                "Sonar: Le projet "
+                                        + module.getModName()
+                                        + " n'a pas une analyse Sonar correcte");
+                        withoutValidAnalysis++;
+                    }
+                }
+            } catch (Exception e) {
+                log.error(
+                        "Erreur lors du traitement du module {} : {}",
+                        module.getModName(),
+                        e.getMessage());
+                eventManager.notifyObservers(
+                        EventTypeObserver.EVENT_TYPE_ERROR,
+                        "Sonar: Erreur lors du traitement du module "
+                                + module.getModName()
+                                + " : "
+                                + e.getMessage());
             }
         }
         log.info("Nombre de modules Oscar avec un project Key Sonar : {}", withProjectKey);
@@ -118,23 +132,34 @@ public class RecuperationIndicateurSonarService {
         Map<Application, Set<String>> applications = oscarService.mapApplicationsToKeySonars();
 
         for (Map.Entry<Application, Set<String>> entry : applications.entrySet()) {
-            Set<String> keysSonar = entry.getValue();
-            RecuperationMeasures sommeMesures = new RecuperationMeasures();
-            if (!keysSonar.isEmpty() && keysSonar.stream().allMatch(SANS_OBJET::equals)) {
-                Component component = new Component();
-                Measure ligneNegative = new Measure("lines_to_cover", "-1");
-                component.setMeasures(new ArrayList<>(List.of(ligneNegative)));
-                sommeMesures.setComponent(component);
-            }
-            for (String keySonar : entry.getValue()) {
-                sommeMesures =
-                        UtilsService.concatenationMeasures(
-                                sommeMesures, analyseModule.get(keySonar));
-            }
-            if (sommeMesures != null
-                    && sommeMesures.getComponent() != null
-                    && sommeMesures.getComponent().getMeasures() != null) {
-                putIndicateurSonarInBdd(null, entry.getKey(), sommeMesures, LocalDate.now());
+            try {
+                Set<String> keysSonar = entry.getValue();
+                RecuperationMeasures sommeMesures = new RecuperationMeasures();
+                if (!keysSonar.isEmpty() && keysSonar.stream().allMatch(SANS_OBJET::equals)) {
+                    Component component = new Component();
+                    Measure ligneNegative = new Measure("lines_to_cover", "-1");
+                    component.setMeasures(new ArrayList<>(List.of(ligneNegative)));
+                    sommeMesures.setComponent(component);
+                }
+                for (String keySonar : entry.getValue()) {
+                    sommeMesures =
+                            UtilsService.concatenationMeasures(
+                                    sommeMesures, analyseModule.get(keySonar));
+                }
+                if (sommeMesures != null
+                        && sommeMesures.getComponent() != null
+                        && sommeMesures.getComponent().getMeasures() != null) {
+                    putIndicateurSonarInBdd(null, entry.getKey(), sommeMesures, LocalDate.now());
+                }
+            } catch (Exception e) {
+                log.error(
+                        "Erreur application {} : {}", entry.getKey().getAppName(), e.getMessage());
+                eventManager.notifyObservers(
+                        EventTypeObserver.EVENT_TYPE_ERROR,
+                        "Sonar : Erreur application "
+                                + entry.getKey().getAppName()
+                                + " : "
+                                + e.getMessage());
             }
         }
     }

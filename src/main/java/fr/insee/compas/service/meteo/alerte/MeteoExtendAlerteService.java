@@ -11,6 +11,7 @@ import fr.insee.compas.model.meteo.Meteo;
 import fr.insee.compas.service.spoc.RgaResolverService;
 import fr.insee.compas.service.spoc.SpocService;
 import fr.insee.compas.util.MeteoAlerteUtils;
+import fr.insee.compas.util.mail.templates.TemplateAlerteMeteo;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -165,7 +166,7 @@ public class MeteoExtendAlerteService {
 
         MailRecipients recipients = buildMailRecipients(mailAlerteMeteo, destinataire);
 
-        Mail mail = new Mail(mailSubject, mailBody, recipients.to(), recipients.cc());
+        Mail mail = new Mail(mailSubject, mailBody, List.of(), recipients.to(), recipients.cc());
 
         try {
             spocService.sendMail(mail);

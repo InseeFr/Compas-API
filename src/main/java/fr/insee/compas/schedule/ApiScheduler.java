@@ -13,8 +13,10 @@ import fr.insee.compas.service.a11y.A11yMajService;
 import fr.insee.compas.service.devops.update.UpdateIndicatorDevopsService;
 import fr.insee.compas.service.meteo.alerte.MeteoAlerteService;
 import fr.insee.compas.service.qualite.RecuperationIndicateurSonarService;
+import fr.insee.compas.service.scheduler.IMailErreurScheduler;
 import fr.insee.compas.service.securite.RecupCveSecuriteService;
 import fr.insee.compas.service.securite.RecupHyperxSecuriteService;
+import fr.insee.compas.util.observer.listener.FileErrorListener;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,9 +30,14 @@ public class ApiScheduler {
     private final A11yMajService a11yMajService;
     private final RecupHyperxSecuriteService recupHyperxSecuriteService;
     private final MeteoAlerteService meteoAlerteService;
+    private final IMailErreurScheduler mailErreurScheduler;
+    private final FileErrorListener fileErrorListener;
 
     @Value("${compas.alertes.enabled:false}")
     private boolean alertesEnabled;
+
+    @Value("${compas.alertes.erreur.mail.dev:false}")
+    private boolean isMailErreurInDev;
 
     public ApiScheduler(
             OscarService oscarService,
@@ -39,7 +46,9 @@ public class ApiScheduler {
             UpdateIndicatorDevopsService updateIndicatorDevopsService,
             A11yMajService a11yMajService,
             RecupHyperxSecuriteService recupHyperxSecuriteService,
-            MeteoAlerteService meteoAlerteService) {
+            MeteoAlerteService meteoAlerteService,
+            IMailErreurScheduler mailErreurScheduler,
+            FileErrorListener fileErrorListener) {
         this.oscarService = oscarService;
         this.indicateurSonar = testUnitaireService;
         this.cveService = cveService;
@@ -47,6 +56,8 @@ public class ApiScheduler {
         this.a11yMajService = a11yMajService;
         this.meteoAlerteService = meteoAlerteService;
         this.recupHyperxSecuriteService = recupHyperxSecuriteService;
+        this.mailErreurScheduler = mailErreurScheduler;
+        this.fileErrorListener = fileErrorListener;
     }
 
     @Scheduled(cron = "0 30 6 * * *")
@@ -73,6 +84,9 @@ public class ApiScheduler {
         updateIndicatorDevopsService.miseAJourIndicateursDevopsEnBaseDeDonnes(null, null);
         log.info("fin des mises à jour des devops");
         log.info("fin des mises à jour ");
+        if (!isMailErreurInDev) {
+            this.mailErreurScheduler.sendMailErreurScheduler(fileErrorListener.getLogFile(), false);
+        }
     }
 
     @Scheduled(cron = "0 0 7 * * MON")

@@ -51,7 +51,7 @@ public class DevopsConstantes {
                 && DevopsConstantes.MODIFICATION.equals(h.getOperation());
     }
 
-    public static final LocalDateTime[] normalizeDates(LocalDateTime start, LocalDateTime end) {
+    public static LocalDateTime[] normalizeDates(LocalDateTime start, LocalDateTime end) {
         if (start == null || end == null) {
             return new LocalDateTime[] {
                 LocalDateTime.now().minusMonths(1), LocalDateTime.now().with(LocalTime.MAX)
@@ -61,7 +61,7 @@ public class DevopsConstantes {
         return new LocalDateTime[] {start, end};
     }
 
-    public static final int calculateRoundedAverage(List<Integer> values) {
+    public static int calculateRoundedAverage(List<Integer> values) {
         if (values == null || values.isEmpty()) {
             return IndicatorSpecialValue.SO.getCode();
         }

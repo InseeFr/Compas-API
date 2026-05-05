@@ -16,8 +16,10 @@ import fr.insee.compas.service.OscarService;
 import fr.insee.compas.service.a11y.A11yMajService;
 import fr.insee.compas.service.devops.update.UpdateIndicatorDevopsService;
 import fr.insee.compas.service.qualite.RecuperationIndicateurSonarService;
+import fr.insee.compas.service.scheduler.IMailErreurScheduler;
 import fr.insee.compas.service.securite.RecupCveSecuriteService;
 import fr.insee.compas.service.securite.RecupHyperxSecuriteService;
+import fr.insee.compas.util.observer.listener.FileErrorListener;
 
 class ApiSchedulerTest {
 
@@ -32,6 +34,10 @@ class ApiSchedulerTest {
     @Mock private A11yMajService a11yMajService;
 
     @Mock private RecupHyperxSecuriteService recupHyperxSecuriteService;
+
+    @Mock private IMailErreurScheduler iMailErreurScheduler;
+
+    @Mock private FileErrorListener fileErrorListener;
 
     @InjectMocks private ApiScheduler apiScheduler;
 
