@@ -41,7 +41,27 @@ VALUES (218, 'Nombre de Vm PD', 'numeric', 'Brut');
 INSERT INTO INDICATEUR (id, nom, type, brut_final)
 VALUES (219, 'RAM consommée PD', 'numeric', 'Brut');
 INSERT INTO INDICATEUR (id, nom, type, brut_final)
-VALUES (220, 'temps Cpu PD', 'numeric', 'Brut');
+VALUES (220, 'temps Cpu PD', 'numeric', 'Brut') ;
+INSERT INTO INDICATEUR (id, nom, type, brut_final)
+VALUES (221, 'S3 consommé', 'numeric', 'Brut');
+INSERT INTO INDICATEUR (id, nom, type, brut_final)
+VALUES (222, 'Pvc consommé', 'numeric', 'Brut');
+INSERT INTO INDICATEUR (id, nom, type, brut_final)
+VALUES (223, 'Nombre de Pods maxi', 'numeric', 'Brut');
+INSERT INTO INDICATEUR (id, nom, type, brut_final)
+VALUES (224, 'S3 consommé PD', 'numeric', 'Brut');
+INSERT INTO INDICATEUR (id, nom, type, brut_final)
+VALUES (225, 'Pvc consommé PD', 'numeric', 'Brut');
+INSERT INTO INDICATEUR (id, nom, type, brut_final)
+VALUES (226, 'nb Pod maxi PD', 'numeric', 'Brut');
+INSERT INTO INDICATEUR (id, nom, type, brut_final)
+VALUES (227, 'Applishare consommé', 'numeric', 'Brut');
+INSERT INTO INDICATEUR (id, nom, type, brut_final)
+VALUES (228, 'Applishare consommé PD', 'numeric', 'Brut');
+INSERT INTO INDICATEUR (id, nom, type, brut_final)
+VALUES (229, 'Applishare alloué', 'numeric', 'Brut');
+INSERT INTO INDICATEUR (id, nom, type, brut_final)
+VALUES (230, 'Applishare alloué PD', 'numeric', 'Brut');
 INSERT INTO INDICATEUR (id, nom, type, brut_final)
 VALUES (301, 'Nombre de jours depuis le dernier déploiement en production', 'numeric', 'Brut');
 INSERT INTO INDICATEUR (id, nom, type, brut_final)

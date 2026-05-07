@@ -12,7 +12,7 @@ public class GreenITutils {
         return (value != null) ? value.toString() : "";
     }
 
-    public static String normalizeStringArroundGo(Long value) {
+    public static String normalizeStringAroundGo(Long value) {
         if (value == null) {
             return "";
         }

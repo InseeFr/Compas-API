@@ -24,7 +24,8 @@ import fr.insee.compas.repository.projection.MetriqueModuleProjection;
         properties = {
             "spring.datasource.url=jdbc:h2:mem:testdb",
             "spring.jpa.hibernate.ddl-auto=create-drop",
-            "spring.jpa.defer-datasource-initialization=true"
+            "spring.jpa.defer-datasource-initialization=true",
+            "spring.flyway.enabled=false"
         })
 class TableFaitsRepositoryTest {
 
@@ -53,7 +54,7 @@ class TableFaitsRepositoryTest {
                 tableFaitsRepository.findLatestValueByIndicateurAndApplication(201, 130);
         assertNotNull(value);
         assertEquals(3, value.size());
-        assertEquals(new BigDecimal("16.00"), value.get(0));
+        assertEquals(new BigDecimal("16.00"), value.getFirst());
     }
 
     @Test

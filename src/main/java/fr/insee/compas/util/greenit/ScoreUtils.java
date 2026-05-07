@@ -1,5 +1,8 @@
 package fr.insee.compas.util.greenit;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -29,5 +32,9 @@ public class ScoreUtils {
     public static boolean isPlateformeProd(String plateforme) {
 
         return (plateforme != null && plateforme.startsWith("pd"));
+    }
+
+    public static String formatScore(BigDecimal score) {
+        return score.setScale(3, RoundingMode.HALF_UP).toString();
     }
 }

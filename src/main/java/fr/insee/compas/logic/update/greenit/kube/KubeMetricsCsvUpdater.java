@@ -3,6 +3,7 @@ package fr.insee.compas.logic.update.greenit.kube;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.List;
@@ -42,6 +43,7 @@ public class KubeMetricsCsvUpdater implements GreenItMetricsUpdater {
     private List<MetriqueKube> metriqueKubes;
     private final OscarClient oscarClient;
     private final TableFaitsRepository tableFaitsRepository;
+    private static final BigDecimal NB_SEMAINES = new BigDecimal(5);
 
     public KubeMetricsCsvUpdater(
             OscarClient oscarClient,
@@ -115,7 +117,9 @@ public class KubeMetricsCsvUpdater implements GreenItMetricsUpdater {
                         .date(fileDate)
                         .idSource(SourceType.FICHIER_KUBE.getValue())
                         .idIndicateur(IndicateurType.RAM_CONSOMMEE.getValue())
-                        .valeur(calculKubeAllAgregatValeur(kubes, MetriqueKube::getRamUsed))
+                        .valeur(
+                                calculKubeAllAgregatValeur(kubes, MetriqueKube::getRamUsed)
+                                        .divide(NB_SEMAINES, RoundingMode.UP))
                         .build();
         final TableFaits indCpuUsed =
                 TableFaits.builder()
@@ -131,7 +135,9 @@ public class KubeMetricsCsvUpdater implements GreenItMetricsUpdater {
                         .date(fileDate)
                         .idSource(SourceType.FICHIER_KUBE.getValue())
                         .idIndicateur(IndicateurType.S3_CONSOMME.getValue())
-                        .valeur(calculKubeAllAgregatValeur(kubes, MetriqueKube::getS3Used))
+                        .valeur(
+                                calculKubeAllAgregatValeur(kubes, MetriqueKube::getS3Used)
+                                        .divide(NB_SEMAINES, RoundingMode.UP))
                         .build();
         final TableFaits indPvcUsed =
                 TableFaits.builder()
@@ -139,7 +145,9 @@ public class KubeMetricsCsvUpdater implements GreenItMetricsUpdater {
                         .date(fileDate)
                         .idSource(SourceType.FICHIER_KUBE.getValue())
                         .idIndicateur(IndicateurType.PVC_CONSOMME.getValue())
-                        .valeur(calculKubeAllAgregatValeur(kubes, MetriqueKube::getPvcUsed))
+                        .valeur(
+                                calculKubeAllAgregatValeur(kubes, MetriqueKube::getPvcUsed)
+                                        .divide(NB_SEMAINES, RoundingMode.UP))
                         .build();
         final TableFaits indNbPodMaxi =
                 TableFaits.builder()
@@ -147,7 +155,9 @@ public class KubeMetricsCsvUpdater implements GreenItMetricsUpdater {
                         .date(fileDate)
                         .idSource(SourceType.FICHIER_KUBE.getValue())
                         .idIndicateur(IndicateurType.NB_POD_MAXI.getValue())
-                        .valeur(calculKubeAllAgregatValeur(kubes, MetriqueKube::getNbPodMaxi))
+                        .valeur(
+                                calculKubeAllAgregatValeur(kubes, MetriqueKube::getNbPodMaxi)
+                                        .divide(NB_SEMAINES, RoundingMode.UP))
                         .build();
         final TableFaits indRamUsedProd =
                 TableFaits.builder()
@@ -155,7 +165,9 @@ public class KubeMetricsCsvUpdater implements GreenItMetricsUpdater {
                         .date(fileDate)
                         .idSource(SourceType.FICHIER_KUBE.getValue())
                         .idIndicateur(IndicateurType.RAM_CONSOMMEE_PD.getValue())
-                        .valeur(calculKubeProdAgregatValeur(kubes, MetriqueKube::getRamUsed))
+                        .valeur(
+                                calculKubeProdAgregatValeur(kubes, MetriqueKube::getRamUsed)
+                                        .divide(NB_SEMAINES, RoundingMode.UP))
                         .build();
         final TableFaits indCpuUsedProd =
                 TableFaits.builder()
@@ -171,7 +183,9 @@ public class KubeMetricsCsvUpdater implements GreenItMetricsUpdater {
                         .date(fileDate)
                         .idSource(SourceType.FICHIER_KUBE.getValue())
                         .idIndicateur(IndicateurType.S3_CONSOMME_PD.getValue())
-                        .valeur(calculKubeProdAgregatValeur(kubes, MetriqueKube::getS3Used))
+                        .valeur(
+                                calculKubeProdAgregatValeur(kubes, MetriqueKube::getS3Used)
+                                        .divide(NB_SEMAINES, RoundingMode.UP))
                         .build();
         final TableFaits indPvcUsedProd =
                 TableFaits.builder()
@@ -179,7 +193,9 @@ public class KubeMetricsCsvUpdater implements GreenItMetricsUpdater {
                         .date(fileDate)
                         .idSource(SourceType.FICHIER_KUBE.getValue())
                         .idIndicateur(IndicateurType.PVC_CONSOMME_PD.getValue())
-                        .valeur(calculKubeProdAgregatValeur(kubes, MetriqueKube::getPvcUsed))
+                        .valeur(
+                                calculKubeProdAgregatValeur(kubes, MetriqueKube::getPvcUsed)
+                                        .divide(NB_SEMAINES, RoundingMode.UP))
                         .build();
         final TableFaits indNbPodMaxiProd =
                 TableFaits.builder()
@@ -187,7 +203,9 @@ public class KubeMetricsCsvUpdater implements GreenItMetricsUpdater {
                         .date(fileDate)
                         .idSource(SourceType.FICHIER_KUBE.getValue())
                         .idIndicateur(IndicateurType.NB_POD_MAXI_PD.getValue())
-                        .valeur(calculKubeProdAgregatValeur(kubes, MetriqueKube::getNbPodMaxi))
+                        .valeur(
+                                calculKubeProdAgregatValeur(kubes, MetriqueKube::getNbPodMaxi)
+                                        .divide(NB_SEMAINES, RoundingMode.UP))
                         .build();
         List<TableFaits> tableFaits =
                 List.of(

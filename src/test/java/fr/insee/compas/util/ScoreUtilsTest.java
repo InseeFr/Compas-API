@@ -2,6 +2,8 @@ package fr.insee.compas.util;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.math.BigDecimal;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -91,5 +93,47 @@ class ScoreUtilsTest {
     @DisplayName("isPlateformeProd: null -> false")
     void returnsFalse_whenNull(String input) {
         assertFalse(ScoreUtils.isPlateformeProd(input));
+    }
+
+    @Test
+    void shouldFormatScoreWithThreeDecimals() {
+        String result = ScoreUtils.formatScore(new BigDecimal("1.23456"));
+
+        assertEquals("1.235", result);
+    }
+
+    @Test
+    void shouldRoundDownWhenBelowFive() {
+        String result = ScoreUtils.formatScore(new BigDecimal("1.2344"));
+
+        assertEquals("1.234", result);
+    }
+
+    @Test
+    void shouldRoundUpWhenEqualOrAboveFive() {
+        String result = ScoreUtils.formatScore(new BigDecimal("1.2345"));
+
+        assertEquals("1.235", result);
+    }
+
+    @Test
+    void shouldKeepTrailingZeros() {
+        String result = ScoreUtils.formatScore(new BigDecimal("1"));
+
+        assertEquals("1.000", result);
+    }
+
+    @Test
+    void shouldHandleZero() {
+        String result = ScoreUtils.formatScore(BigDecimal.ZERO);
+
+        assertEquals("0.000", result);
+    }
+
+    @Test
+    void shouldHandleNegativeNumbers() {
+        String result = ScoreUtils.formatScore(new BigDecimal("-1.2345"));
+
+        assertEquals("-1.235", result);
     }
 }

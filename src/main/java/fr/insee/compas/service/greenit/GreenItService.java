@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -26,7 +27,6 @@ import fr.insee.compas.model.compas.dto.MetriqueModuleDTO;
 import fr.insee.compas.model.greenit.IndicateurApplicationGreenIT;
 import fr.insee.compas.model.greenit.IndicateurModuleGreenIT;
 import fr.insee.compas.repository.TableFaitsRepository;
-import fr.insee.compas.repository.projection.MetriqueApplicationProjection;
 import fr.insee.compas.repository.projection.MetriqueModuleProjection;
 import fr.insee.compas.repository.projection.MetriqueSumIndicateurProjection;
 
@@ -50,11 +50,13 @@ public class GreenItService {
             List.of(
                     IndicateurType.RAM_ALLOUEE,
                     IndicateurType.DISQUE_ALLOUE,
+                    IndicateurType.DISQUE_CONSOMME,
                     IndicateurType.CPU_ALLOUEE,
                     IndicateurType.CONSO_ELEC,
                     IndicateurType.NBR_VM,
                     IndicateurType.RAM_ALLOUEE_PD,
                     IndicateurType.DISQUE_ALLOUE_PD,
+                    IndicateurType.DISQUE_CONSOMME_PD,
                     IndicateurType.CPU_ALLOUEE_PD,
                     IndicateurType.CONSO_ELEC_PD,
                     IndicateurType.NBR_VM_PD,
@@ -201,10 +203,10 @@ public class GreenItService {
         greenIt.setCpuUsedProd(getValue(indicateurs, IndicateurType.CPU_CONSOMMEE_PD).intValue());
         greenIt.setRamUsed(getValue(indicateurs, IndicateurType.RAM_CONSOMMEE).longValue());
         greenIt.setRamUsedProd(getValue(indicateurs, IndicateurType.RAM_CONSOMMEE_PD).longValue());
-        greenIt.setS3Used(getValue(indicateurs, IndicateurType.S3_CONSOMME).intValue());
-        greenIt.setS3UsedProd(getValue(indicateurs, IndicateurType.S3_CONSOMME_PD).intValue());
-        greenIt.setPvcUsed(getValue(indicateurs, IndicateurType.PVC_CONSOMME).intValue());
-        greenIt.setPvcUsedProd(getValue(indicateurs, IndicateurType.PVC_CONSOMME_PD).intValue());
+        greenIt.setS3Used(getValue(indicateurs, IndicateurType.S3_CONSOMME).longValue());
+        greenIt.setS3UsedProd(getValue(indicateurs, IndicateurType.S3_CONSOMME_PD).longValue());
+        greenIt.setPvcUsed(getValue(indicateurs, IndicateurType.PVC_CONSOMME).longValue());
+        greenIt.setPvcUsedProd(getValue(indicateurs, IndicateurType.PVC_CONSOMME_PD).longValue());
         greenIt.setNbPodMaxi(getValue(indicateurs, IndicateurType.NB_POD_MAXI).intValue());
         greenIt.setNbPodMaxiProd(getValue(indicateurs, IndicateurType.NB_POD_MAXI_PD).intValue());
         return greenIt;
@@ -264,16 +266,19 @@ public class GreenItService {
     }
 
     public List<MetriqueApplicationDTO> getApplicationMetriques() {
-        final List<MetriqueApplicationProjection> results =
-                tableFaitsRepository.findLatestSummedValuesByIndicateurForAllApplications(
-                        IndicateurType.CONSO_ELEC.getValue());
-        return results.stream()
-                .map(
-                        result ->
-                                new MetriqueApplicationDTO(
-                                        result.getIdApplication(),
-                                        result.getDate(),
-                                        result.getTotalValeur()))
+        return Stream.of(IndicateurType.CONSO_ELEC, IndicateurType.NB_POD_MAXI)
+                .flatMap(
+                        indicateur ->
+                                tableFaitsRepository
+                                        .findLatestSummedValuesByIndicateurForAllApplications(
+                                                indicateur.getValue())
+                                        .stream()
+                                        .map(
+                                                result ->
+                                                        new MetriqueApplicationDTO(
+                                                                result.getIdApplication(),
+                                                                result.getDate(),
+                                                                result.getTotalValeur())))
                 .toList();
     }
 

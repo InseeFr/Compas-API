@@ -23,8 +23,8 @@ public abstract class IndicateurGreenIT {
     private Integer nbVm;
     private Integer cpuUsed;
     private Long ramUsed;
-    private Integer s3Used;
-    private Integer pvcUsed;
+    private Long s3Used;
+    private Long pvcUsed;
     private Integer nbPodMaxi;
     private Integer ramAllocatedProd;
     private BigDecimal ramMaxiProd;
@@ -36,8 +36,8 @@ public abstract class IndicateurGreenIT {
     private Integer nbVmProd;
     private Integer cpuUsedProd;
     private Long ramUsedProd;
-    private Integer s3UsedProd;
-    private Integer pvcUsedProd;
+    private Long s3UsedProd;
+    private Long pvcUsedProd;
     private Integer nbPodMaxiProd;
     private LocalDate dateMaj;
 
