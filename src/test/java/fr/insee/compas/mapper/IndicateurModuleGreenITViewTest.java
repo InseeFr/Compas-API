@@ -36,7 +36,7 @@ class IndicateurModuleGreenITViewTest {
         indicateur.setRamAllocated(4);
         indicateur.setRamMaxi(new BigDecimal("80"));
         indicateur.setDiskAllocated(100);
-        indicateur.setDiskUsed(new BigDecimal(60));
+        indicateur.setDiskUsed(60);
         indicateur.setCpuAllocated(2000);
         indicateur.setCpuMaxi(new BigDecimal(90));
         indicateur.setConso(150);

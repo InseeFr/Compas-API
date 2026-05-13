@@ -120,9 +120,6 @@ class GreenItServiceGetTest {
                         any(), eq(IndicateurType.DISQUE_ALLOUE.getValue()), eq(238)))
                 .thenReturn(list);
         when(tableFaitsRepository.findByDateAndIdIndicateurAndIdModule(
-                        any(), eq(IndicateurType.DISQUE_CONSOMME.getValue()), eq(238)))
-                .thenReturn(list);
-        when(tableFaitsRepository.findByDateAndIdIndicateurAndIdModule(
                         any(), eq(IndicateurType.CPU_ALLOUEE.getValue()), eq(238)))
                 .thenReturn(list);
         when(tableFaitsRepository.findByDateAndIdIndicateurAndIdModule(

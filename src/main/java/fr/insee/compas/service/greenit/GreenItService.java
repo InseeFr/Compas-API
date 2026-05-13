@@ -126,12 +126,7 @@ public class GreenItService {
         final Optional<TableFaits> indDisqueAlloue = disqueAlloueLatestValues.stream().findFirst();
         if (indDisqueAlloue.isPresent()) {
             greenIt.setDiskAllocated(indDisqueAlloue.get().getValeur().intValue());
-            greenIt.setDiskUsed(
-                    calculateMetricPercentModule(
-                            IndicateurType.DISQUE_CONSOMME.getValue(),
-                            greenIt.getDiskAllocated(),
-                            moduleId,
-                            lastDay));
+            greenIt.setDiskUsed(null);
         }
         final List<TableFaits> cpuAlloueeLatestValues =
                 tableFaitsRepository.findByDateAndIdIndicateurAndIdModule(
@@ -182,16 +177,11 @@ public class GreenItService {
         greenIt.setRamAllocatedProd(
                 getValue(indicateurs, IndicateurType.RAM_ALLOUEE_PD).intValue());
         greenIt.setDiskAllocated(getValue(indicateurs, IndicateurType.DISQUE_ALLOUE).intValue());
-        greenIt.setDiskUsed(
-                calculatePercent(
-                        getValue(indicateurs, IndicateurType.DISQUE_CONSOMME),
-                        getValue(indicateurs, IndicateurType.DISQUE_ALLOUE)));
+        greenIt.setDiskUsed(getValue(indicateurs, IndicateurType.DISQUE_CONSOMME).intValue());
         greenIt.setDiskAllocatedProd(
                 getValue(indicateurs, IndicateurType.DISQUE_ALLOUE_PD).intValue());
         greenIt.setDiskUsedProd(
-                calculatePercent(
-                        getValue(indicateurs, IndicateurType.DISQUE_CONSOMME_PD),
-                        getValue(indicateurs, IndicateurType.DISQUE_ALLOUE_PD)));
+                getValue(indicateurs, IndicateurType.DISQUE_CONSOMME_PD).intValue());
         greenIt.setCpuAllocated(getValue(indicateurs, IndicateurType.CPU_ALLOUEE).intValue());
         greenIt.setCpuAllocatedProd(
                 getValue(indicateurs, IndicateurType.CPU_ALLOUEE_PD).intValue());

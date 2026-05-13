@@ -18,7 +18,7 @@ public abstract class IndicateurGreenIT {
     private Integer cpuAllocated;
     private BigDecimal cpuMaxi;
     private Integer diskAllocated;
-    private BigDecimal diskUsed;
+    private Integer diskUsed;
     private Integer conso;
     private Integer nbVm;
     private Integer cpuUsed;
@@ -31,7 +31,7 @@ public abstract class IndicateurGreenIT {
     private Integer cpuAllocatedProd;
     private BigDecimal cpuMaxiProd;
     private Integer diskAllocatedProd;
-    private BigDecimal diskUsedProd;
+    private Integer diskUsedProd;
     private Integer consoProd;
     private Integer nbVmProd;
     private Integer cpuUsedProd;

@@ -32,7 +32,7 @@ public class IndicateurModuleGreenITViewMapper {
                 .moduleName(ind.getModuleName())
                 .cpuAllocated(GreenITutils.normalizeString(ind.getCpuAllocated()))
                 .diskAllocated(GreenITutils.normalizeString(ind.getDiskAllocated()))
-                .diskUsed(GreenITutils.gestionPourcentageOuSansObjet(ind.getDiskUsed()))
+                .diskUsed(GreenITutils.normalizeString(ind.getDiskUsed()))
                 .ramAllocated(GreenITutils.normalizeString(ind.getRamAllocated()))
                 .conso(GreenITutils.normalizeString(ind.getConso()))
                 .nbVm(GreenITutils.normalizeString(ind.getNbVm()))
