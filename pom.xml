@@ -16,7 +16,7 @@
 
 	<properties>
 		<java.version>25</java.version>
-		<spotless-maven-plugin.version>3.4.0</spotless-maven-plugin.version>
+		<spotless-maven-plugin.version>3.6.0</spotless-maven-plugin.version>
 		<googleJavaFormat.version>1.27.0</googleJavaFormat.version>
 		<sonar.exclusions>**/test/**, **/*Test.java, **/*Tests.java</sonar.exclusions>
 		<sonar.coverage.exclusions>**/LocalSecurityConfig.java</sonar.coverage.exclusions>
