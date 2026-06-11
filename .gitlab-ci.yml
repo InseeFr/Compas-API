@@ -26,6 +26,7 @@ stages:
   - security-app
   - build-app-and-test
   - quality
+  - mirroring
   - calculate-version-and-release
   - tag
   - prepare-docker
@@ -33,6 +34,18 @@ stages:
   - docker
   - release-gitops
 
+
+mirror-api-to-github:
+  stage: mirroring
+  image: gitlab-registry.insee.fr:443/kubernetes/images/build/alpine:latest
+  variables:
+    GIT_DEPTH: 0
+  script:
+    - git remote add github_compas_api https://${GITHUB_MIRROR_USERNAME}:${GITHUB_TOKEN_MIRRORING}@github.com/InseeFr/Compas-API.git
+    - git push --force github_compas_api HEAD:main
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
 
 release-gitops-dev1:
   stage: release-gitops
