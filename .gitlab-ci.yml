@@ -35,17 +35,31 @@ stages:
   - release-gitops
 
 
-mirror-api-to-github:
+fetch-source-github:
   stage: mirroring
   image: gitlab-registry.insee.fr:443/kubernetes/images/build/alpine:latest
-  variables:
-    GIT_DEPTH: 0
   script:
     - git remote add github_compas_api https://${GITHUB_MIRROR_USERNAME}:${GITHUB_TOKEN_MIRRORING}@github.com/InseeFr/Compas-API.git
-    - git push --force github_compas_api HEAD:main
+    - git fetch github_compas_api
+    - git merge github_compas_api/main --ff-only
+    - git push origin HEAD:main
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
       when: manual
+
+mirror-api-to-github:
+    stage: mirroring
+    image: gitlab-registry.insee.fr:443/kubernetes/images/build/alpine:latest
+    variables:
+      GIT_DEPTH: 0
+    needs:
+      - fetch-source-github
+    script:
+      - git remote add github_compas_api https://${GITHUB_MIRROR_USERNAME}:${GITHUB_TOKEN_MIRRORING}@github.com/InseeFr/Compas-API.git
+      - git push --force github_compas_api HEAD:main
+    rules:
+      - if: '$CI_COMMIT_BRANCH == "main"'
+        when: manual
 
 release-gitops-dev1:
   stage: release-gitops
