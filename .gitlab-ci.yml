@@ -56,7 +56,7 @@ mirror-api-to-github:
       - fetch-source-github
     script:
       - git remote add github_compas_api https://${GITHUB_MIRROR_USERNAME}:${GITHUB_TOKEN_MIRRORING}@github.com/InseeFr/Compas-API.git
-      - git push --force github_compas_api HEAD:main
+      - git push github_compas_api HEAD:main
     rules:
       - if: '$CI_COMMIT_BRANCH == "main"'
         when: manual
