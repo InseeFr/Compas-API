@@ -10,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import fr.insee.compas.model.meteo.Meteo;
+import fr.insee.compas.util.MeteoAlerteUtils;
 import fr.insee.compas.util.MeteoAlerteUtils.AlerteType;
 import fr.insee.compas.util.mail.templates.TemplateAlerteMeteo;
 
@@ -64,8 +65,8 @@ class TemplateAlerteMeteoTest {
         String emailAdj = "adj@example.com";
         String balf = "balf@example.com";
 
-        String body =
-                template.getTemplateBody(
+        MeteoAlerteUtils.AlerteMailContext alerteMailContext =
+                new MeteoAlerteUtils.AlerteMailContext(
                         rgaEmail,
                         List.of(m1),
                         true,
@@ -74,6 +75,8 @@ class TemplateAlerteMeteoTest {
                         balf,
                         AlerteType.RETARD,
                         26);
+
+        String body = template.getTemplateBody(alerteMailContext);
 
         assertTrue(body.contains("⚠️ MODE TEST"));
         assertTrue(body.contains(rgaEmail));
@@ -101,8 +104,8 @@ class TemplateAlerteMeteoTest {
         String emailAdj = "adj@example.com";
         String balf = "balf@example.com";
 
-        String body =
-                template.getTemplateBody(
+        MeteoAlerteUtils.AlerteMailContext alerteMailContext =
+                new MeteoAlerteUtils.AlerteMailContext(
                         rgaEmail,
                         List.of(m1),
                         false,
@@ -111,6 +114,7 @@ class TemplateAlerteMeteoTest {
                         balf,
                         AlerteType.RAPPEL,
                         26);
+        String body = template.getTemplateBody(alerteMailContext);
 
         assertFalse(body.contains("MODE TEST"));
         assertTrue(

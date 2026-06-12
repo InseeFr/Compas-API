@@ -1,7 +1,6 @@
 package fr.insee.compas.mapper;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
@@ -97,6 +96,27 @@ public class HomologationMapperTest {
         assertEquals("homologuée", result.getStatutHomologation());
         assertEquals("24/03/2026", result.getHomologationBeginDate());
         assertEquals("24/03/2027", result.getHomologationEndDate());
+    }
+
+    @Test
+    void buildHomologation_statut_inexistant() {
+
+        Homologation h = new Homologation();
+        h.setStatutHomologation("example");
+        h.setHomologationSI("app1, app2");
+        h.setSensitivity("4");
+        h.setHomologationBeginDate("24/03/2026");
+        h.setHomologationEndDate("24/03/2027");
+        h.setHomologationRemarks("");
+
+        IllegalArgumentException exception =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> homologationMapper.buildHomologation(h, "app1"));
+
+        assertEquals(
+                "Valeur inattendue pour le statut d'homologation : example",
+                exception.getMessage());
     }
 
     @Test

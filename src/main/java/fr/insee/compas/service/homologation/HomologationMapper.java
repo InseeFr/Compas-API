@@ -106,6 +106,10 @@ public class HomologationMapper {
                 result.setHomologationRemarks(h.getHomologationRemarks());
             }
             case "partielle" -> buildHomologationPartielle(h, app, result);
+            default ->
+                    throw new IllegalArgumentException(
+                            "Valeur inattendue pour le statut d'homologation : "
+                                    + h.getStatutHomologation());
         }
         return result;
     }
