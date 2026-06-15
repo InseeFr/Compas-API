@@ -41,26 +41,55 @@ sync-from-github:
     GIT_DEPTH: 0
   script:
     - apk add --no-cache curl jq
-    - git remote add github_compas_api https://${GITHUB_MIRROR_USERNAME}:${GITHUB_TOKEN_MIRRORING}@github.com/InseeFr/Compas-API.git
-    - git fetch github_compas_api
-    - git checkout -B sync-from-github github_compas_api/main
-    - git push https://oauth2:${GITHUB_MR_TOKEN}@gitlab.insee.fr/dsi/compas/compas-api.git --delete sync-from-github || true
-    - git push https://oauth2:${GITHUB_MR_TOKEN}@gitlab.insee.fr/dsi/compas/compas-api.git HEAD:sync-from-github
+    # Récupère toutes les PRs ouvertes sur GitHub
     - |
-      EXISTING_MR=$(curl --silent \
-        --header "PRIVATE-TOKEN: ${GITHUB_MR_TOKEN}" \
-        "https://gitlab.insee.fr/api/v4/projects/${CI_PROJECT_ID}/merge_requests?state=opened&source_branch=sync-from-github" \
-        | jq '.[0].iid')
-      if [ "$EXISTING_MR" == "null" ] || [ -z "$EXISTING_MR" ]; then
-        curl --request POST \
+      GH_PRS=$(curl --silent \
+        --header "Authorization: Bearer ${GITHUB_TOKEN_MIRRORING}" \
+        --header "Accept: application/vnd.github+json" \
+        "https://api.github.com/repos/InseeFr/Compas-API/pulls?state=open")
+      echo "PRs GitHub trouvées : $(echo "$GH_PRS" | jq 'length')"
+
+      echo "$GH_PRS" | jq -c '.[]' | while read -r PR; do
+        PR_NUMBER=$(echo "$PR" | jq -r '.number')
+        PR_TITLE=$(echo "$PR"  | jq -r '.title')
+        PR_BODY=$(echo "$PR"   | jq -r '.body // ""')
+        PR_BRANCH=$(echo "$PR" | jq -r '.head.ref')
+
+        echo "--- Traitement PR #${PR_NUMBER} : ${PR_TITLE} (branche: ${PR_BRANCH})"
+
+        git fetch https://${GITHUB_MIRROR_USERNAME}:${GITHUB_TOKEN_MIRRORING}@github.com/InseeFr/Compas-API.git "${PR_BRANCH}" || {
+          echo "⚠️  Impossible de fetch la branche ${PR_BRANCH}, on passe."
+          continue
+        }
+        git push https://oauth2:${GITHUB_MR_TOKEN}@gitlab.insee.fr/dsi/compas/compas-api.git "FETCH_HEAD:refs/heads/${PR_BRANCH}" || {
+          echo "⚠️  Push de ${PR_BRANCH} échoué, on passe."
+          continue
+        }
+
+        EXISTING_MR=$(curl --silent \
           --header "PRIVATE-TOKEN: ${GITHUB_MR_TOKEN}" \
-          --header "Content-Type: application/json" \
-          --data '{"source_branch":"sync-from-github","target_branch":"main","title":"Synchronisation Compas Api depuis GitHub","remove_source_branch":false}' \
-          "https://gitlab.insee.fr/api/v4/projects/${CI_PROJECT_ID}/merge_requests"
-        echo "MR créée ✅"
-      else
-        echo "MR déjà existante #$EXISTING_MR ✅"
-      fi
+          "https://gitlab.insee.fr/api/v4/projects/${CI_PROJECT_ID}/merge_requests?state=opened&source_branch=${PR_BRANCH}" \
+          | jq '.[0].iid // null')
+
+        if [ "$EXISTING_MR" == "null" ] || [ -z "$EXISTING_MR" ]; then
+          PAYLOAD=$(jq -n \
+            --arg source  "${PR_BRANCH}" \
+            --arg target  "main" \
+            --arg title   "[GitHub PR #${PR_NUMBER}] ${PR_TITLE}" \
+            --arg desc    "${PR_BODY}" \
+            '{source_branch: $source, target_branch: $target, title: $title, description: $desc, remove_source_branch: false}')
+
+          curl --silent --request POST \
+            --header "PRIVATE-TOKEN: ${GITHUB_MR_TOKEN}" \
+            --header "Content-Type: application/json" \
+            --data "$PAYLOAD" \
+            "https://gitlab.insee.fr/api/v4/projects/${CI_PROJECT_ID}/merge_requests"
+
+          echo "MR créée pour PR #${PR_NUMBER} ✅"
+        else
+          echo "MR GitLab déjà existante (#${EXISTING_MR}) pour PR #${PR_NUMBER} ✅"
+        fi
+      done
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
       when: manual
