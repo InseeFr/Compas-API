@@ -54,7 +54,7 @@ class GreenItScoreCalculatorTest {
         kpis.setRamAllocated(1);
         kpis.setCpuAllocated(500);
         kpis.setDiskAllocated(50);
-        kpis.setDiskUsed(80);
+        kpis.setDiskUsed(40);
 
         final GreenItScore score = calculator.computeAppScore(kpis);
 
@@ -76,7 +76,7 @@ class GreenItScoreCalculatorTest {
         kpis.setRamAllocated(2);
         kpis.setCpuAllocated(10);
         kpis.setDiskAllocated(10);
-        kpis.setDiskUsed(50);
+        kpis.setDiskUsed(5);
 
         final GreenItScore score = calculator.computeModuleScore(kpis);
         assertNotNull(score);
@@ -112,7 +112,7 @@ class GreenItScoreCalculatorTest {
         final GreenItScore score = calculator.computeModuleScore(kpis);
 
         assertEquals(
-                BigDecimal.valueOf(0.3),
+                BigDecimal.valueOf(0.0),
                 score.getGaspillage().setScale(1, RoundingMode.UP)); // car diskUsed = 0%
     }
 }

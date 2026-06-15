@@ -69,10 +69,12 @@ public abstract class GreenItAbstractScore
 
     private BigDecimal scoreGaspillage(
             double diskUsed, double diskAllocated, double maxDiskAllocated) {
+        if (diskAllocated == 0) return BigDecimal.ZERO;
         return (FACTEUR_GASPILLAGE_ALLOUE.multiply(
-                        BigDecimal.valueOf(
-                                diskAllocated * (1 - diskUsed / 100) / maxDiskAllocated)))
-                .add(FACTEUR_GASPILLAGE_INUTILISE.multiply(BigDecimal.valueOf(1 - diskUsed / 100)));
+                        BigDecimal.valueOf((diskAllocated - diskUsed) / maxDiskAllocated)))
+                .add(
+                        FACTEUR_GASPILLAGE_INUTILISE.multiply(
+                                BigDecimal.valueOf(1 - diskUsed / diskAllocated)));
     }
 
     private BigDecimal calculPression(double ram, double cpu, double disk) {
