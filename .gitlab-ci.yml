@@ -41,7 +41,6 @@ sync-from-github:
     GIT_DEPTH: 0
   script:
     - apk add --no-cache curl jq
-    # Récupère toutes les PRs ouvertes sur GitHub
     - |
       GH_PRS=$(curl --silent \
         --header "Authorization: Bearer ${GITHUB_TOKEN_MIRRORING}" \
@@ -66,28 +65,25 @@ sync-from-github:
           continue
         }
 
-        EXISTING_MR=$(curl --silent \
-          --header "PRIVATE-TOKEN: ${GITHUB_MR_TOKEN}" \
-          "https://gitlab.insee.fr/api/v4/projects/${CI_PROJECT_ID}/merge_requests?state=opened&source_branch=${PR_BRANCH}" \
-          | jq '.[0].iid // null')
+        CREATE_RESPONSE=$(jq -n \
+          --arg source "${PR_BRANCH}" \
+          --arg target "main" \
+          --arg title  "[GitHub PR #${PR_NUMBER}] ${PR_TITLE}" \
+          --arg desc   "${PR_BODY}" \
+          '{source_branch: $source, target_branch: $target, title: $title, description: $desc, remove_source_branch: false}' \
+          | curl --silent --request POST \
+              --header "PRIVATE-TOKEN: ${GITHUB_MR_TOKEN}" \
+              --header "Content-Type: application/json" \
+              --data @- \
+              "https://gitlab.insee.fr/api/v4/projects/${CI_PROJECT_ID}/merge_requests")
 
-        if [ "$EXISTING_MR" == "null" ] || [ -z "$EXISTING_MR" ]; then
-          PAYLOAD=$(jq -n \
-            --arg source  "${PR_BRANCH}" \
-            --arg target  "main" \
-            --arg title   "[GitHub PR #${PR_NUMBER}] ${PR_TITLE}" \
-            --arg desc    "${PR_BODY}" \
-            '{source_branch: $source, target_branch: $target, title: $title, description: $desc, remove_source_branch: false}')
+        echo "Réponse GitLab : $CREATE_RESPONSE"
 
-          curl --silent --request POST \
-            --header "PRIVATE-TOKEN: ${GITHUB_MR_TOKEN}" \
-            --header "Content-Type: application/json" \
-            --data "$PAYLOAD" \
-            "https://gitlab.insee.fr/api/v4/projects/${CI_PROJECT_ID}/merge_requests"
-
-          echo "MR créée pour PR #${PR_NUMBER} ✅"
+        MR_IID=$(echo "$CREATE_RESPONSE" | jq '.iid // null')
+        if [ "$MR_IID" != "null" ]; then
+          echo "MR créée #${MR_IID} ✅"
         else
-          echo "MR GitLab déjà existante (#${EXISTING_MR}) pour PR #${PR_NUMBER} ✅"
+          echo "MR déjà existante ou erreur : $(echo "$CREATE_RESPONSE" | jq -r '.message // "inconnue"')"
         fi
       done
   rules:
