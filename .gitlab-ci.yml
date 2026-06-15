@@ -34,6 +34,35 @@ stages:
   - docker
   - release-gitops
 
+sync-from-github:
+  stage: mirroring
+  image: gitlab-registry.insee.fr:443/kubernetes/images/build/alpine:latest
+  variables:
+    GIT_DEPTH: 0
+  script:
+    - git remote add github_compas_api https://${GITHUB_MIRROR_USERNAME}:${GITHUB_TOKEN_MIRRORING}@github.com/InseeFr/Compas-API.git
+    - git fetch github_compas_api
+    - git checkout -B sync-from-github github_compas_api/main
+    - git push https://oauth2:${GITHUB_MR_TOKEN}@gitlab.insee.fr/dsi/compas/compas-api.git --delete sync-from-github || true
+    - git push https://oauth2:${GITHUB_MR_TOKEN}@gitlab.insee.fr/dsi/compas/compas-api.git HEAD:sync-from-github
+    - |
+      EXISTING_MR=$(curl --silent \
+        --header "PRIVATE-TOKEN: ${GITHUB_MR_TOKEN}" \
+        "https://gitlab.insee.fr/api/v4/projects/${CI_PROJECT_ID}/merge_requests?state=opened&source_branch=sync-from-github" \
+        | jq '.[0].iid')
+      if [ "$EXISTING_MR" == "null" ] || [ -z "$EXISTING_MR" ]; then
+        curl --request POST \
+          --header "PRIVATE-TOKEN: ${GITHUB_MR_TOKEN}" \
+          --header "Content-Type: application/json" \
+          --data '{"source_branch":"sync-from-github","target_branch":"main","title":"Synchronisation Compas Api depuis GitHub","remove_source_branch":false}' \
+          "https://gitlab.insee.fr/api/v4/projects/${CI_PROJECT_ID}/merge_requests"
+        echo "MR créée ✅"
+      else
+        echo "MR déjà existante #$EXISTING_MR ✅"
+      fi
+  rules:
+    - when: manual
+
 
 mirror-api-to-github:
   stage: mirroring
