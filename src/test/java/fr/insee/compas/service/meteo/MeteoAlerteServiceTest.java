@@ -48,7 +48,7 @@ class MeteoAlerteServiceTest {
                         spocService);
     }
 
-    // --- 1) Mode TEST : groupage, tri corps, redirection vers default receivers
+    // --- 1) Mode TEST pur : groupage, tri corps, redirection vers default receivers
     @Test
     void envoyerAlertesRga_testMode_groupByRga_and_sortedBody_and_defaultReceivers() {
         LocalDate today = LocalDate.of(2025, 3, 1); // calculé AVANT le mock static
