@@ -40,6 +40,7 @@ sync-from-github:
   variables:
     GIT_DEPTH: 0
   script:
+    - apk add --no-cache curl jq
     - git remote add github_compas_api https://${GITHUB_MIRROR_USERNAME}:${GITHUB_TOKEN_MIRRORING}@github.com/InseeFr/Compas-API.git
     - git fetch github_compas_api
     - git checkout -B sync-from-github github_compas_api/main
@@ -61,7 +62,8 @@ sync-from-github:
         echo "MR déjà existante #$EXISTING_MR ✅"
       fi
   rules:
-    - when: manual
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
 
 
 mirror-api-to-github:
