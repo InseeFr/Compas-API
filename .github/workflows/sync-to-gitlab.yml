@@ -1,0 +1,55 @@
+name: Sync PR to GitLab
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.head_ref }}
+
+      - name: GitLab remote
+        run: |
+          git remote add gitlab https://oauth2:${{ secrets.PUSH_TO_MAIN_TOKEN }}@gitlab.insee.fr/dsi/compas/compas-api.git
+
+      - name: Creation de la sync branch
+        run: |
+          git checkout -B sync-from-github origin/${{ github.head_ref }}
+
+      - name: Push to GitLab
+        run: |
+          git push --force gitlab HEAD:sync-from-github
+
+      - name: Creation de la MR
+        run: |
+          EXISTING_MR=$(curl --silent \
+            --header "PRIVATE-TOKEN: ${{ secrets.PUSH_TO_MAIN_TOKEN }}" \
+            "https://gitlab.insee.fr/api/v4/projects/${{ secrets.ID_PROJECT }}/merge_requests?state=opened&source_branch=sync-from-github" \
+            | jq '.[0].iid')
+
+          if [ "$EXISTING_MR" == "null" ] || [ -z "$EXISTING_MR" ]; then
+            echo "Création de la MR..."
+            curl --request POST \
+              --header "PRIVATE-TOKEN: ${{ secrets.PUSH_TO_MAIN_TOKEN }}" \
+              --header "Content-Type: application/json" \
+              --data '{
+                "source_branch": "sync-from-github",
+                "target_branch": "main",
+                "title": "Sync de GitHub PR: ${{ github.event.pull_request.title }}",
+                "remove_source_branch": false
+              }' \
+              "https://gitlab.insee.fr/api/v4/projects/${{ secrets.ID_PROJECT }}/merge_requests"
+            echo "MR créée ✅"
+          else
+            echo "MR déjà existante #$EXISTING_MR, push suffisant ✅"
+          fi
