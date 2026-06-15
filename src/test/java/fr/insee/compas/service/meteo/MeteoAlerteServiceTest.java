@@ -48,7 +48,7 @@ class MeteoAlerteServiceTest {
                         spocService);
     }
 
-    // --- 1) Mode TEST : groupage, tri corps, redirection vers default receivers
+    // --- 1) Mode TEST pur : groupage, tri corps, redirection vers default receivers
     @Test
     void envoyerAlertesRga_testMode_groupByRga_and_sortedBody_and_defaultReceivers() {
         LocalDate today = LocalDate.of(2025, 3, 1); // calculé AVANT le mock static
@@ -71,24 +71,16 @@ class MeteoAlerteServiceTest {
         when(spocService.getDefaultReceivers()).thenReturn(defaults);
         when(spocService.getDefaultReceiverAdjMail()).thenReturn(defaultsAdj);
 
-        when(templateAlerteMeteo.getTemplateBody(
-                        anyString(),
-                        anyList(),
-                        anyBoolean(),
-                        anyString(),
-                        anyString(),
-                        nullable(String.class),
-                        any(MeteoAlerteUtils.AlerteType.class),
-                        anyInt()))
+        when(templateAlerteMeteo.getTemplateBody(any(MeteoAlerteUtils.AlerteMailContext.class)))
                 .thenAnswer(
                         invocation -> {
-                            String emailRga = invocation.getArgument(0);
-                            List<Meteo> apps = invocation.getArgument(1);
+                            MeteoAlerteUtils.AlerteMailContext ctx = invocation.getArgument(0);
+                            String emailRga = ctx.rgaEmail();
+                            List<Meteo> apps = ctx.apps();
 
                             if (apps.isEmpty()) {
                                 return "Mail pour " + emailRga + " avec aucune application";
                             }
-
                             return "Mail pour "
                                     + emailRga
                                     + " avec "
@@ -167,19 +159,12 @@ class MeteoAlerteServiceTest {
         m10.setSndi("SNDI1");
         when(meteoAffichageService.listerApplicationsMeteoAvecAgeMin(45)).thenReturn(List.of(m10));
         when(rgaResolverService.resolveRgaEmailByApplicationId(10)).thenReturn("rga1@insee.fr");
-        when(templateAlerteMeteo.getTemplateBody(
-                        anyString(),
-                        anyList(),
-                        anyBoolean(),
-                        anyString(),
-                        anyString(),
-                        nullable(String.class),
-                        any(MeteoAlerteUtils.AlerteType.class),
-                        anyInt()))
+        when(templateAlerteMeteo.getTemplateBody(any(MeteoAlerteUtils.AlerteMailContext.class)))
                 .thenAnswer(
                         invocation -> {
-                            String emailRga = invocation.getArgument(0);
-                            List<Meteo> apps = invocation.getArgument(1);
+                            MeteoAlerteUtils.AlerteMailContext ctx = invocation.getArgument(0);
+                            String emailRga = ctx.rgaEmail();
+                            List<Meteo> apps = ctx.apps();
                             if (apps.isEmpty()) return "Mail vide";
                             return "Mail pour " + emailRga + " - " + apps.getFirst().getAppName();
                         });

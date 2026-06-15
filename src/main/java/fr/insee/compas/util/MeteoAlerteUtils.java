@@ -2,6 +2,7 @@ package fr.insee.compas.util;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -13,6 +14,16 @@ import lombok.extern.slf4j.Slf4j;
 public class MeteoAlerteUtils {
     private static final Pattern EMAIL_RX =
             Pattern.compile("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
+
+    public record AlerteMailContext(
+            String rgaEmail,
+            List<Meteo> apps,
+            boolean test,
+            String emailResponsable,
+            String emailAdjResponsable,
+            String balfMetier,
+            AlerteType type,
+            int ageMinJours) {}
 
     public enum AlerteType {
         NONE,

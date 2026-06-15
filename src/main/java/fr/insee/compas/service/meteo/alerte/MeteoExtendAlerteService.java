@@ -197,15 +197,18 @@ public class MeteoExtendAlerteService {
                         .filter(MeteoAlerteUtils::isValidEmail)
                         .orElse("");
 
-        return templateAlerteMeteo.getTemplateBody(
-                destinataire.rgaEmail(),
-                mailAlerteMeteo.getAppsMeteo(),
-                mailAlerteMeteo.getIsTest(),
-                responsableMail,
-                responsableAdj,
-                destinataire.balfMetier(),
-                mailAlerteMeteo.getType(),
-                mailAlerteMeteo.getAgeMinJours());
+        MeteoAlerteUtils.AlerteMailContext alerteMailContext =
+                new MeteoAlerteUtils.AlerteMailContext(
+                        destinataire.rgaEmail(),
+                        mailAlerteMeteo.getAppsMeteo(),
+                        mailAlerteMeteo.getIsTest(),
+                        responsableMail,
+                        responsableAdj,
+                        destinataire.balfMetier(),
+                        mailAlerteMeteo.getType(),
+                        mailAlerteMeteo.getAgeMinJours());
+
+        return templateAlerteMeteo.getTemplateBody(alerteMailContext);
     }
 
     private MailRecipients buildMailRecipients(

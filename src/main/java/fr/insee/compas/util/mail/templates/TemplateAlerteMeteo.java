@@ -26,56 +26,48 @@ public class TemplateAlerteMeteo {
         return prefix + n + " application" + (n > 1 ? "s" : "");
     }
 
-    public String getTemplateBody(
-            String rgaEmail,
-            List<Meteo> apps,
-            boolean test,
-            String emailResponsable,
-            String emailAdjResponsable,
-            String balfMetier,
-            AlerteType type,
-            int ageMinJours) {
+    public String getTemplateBody(MeteoAlerteUtils.AlerteMailContext ctx) {
         LocalDate today = LocalDate.now(TZ_PARIS);
         StringBuilder sb = new StringBuilder();
 
-        if (test) {
+        if (ctx.test()) {
             sb.append("⚠️ MODE TEST — Ce mail est destiné à '")
-                    .append(MeteoAlerteUtils.escape(rgaEmail))
+                    .append(MeteoAlerteUtils.escape(ctx.rgaEmail()))
                     .append("'")
                     .append(BR);
-            if (emailResponsable != null && !emailResponsable.isBlank()) {
+            if (ctx.emailResponsable() != null && !ctx.emailResponsable().isBlank()) {
                 sb.append("Responsable (non destinataire en test) : ")
-                        .append(MeteoAlerteUtils.escape(emailResponsable))
+                        .append(MeteoAlerteUtils.escape(ctx.emailResponsable()))
                         .append(BR);
             }
-            if (emailAdjResponsable != null && !emailAdjResponsable.isBlank()) {
+            if (ctx.emailAdjResponsable() != null && !ctx.emailAdjResponsable().isBlank()) {
                 sb.append("Responsable Adjoint (non destinataire en test) : ")
-                        .append(MeteoAlerteUtils.escape(emailAdjResponsable))
+                        .append(MeteoAlerteUtils.escape(ctx.emailAdjResponsable()))
                         .append(BR);
             }
-            if (balfMetier != null && !balfMetier.isBlank()) {
+            if (ctx.balfMetier() != null && !ctx.balfMetier().isBlank()) {
                 sb.append("BALF métier (non destinataire en test) : ")
-                        .append(MeteoAlerteUtils.escape(balfMetier))
+                        .append(MeteoAlerteUtils.escape(ctx.balfMetier()))
                         .append(BR);
             }
             sb.append(BR);
         }
 
-        if (type == AlerteType.RETARD) {
+        if (ctx.type() == AlerteType.RETARD) {
             sb.append(
-                            "La saisie de la météo de vos applications ci-dessous est en retard"
-                                    + " (≥ 1 mois).")
+                            "La saisie de la météo de vos applications ci-dessous est en retard (≥"
+                                    + " 1 mois).")
                     .append(BR)
                     .append(BR);
         } else {
             sb.append("Vos applications ci-dessous ont une météo à bientôt mettre à jour (≥ ")
-                    .append(ageMinJours)
+                    .append(ctx.ageMinJours())
                     .append(" jours).")
                     .append(BR)
                     .append(BR);
         }
 
-        apps.stream()
+        ctx.apps().stream()
                 .sorted(
                         Comparator.comparing((Meteo m) -> MeteoAlerteUtils.daysOld(m, today))
                                 .reversed())
@@ -101,7 +93,7 @@ public class TemplateAlerteMeteo {
                 .append(BR)
                 .append("Cordialement,")
                 .append(BR)
-                .append("L’équipe COMPAS")
+                .append("L'équipe COMPAS")
                 .append(BR);
 
         return sb.toString();
