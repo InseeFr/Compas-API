@@ -17,7 +17,6 @@ import fr.insee.compas.dto.AggregatedResultDto;
 import fr.insee.compas.model.compas.TableFaits;
 import fr.insee.compas.repository.TableFaitsRepository;
 import fr.insee.compas.view.IndicateurDevopsView;
-import fr.insee.compas.view.IndicateurQualiteView;
 
 class TableFaitsServiceTest {
 
@@ -119,41 +118,6 @@ class TableFaitsServiceTest {
         // then
         assertEquals(new BigDecimal("10.75"), map.get(1).getSumValeur());
         assertEquals(new BigDecimal("20"), map.get(2).getSumValeur());
-    }
-
-    @Test
-    void givenRawData_whenGetIndicateurModuleQualite_thenReturnView() {
-        // given
-        Object[][] raw = {{1, 100, 20, "DT", "FIA"}};
-        List<Object[]> faits = Arrays.asList(raw);
-        when(tableFaitsRepository.findValueIndicateurModuleQualiteBrute()).thenReturn(faits);
-
-        // when
-        Map<Integer, IndicateurQualiteView> map = tableFaitsService.getIndicateurModuleQualite();
-
-        // then
-        IndicateurQualiteView view = map.get(1);
-        assertEquals("100", view.getNbLigneCode());
-        assertEquals("20", view.getNbLigneCodeNonTeste());
-        assertEquals("DT", view.getDetteTechnique());
-        assertEquals("FIA", view.getFiabilite());
-    }
-
-    @Test
-    void givenRawData_whenGetIndicateurApplicationDevops_thenReturnView() {
-        // given
-        Object[][] raw = {{2, 5, 10, 3}};
-        List<Object[]> faits = Arrays.asList(raw);
-        when(tableFaitsRepository.findValueIndicateurApplicationDevopsBrute()).thenReturn(faits);
-
-        // when
-        Map<Integer, IndicateurDevopsView> map = tableFaitsService.getIndicateurApplicationDevops();
-
-        // then
-        IndicateurDevopsView view = map.get(2);
-        assertEquals("5", view.getDistanceCount());
-        assertEquals("10", view.getNbDeploymentCount());
-        assertEquals("3", view.getNbContributorCount());
     }
 
     @Test

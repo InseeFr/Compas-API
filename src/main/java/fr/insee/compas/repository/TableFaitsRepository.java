@@ -2,6 +2,7 @@ package fr.insee.compas.repository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -293,34 +294,69 @@ public interface TableFaitsRepository extends JpaRepository<TableFaits, Long> {
 
     @Query(
             value =
-"""
-       WITH latest_data AS (
-                                       SELECT
-                                           id_module,
-                                           id_application,
-                                           id_indicateur,
-                                           valeur,
-                                           date,
-                                           ROW_NUMBER() OVER (PARTITION BY id_application, id_indicateur ORDER BY date DESC) AS rn
-                                       FROM
-                                           table_faits
-                                       WHERE id_module is null  and id_application  is not null
-                                   )
-                                   SELECT
-                                      id_application AS applicationId,
-                                      MAX(CASE WHEN id_indicateur = 1 THEN valeur END) AS nbLigneCode,
-                                      MAX(CASE WHEN id_indicateur = 2 THEN valeur END) AS nbLigneCodeNonTeste,
-                                      MAX(CASE WHEN id_indicateur = 11 THEN valeur END) AS detteTechnique,
-                                      MAX(CASE WHEN id_indicateur = 12 THEN valeur END) AS fiabilite
-                                   FROM
-                                       latest_data
-                                   WHERE
-                                       rn = 1
-                                   GROUP BY
-                                       id_application;
-""",
+                    """
+                     WITH latest_data AS (
+                                                                         SELECT
+                                                                             id_module,
+                                                                             id_indicateur,
+                                                                             valeur,
+                                                                             date,
+                                                                             ROW_NUMBER() OVER (
+                                                                                 PARTITION BY id_module, id_indicateur
+                                                                                 ORDER BY date DESC
+                                                                             ) AS rn
+                                                                         FROM
+                                                                             table_faits
+                                                                         WHERE
+                                                                             date <= :dateReference
+                                                                     )
+                                                                     SELECT
+                                                                         id_module AS moduleId,
+                                                                         MAX(CASE WHEN id_indicateur = 1 THEN valeur END) AS nbLigneCode,
+                                                                         MAX(CASE WHEN id_indicateur = 2 THEN valeur END) AS nbLigneCodeNonTeste,
+                                                                         MAX(CASE WHEN id_indicateur = 11 THEN valeur END) AS detteTechnique,
+                                                                         MAX(CASE WHEN id_indicateur = 12 THEN valeur END) AS fiabilite
+                                                                     FROM
+                                                                         latest_data
+                                                                     WHERE
+                                                                         rn = 1
+                                                                         AND id_module IS NOT NULL
+                                                                     GROUP BY
+                                                                         id_module;
+                    """,
             nativeQuery = true)
-    List<Object[]> findValueIndicateurApplicationQualiteBrute();
+    List<Object[]> findValueIndicateurModuleQualiteBrute(Date dateReference);
+
+    @Query(
+            value =
+                    """
+                           WITH latest_data AS (
+                                                           SELECT
+                                                               id_module,
+                                                               id_application,
+                                                               id_indicateur,
+                                                               valeur,
+                                                               date,
+                                                               ROW_NUMBER() OVER (PARTITION BY id_application, id_indicateur ORDER BY date DESC) AS rn
+                                                           FROM
+                                                               table_faits
+                                                           WHERE id_module is null  and id_application  is not null and date <= :dateReference
+                                                       )
+                                                       SELECT
+                                                          id_application AS applicationId,
+                                                          MAX(CASE WHEN id_indicateur = 1 THEN valeur END) AS nbLigneCode,
+                                                          MAX(CASE WHEN id_indicateur = 2 THEN valeur END) AS nbLigneCodeNonTeste,
+                                                          MAX(CASE WHEN id_indicateur = 11 THEN valeur END) AS detteTechnique,
+                                                          MAX(CASE WHEN id_indicateur = 12 THEN valeur END) AS fiabilite
+                                                       FROM
+                                                           latest_data
+                                                       WHERE
+                                                           rn = 1
+                                                       GROUP BY
+                                                           id_application;
+                    """,
+            nativeQuery = true)
+    List<Object[]> findValueIndicateurApplicationQualiteBrute(Date dateReference);
 
     @Query(
             value =

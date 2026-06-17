@@ -1,14 +1,17 @@
 package fr.insee.compas.controller;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import fr.insee.compas.model.compas.Periode;
 import fr.insee.compas.model.sonar.RecuperationMeasures;
 import fr.insee.compas.service.qualite.IndicateurQualiteApplicationService;
 import fr.insee.compas.service.qualite.IndicateurQualiteModuleService;
@@ -26,6 +29,7 @@ public class QualiteController {
     private final RecuperationIndicateurSonarService testUnitaireService;
     private final IndicateurQualiteModuleService moduleService;
     private final IndicateurQualiteApplicationService applicationService;
+    private final SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 
     public QualiteController(
             RecuperationIndicateurSonarService testUnitaireService,
@@ -47,18 +51,46 @@ public class QualiteController {
     }
 
     @GetMapping(value = "/modules", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<IndicateurQualiteView> getIndicateurQualiteByModule() {
+    public List<IndicateurQualiteView> getIndicateurQualiteByModuleByDate(
+            @RequestParam(required = false) String origine,
+            @RequestParam(required = false) String passee)
+            throws ParseException {
         log.info("Début du endpoint  récupération indicateur Qualite par module");
-        List<IndicateurQualiteView> result = moduleService.getIndicateurNiveauModule();
+        Periode periode = buildPeriode(origine, passee);
+
+        List<IndicateurQualiteView> result =
+                moduleService.getIndicateurNiveauModule(periode.origine(), periode.passee());
         log.info("Fin du endpoint récupération indicateur Qualite par module");
         return result;
     }
 
     @GetMapping(value = "/applications", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<IndicateurQualiteView> getIndicateurQualiteByApplication() {
+    public List<IndicateurQualiteView> getIndicateurQualiteByApplicationByDate(
+            @RequestParam(required = false) String origine,
+            @RequestParam(required = false) String passee)
+            throws ParseException {
         log.info("Début du endpoint récupération indicateur Qualite par application ");
-        List<IndicateurQualiteView> result = applicationService.getIndicateurNiveauApplication();
+
+        Periode periode = buildPeriode(origine, passee);
+        List<IndicateurQualiteView> result =
+                applicationService.getIndicateurNiveauApplication(
+                        periode.origine(), periode.passee());
         log.info("Fin du endpoint récupération indicateur Qualite par application");
         return result;
+    }
+
+    private Periode buildPeriode(String origine, String passee) throws ParseException {
+        Date dateOrigine = origine == null ? new Date() : sdf.parse(origine);
+
+        Date datePassee =
+                passee == null
+                        ? Date.from(
+                                LocalDate.now()
+                                        .minusMonths(1)
+                                        .atStartOfDay(ZoneId.systemDefault())
+                                        .toInstant())
+                        : sdf.parse(passee);
+
+        return new Periode(dateOrigine, datePassee);
     }
 }

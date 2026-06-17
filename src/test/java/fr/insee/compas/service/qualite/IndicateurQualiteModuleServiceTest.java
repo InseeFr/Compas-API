@@ -2,8 +2,12 @@ package fr.insee.compas.service.qualite;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.List;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +28,21 @@ class IndicateurQualiteModuleServiceTest {
 
     @Autowired private IndicateurQualiteModuleService indicateurService;
 
+    private Date dateOrigine;
+    private Date datePassee;
+
+    @BeforeEach
+    void initDates() {
+        dateOrigine = new Date();
+
+        datePassee =
+                Date.from(
+                        LocalDate.now()
+                                .minusMonths(1)
+                                .atStartOfDay(ZoneId.systemDefault())
+                                .toInstant());
+    }
+
     @Test
     @Sql(
             scripts = {"classpath:qualite/data-qualite.sql"},
@@ -36,17 +55,30 @@ class IndicateurQualiteModuleServiceTest {
                         .appName("application")
                         .sndi("SNDI")
                         .keySonar("keySonar")
+                        .domaineFonctionnel("domaine")
+                        .domaineSndi("DOT")
                         .build();
 
         List<Module> mockModules = List.of(module);
         Mockito.when(oscarService.getModules()).thenReturn(mockModules);
 
-        var listeIndicateurModule = indicateurService.getIndicateurNiveauModule();
+        var listeIndicateurModule =
+                indicateurService.getIndicateurNiveauModule(dateOrigine, datePassee);
         assertThat(listeIndicateurModule).hasSize(1);
         IndicateurQualiteView view = listeIndicateurModule.getFirst();
-        assertThat(view.getLettreCouvertureTestUniaire()).isEqualTo("A");
+        assertThat(view.getModuleId()).isEqualTo(483);
+        assertThat(view.getApplicationName()).isEqualTo("application");
+        assertThat(view.getModuleName()).isEqualTo("module");
+        assertThat(view.getSndi()).isEqualTo("SNDI");
+        assertThat(view.getDomaineSndi()).isEqualTo("DOT");
+        assertThat(view.getDomaineFonctionnel()).isEqualTo("domaine");
+        assertThat(view.getLettreCouvertureTestUnitaire()).isEqualTo("A");
         assertThat(view.getLettreFiabilite()).isEqualTo("A");
         assertThat(view.getLettreDetteTechnique()).isEqualTo("A");
+        assertThat(view.getEvolutionCouvertureTestUnitaire()).isEqualTo(-10);
+        assertThat(view.getEvolutionDetteTechnique()).isEqualTo(30);
+        assertThat(view.getEvolutionFiabilite()).isEqualTo(1);
+        assertThat(view.getLettreGlobalQualite()).isEqualTo("A");
     }
 
     @Test
@@ -66,10 +98,12 @@ class IndicateurQualiteModuleServiceTest {
         List<Module> mockModules = List.of(module);
         Mockito.when(oscarService.getModules()).thenReturn(mockModules);
 
-        var listeIndicateurModule = indicateurService.getIndicateurNiveauModule();
+        var listeIndicateurModule =
+                indicateurService.getIndicateurNiveauModule(dateOrigine, datePassee);
         assertThat(listeIndicateurModule).hasSize(1);
         IndicateurQualiteView view = listeIndicateurModule.getFirst();
-        assertThat(view.getLettreCouvertureTestUniaire()).isEqualTo("A");
+        assertThat(view.getModuleId()).isEqualTo(484);
+        assertThat(view.getLettreCouvertureTestUnitaire()).isEqualTo("A");
         assertThat(view.getLettreFiabilite()).isEqualTo("A");
         assertThat(view.getLettreDetteTechnique()).isEqualTo("A");
     }
@@ -92,10 +126,11 @@ class IndicateurQualiteModuleServiceTest {
         Mockito.when(oscarService.getModules()).thenReturn(mockModules);
 
         List<IndicateurQualiteView> listeIndicateurModule =
-                indicateurService.getIndicateurNiveauModule();
+                indicateurService.getIndicateurNiveauModule(dateOrigine, datePassee);
         assertThat(listeIndicateurModule).hasSize(1);
         IndicateurQualiteView view = listeIndicateurModule.getFirst();
-        assertThat(view.getLettreCouvertureTestUniaire()).isEqualTo("NR");
+        assertThat(view.getModuleId()).isEqualTo(485);
+        assertThat(view.getLettreCouvertureTestUnitaire()).isEqualTo("NR");
         assertThat(view.getLettreFiabilite()).isEqualTo("NR");
     }
 
@@ -116,10 +151,12 @@ class IndicateurQualiteModuleServiceTest {
         List<Module> mockModules = List.of(module);
         Mockito.when(oscarService.getModules()).thenReturn(mockModules);
 
-        var listeIndicateurModule = indicateurService.getIndicateurNiveauModule();
+        var listeIndicateurModule =
+                indicateurService.getIndicateurNiveauModule(dateOrigine, datePassee);
         assertThat(listeIndicateurModule).hasSize(1);
         IndicateurQualiteView view = listeIndicateurModule.getFirst();
-        assertThat(view.getLettreCouvertureTestUniaire()).isEqualTo("SO");
+        assertThat(view.getModuleId()).isEqualTo(488);
+        assertThat(view.getLettreCouvertureTestUnitaire()).isEqualTo("SO");
         assertThat(view.getLettreDetteTechnique()).isEqualTo("SO");
         assertThat(view.getLettreFiabilite()).isEqualTo("SO");
     }
@@ -141,10 +178,12 @@ class IndicateurQualiteModuleServiceTest {
         List<Module> mockModules = List.of(module);
         Mockito.when(oscarService.getModules()).thenReturn(mockModules);
 
-        var listeIndicateurModule = indicateurService.getIndicateurNiveauModule();
+        var listeIndicateurModule =
+                indicateurService.getIndicateurNiveauModule(dateOrigine, datePassee);
         assertThat(listeIndicateurModule).hasSize(1);
         IndicateurQualiteView view = listeIndicateurModule.getFirst();
-        assertThat(view.getLettreCouvertureTestUniaire()).isEqualTo("NR");
+        assertThat(view.getModuleId()).isEqualTo(488);
+        assertThat(view.getLettreCouvertureTestUnitaire()).isEqualTo("NR");
         assertThat(view.getLettreFiabilite()).isEqualTo("NR");
         assertThat(view.getLettreDetteTechnique()).isEqualTo("NR");
     }

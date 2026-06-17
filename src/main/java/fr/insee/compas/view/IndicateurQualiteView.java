@@ -4,11 +4,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
+@EqualsAndHashCode(callSuper = true)
 @Data
 @Builder
 @NoArgsConstructor
@@ -23,18 +21,29 @@ public class IndicateurQualiteView extends AbstractIndicateurLettreGlobale {
     private String domaineFonctionnel;
     private String nbLigneCode;
     private String nbLigneCodeNonTeste;
-    private String pourcentageCouvertureTestUniaire;
+
     private String detteTechnique;
+    private String pourcentageCouvertureTestUnitaire;
     private String fiabilite;
+
+    private String detteTechniquePast;
+    private String pourcentageCouvertureTestUnitairePast;
+    private String fiabilitePast;
+
     private String lettreDetteTechnique;
     private String lettreFiabilite;
-    private String lettreCouvertureTestUniaire;
+
+    private String lettreCouvertureTestUnitaire;
 
     private String lettreGlobalQualite;
 
+    private double evolutionCouvertureTestUnitaire;
+    private double evolutionDetteTechnique;
+    private double evolutionFiabilite;
+
     @Override
     protected List<String> getLettresPourCalcul() {
-        return Stream.of(lettreCouvertureTestUniaire, lettreFiabilite, lettreDetteTechnique)
+        return Stream.of(lettreCouvertureTestUnitaire, lettreFiabilite, lettreDetteTechnique)
                 .filter(Objects::nonNull)
                 .toList();
     }
@@ -44,7 +53,7 @@ public class IndicateurQualiteView extends AbstractIndicateurLettreGlobale {
         this.lettreGlobalQualite = lettre;
     }
 
-    public void calculerLettreGlobalQualite() {
+    public void calculerLettreGlobalQualiteEtEvolution() {
         super.calculerLettreGlobale();
     }
 }

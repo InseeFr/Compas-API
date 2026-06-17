@@ -12,10 +12,10 @@ class IndicateurModuleQualiteViewTest {
                 IndicateurQualiteView.builder()
                         .lettreDetteTechnique("A")
                         .lettreFiabilite("B")
-                        .lettreCouvertureTestUniaire("C")
+                        .lettreCouvertureTestUnitaire("C")
                         .build();
 
-        m.calculerLettreGlobalQualite();
+        m.calculerLettreGlobalQualiteEtEvolution();
         assertEquals("B", m.getLettreGlobalQualite());
     }
 
@@ -25,10 +25,10 @@ class IndicateurModuleQualiteViewTest {
                 IndicateurQualiteView.builder()
                         .lettreDetteTechnique("A")
                         .lettreFiabilite("X")
-                        .lettreCouvertureTestUniaire("B")
+                        .lettreCouvertureTestUnitaire("B")
                         .build();
 
-        m.calculerLettreGlobalQualite();
+        m.calculerLettreGlobalQualiteEtEvolution();
         assertEquals("C", m.getLettreGlobalQualite());
     }
 
@@ -38,10 +38,10 @@ class IndicateurModuleQualiteViewTest {
                 IndicateurQualiteView.builder()
                         .lettreDetteTechnique("X")
                         .lettreFiabilite("X")
-                        .lettreCouvertureTestUniaire("C")
+                        .lettreCouvertureTestUnitaire("C")
                         .build();
 
-        m.calculerLettreGlobalQualite();
+        m.calculerLettreGlobalQualiteEtEvolution();
         assertEquals("D", m.getLettreGlobalQualite());
     }
 
@@ -51,10 +51,10 @@ class IndicateurModuleQualiteViewTest {
                 IndicateurQualiteView.builder()
                         .lettreDetteTechnique("X")
                         .lettreFiabilite("X")
-                        .lettreCouvertureTestUniaire("X")
+                        .lettreCouvertureTestUnitaire("X")
                         .build();
 
-        m.calculerLettreGlobalQualite();
+        m.calculerLettreGlobalQualiteEtEvolution();
         assertEquals("E", m.getLettreGlobalQualite());
     }
 
@@ -64,10 +64,10 @@ class IndicateurModuleQualiteViewTest {
                 IndicateurQualiteView.builder()
                         .lettreDetteTechnique("A") // 1
                         .lettreFiabilite("E") // 5
-                        .lettreCouvertureTestUniaire("X") // 5
+                        .lettreCouvertureTestUnitaire("X") // 5
                         .build();
 
-        m.calculerLettreGlobalQualite();
+        m.calculerLettreGlobalQualiteEtEvolution();
 
         assertEquals("D", m.getLettreGlobalQualite());
     }

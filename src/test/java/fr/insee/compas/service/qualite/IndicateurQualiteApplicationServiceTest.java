@@ -2,8 +2,12 @@ package fr.insee.compas.service.qualite;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.List;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +28,21 @@ class IndicateurQualiteApplicationServiceTest {
 
     @Autowired IndicateurQualiteApplicationService indicateurService;
 
+    private Date dateOrigine;
+    private Date datePassee;
+
+    @BeforeEach
+    void initDates() {
+        dateOrigine = new Date();
+
+        datePassee =
+                Date.from(
+                        LocalDate.now()
+                                .minusMonths(1)
+                                .atStartOfDay(ZoneId.systemDefault())
+                                .toInstant());
+    }
+
     @Test
     @Sql(
             scripts = {"classpath:qualite/data-qualite.sql"},
@@ -39,12 +58,16 @@ class IndicateurQualiteApplicationServiceTest {
         List<Application> mockApp = List.of(app);
         Mockito.when(oscarService.getApplications()).thenReturn(mockApp);
 
-        var listeIndicateurModule = indicateurService.getIndicateurNiveauApplication();
+        var listeIndicateurModule =
+                indicateurService.getIndicateurNiveauApplication(dateOrigine, datePassee);
         assertThat(listeIndicateurModule).hasSize(1);
         IndicateurQualiteView view = listeIndicateurModule.getFirst();
-        assertThat(view.getLettreCouvertureTestUniaire()).isEqualTo("A");
+        assertThat(view.getLettreCouvertureTestUnitaire()).isEqualTo("A");
         assertThat(view.getLettreFiabilite()).isEqualTo("A");
         assertThat(view.getLettreDetteTechnique()).isEqualTo("A");
+        assertThat(view.getEvolutionFiabilite()).isEqualTo(1);
+        assertThat(view.getEvolutionDetteTechnique()).isEqualTo(-10);
+        assertThat(view.getEvolutionCouvertureTestUnitaire()).isEqualTo(-10);
     }
 
     @Test
@@ -62,10 +85,11 @@ class IndicateurQualiteApplicationServiceTest {
         List<Application> mockApp = List.of(app);
         Mockito.when(oscarService.getApplications()).thenReturn(mockApp);
 
-        var listeIndicateurModule = indicateurService.getIndicateurNiveauApplication();
+        var listeIndicateurModule =
+                indicateurService.getIndicateurNiveauApplication(dateOrigine, datePassee);
         assertThat(listeIndicateurModule).hasSize(1);
         var view = listeIndicateurModule.getFirst();
-        assertThat(view.getLettreCouvertureTestUniaire()).isEqualTo("SO");
+        assertThat(view.getLettreCouvertureTestUnitaire()).isEqualTo("SO");
         assertThat(view.getLettreDetteTechnique()).isEqualTo("SO");
         assertThat(view.getLettreFiabilite()).isEqualTo("SO");
         assertThat(view.getLettreGlobalQualite()).isEqualTo("SO");
@@ -86,10 +110,11 @@ class IndicateurQualiteApplicationServiceTest {
         List<Application> mockApp = List.of(app);
         Mockito.when(oscarService.getApplications()).thenReturn(mockApp);
 
-        var listeIndicateurModule = indicateurService.getIndicateurNiveauApplication();
+        var listeIndicateurModule =
+                indicateurService.getIndicateurNiveauApplication(dateOrigine, datePassee);
         assertThat(listeIndicateurModule).hasSize(1);
         var view = listeIndicateurModule.getFirst();
-        assertThat(view.getLettreCouvertureTestUniaire()).isEqualTo("NR");
+        assertThat(view.getLettreCouvertureTestUnitaire()).isEqualTo("NR");
         assertThat(view.getLettreDetteTechnique()).isEqualTo("NR");
         assertThat(view.getLettreFiabilite()).isEqualTo("NR");
         assertThat(view.getLettreGlobalQualite()).isEqualTo("NR");

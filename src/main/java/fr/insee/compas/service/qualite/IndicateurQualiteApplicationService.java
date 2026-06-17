@@ -1,10 +1,10 @@
 package fr.insee.compas.service.qualite;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import fr.insee.compas.model.oscar.Application;
@@ -24,6 +24,10 @@ public class IndicateurQualiteApplicationService {
 
     private final TableFaitsService tableFaitsService;
 
+    private final CouvertureCalculateurService couvertureCalculateurService;
+    private final FiabiliteCalculateurService fiabiliteCalculateurService;
+    private final DetteTechniqueCalculateurService detteTechniqueCalculateurService;
+
     private final UtilsService utilsService;
 
     private final ConversionService conversionService;
@@ -31,18 +35,28 @@ public class IndicateurQualiteApplicationService {
     public IndicateurQualiteApplicationService(
             OscarService oscarService,
             TableFaitsService tableFaitsService,
+            CouvertureCalculateurService couvertureCalculateurService,
+            FiabiliteCalculateurService fiabiliteCalculateurService,
+            DetteTechniqueCalculateurService detteTechniqueCalculateurService,
             UtilsService utilsService,
             ConversionService conversionService) {
         this.oscarService = oscarService;
         this.tableFaitsService = tableFaitsService;
+        this.couvertureCalculateurService = couvertureCalculateurService;
+        this.fiabiliteCalculateurService = fiabiliteCalculateurService;
+        this.detteTechniqueCalculateurService = detteTechniqueCalculateurService;
+
         this.utilsService = utilsService;
         this.conversionService = conversionService;
     }
 
-    public List<IndicateurQualiteView> getIndicateurNiveauApplication() {
+    public List<IndicateurQualiteView> getIndicateurNiveauApplication(
+            Date dateOrigine, Date datePassee) {
 
         Map<Integer, IndicateurQualiteView> mapQualite =
-                tableFaitsService.getIndicateurApplicationQualite();
+                tableFaitsService.getIndicateurApplicationQualite(dateOrigine);
+        Map<Integer, IndicateurQualiteView> mapQualiteHisto =
+                tableFaitsService.getIndicateurApplicationQualite(datePassee);
 
         // Récupérer les informations des modules depuis l'API
         List<Application> applications = oscarService.getApplications();
@@ -52,6 +66,8 @@ public class IndicateurQualiteApplicationService {
         // Traiter chaque application
         for (Application application : applications) {
             IndicateurQualiteView viewApplication = mapQualite.get(application.getIdApplication());
+            IndicateurQualiteView viewApplicationHisto =
+                    mapQualiteHisto.get(application.getIdApplication());
             if (viewApplication == null) {
                 viewApplication = new IndicateurQualiteView();
             }
@@ -61,64 +77,17 @@ public class IndicateurQualiteApplicationService {
             viewApplication.setDomaineFonctionnel(application.getDomaineFonctionnel());
             viewApplication.setApplicationId(application.getIdApplication());
 
-            calculLettreCouvertureTest(viewApplication);
+            couvertureCalculateurService.calculCouvertureEtEvolution(
+                    viewApplication, viewApplicationHisto, Context.APPLICATION, null);
+            fiabiliteCalculateurService.calculFiabilite(
+                    viewApplication, viewApplicationHisto, Context.APPLICATION, null);
+            detteTechniqueCalculateurService.calculDetteTechnique(
+                    viewApplication, viewApplicationHisto, Context.APPLICATION, null);
 
-            calculLettreFiabilite(viewApplication);
-            calculLettreDetteTechnique(viewApplication);
-
-            viewApplication.calculerLettreGlobalQualite();
+            viewApplication.calculerLettreGlobalQualiteEtEvolution();
             resultat.add(viewApplication);
         }
 
         return resultat;
-    }
-
-    private void calculLettreCouvertureTest(IndicateurQualiteView viewApplication) {
-        log.debug(viewApplication.getApplicationName());
-
-        if (StringUtils.isNotEmpty(viewApplication.getNbLigneCode())) {
-            if (viewApplication.getNbLigneCodeNonTeste().isEmpty()) {
-                viewApplication.setNbLigneCodeNonTeste("0");
-            }
-            if (Double.parseDouble(viewApplication.getNbLigneCode()) > 0) {
-                double percentage =
-                        utilsService.calculPourcentageCouvertureTest(
-                                (int) Double.parseDouble(viewApplication.getNbLigneCode()),
-                                (int) Double.parseDouble(viewApplication.getNbLigneCodeNonTeste()));
-
-                String pourcentage = (int) percentage + " %";
-                // Obtenir la note
-                String lettre = conversionService.convertPourcentageEnNote(percentage);
-                viewApplication.setPourcentageCouvertureTestUniaire(pourcentage);
-                viewApplication.setLettreCouvertureTestUniaire(lettre);
-            } else {
-                // SI la somme des modules est négative tous les modules sont SO
-                viewApplication.setPourcentageCouvertureTestUniaire("");
-                viewApplication.setLettreCouvertureTestUniaire("SO");
-                viewApplication.setLettreDetteTechnique("SO");
-                viewApplication.setLettreFiabilite("SO");
-            }
-
-        } else {
-            viewApplication.setPourcentageCouvertureTestUniaire("");
-            viewApplication.setLettreCouvertureTestUniaire("NR");
-            viewApplication.setLettreDetteTechnique("NR");
-            viewApplication.setLettreFiabilite("NR");
-        }
-    }
-
-    private void calculLettreDetteTechnique(IndicateurQualiteView viewApplication) {
-        if (StringUtils.isNotEmpty(viewApplication.getDetteTechnique())) {
-            viewApplication.setLettreDetteTechnique(
-                    conversionService.convertDetteTechnique(viewApplication.getDetteTechnique()));
-        }
-    }
-
-    private void calculLettreFiabilite(IndicateurQualiteView viewApplication) {
-        if (StringUtils.isNotEmpty(viewApplication.getFiabilite())) {
-            viewApplication.setLettreFiabilite(
-                    Character.toString(
-                            (char) ('A' + Double.parseDouble(viewApplication.getFiabilite()) - 1)));
-        }
     }
 }

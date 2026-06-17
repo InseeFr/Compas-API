@@ -16,3 +16,4 @@ package-lock.json
 **/META-INF/*/target/
 /src/main/resources/
 /.factorypath
+qodana.yaml

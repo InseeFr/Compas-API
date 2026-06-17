@@ -1,6 +1,7 @@
 package fr.insee.compas.service;
 
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -87,8 +88,9 @@ public class TableFaitsService {
                                                 ((Number) obj[0]).intValue())));
     }
 
-    public Map<Integer, IndicateurQualiteView> getIndicateurModuleQualite() {
-        final List<Object[]> faits = tableFaitsRepository.findValueIndicateurModuleQualiteBrute();
+    public Map<Integer, IndicateurQualiteView> getIndicateurModuleQualite(Date date) {
+        final List<Object[]> faits =
+                tableFaitsRepository.findValueIndicateurModuleQualiteBrute(date);
 
         return faits.stream()
                 .collect(
@@ -104,9 +106,9 @@ public class TableFaitsService {
                                                 .build()));
     }
 
-    public Map<Integer, IndicateurQualiteView> getIndicateurApplicationQualite() {
+    public Map<Integer, IndicateurQualiteView> getIndicateurApplicationQualite(Date date) {
         final List<Object[]> faits =
-                tableFaitsRepository.findValueIndicateurApplicationQualiteBrute();
+                tableFaitsRepository.findValueIndicateurApplicationQualiteBrute(date);
 
         return faits.stream()
                 .collect(
