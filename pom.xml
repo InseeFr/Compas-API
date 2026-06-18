@@ -22,7 +22,7 @@
 		<sonar.coverage.exclusions>**/LocalSecurityConfig.java</sonar.coverage.exclusions>
 		<maven.compiler.source>25</maven.compiler.source>
 		<maven.compiler.target>25</maven.compiler.target>
-		<pitest.version>1.23.0</pitest.version>
+		<pitest.version>1.25.5</pitest.version>
 		<pitest-junit5-plugin.version>1.2.3</pitest-junit5-plugin.version>
 	</properties>
 
