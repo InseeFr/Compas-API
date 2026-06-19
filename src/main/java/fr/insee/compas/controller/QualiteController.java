@@ -1,10 +1,8 @@
 package fr.insee.compas.controller;
 
+import static fr.insee.compas.util.TendanceUtils.buildPeriode;
+
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -29,7 +27,6 @@ public class QualiteController {
     private final RecuperationIndicateurSonarService testUnitaireService;
     private final IndicateurQualiteModuleService moduleService;
     private final IndicateurQualiteApplicationService applicationService;
-    private final SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 
     public QualiteController(
             RecuperationIndicateurSonarService testUnitaireService,
@@ -77,20 +74,5 @@ public class QualiteController {
                         periode.origine(), periode.passee());
         log.info("Fin du endpoint récupération indicateur Qualite par application");
         return result;
-    }
-
-    private Periode buildPeriode(String origine, String passee) throws ParseException {
-        Date dateOrigine = origine == null ? new Date() : sdf.parse(origine);
-
-        Date datePassee =
-                passee == null
-                        ? Date.from(
-                                LocalDate.now()
-                                        .minusMonths(1)
-                                        .atStartOfDay(ZoneId.systemDefault())
-                                        .toInstant())
-                        : sdf.parse(passee);
-
-        return new Periode(dateOrigine, datePassee);
     }
 }

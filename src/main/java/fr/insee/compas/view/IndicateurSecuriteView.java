@@ -19,9 +19,15 @@ public class IndicateurSecuriteView extends AbstractIndicateurLettreGlobale {
     private String nbCveMedium;
     private String nbCveLow;
     private String nbVmNonMaj;
+    private String nbCveCriticalPast;
+    private String nbCveHighPast;
+    private String nbCveMediumPast;
+    private String nbCveLowPast;
     private String lettreCve;
     private String delaiVmNonMiseAjour;
+    private String delaiVmNonMiseAJourPast;
     private String lettreMajVm;
+    private String vmCountPast;
     private String lettreGlobaleSecurite;
 
     @Override

@@ -18,8 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class IndicateurQualiteModuleService {
 
-    private static final String SANS_OBJET = "Sans objet";
-
     private final OscarService oscarService;
 
     private final TableFaitsService tableFaitsService;

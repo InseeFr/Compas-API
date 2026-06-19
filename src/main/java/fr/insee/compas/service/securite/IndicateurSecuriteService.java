@@ -1,14 +1,16 @@
 package fr.insee.compas.service.securite;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import static fr.insee.compas.util.security.CalculSecurityUtils.*;
+
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
 import fr.insee.compas.model.oscar.Module;
 import fr.insee.compas.repository.IndicateurSecuriteRepository;
+import fr.insee.compas.repository.projection.SecuriteProjection;
 import fr.insee.compas.service.OscarService;
 import fr.insee.compas.service.conversion.ConversionService;
 import fr.insee.compas.view.IndicateurSecuriteView;
@@ -17,117 +19,115 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class IndicateurSecuriteService {
+public class IndicateurSecuriteService implements IIndicateurSecuriteService {
+
     private final ConversionService conversionService;
     private final IndicateurSecuriteRepository indicateurSecuriteRepository;
     private final OscarService oscarService;
 
-    public List<IndicateurSecuriteView> getIndicateursApplicationView() {
-        List<Object[]> rawData = indicateurSecuriteRepository.findValueBruteApplication();
-        List<IndicateurSecuriteView> result = new ArrayList<>();
+    public List<IndicateurSecuriteView> getIndicateursApplicationView(
+            Date dateReference, Date datePassee) {
+        List<SecuriteProjection> current =
+                indicateurSecuriteRepository.findValueBruteApplication(dateReference);
+        Map<Integer, SecuriteProjection> past =
+                indexById(indicateurSecuriteRepository.findValueBruteApplication(datePassee));
 
-        for (Object[] row : rawData) {
-            Integer idApp = toInteger(row[0]);
-
-            boolean hasCveData =
-                    row[1] != null || row[2] != null || row[3] != null || row[4] != null;
-
-            String lettreCve = "NR";
-            String lettreVm = "NR";
-            Integer nbVmNonMaj = null;
-            Integer delaiMaj = null;
-            if (hasCveData) {
-                double niveau =
-                        getCalculIndicateurCve(
-                                toInteger(row[1]),
-                                toInteger(row[2]),
-                                toInteger(row[3]),
-                                toInteger(row[4]));
-                lettreCve = conversionService.convertNiveauCveEnLettre(niveau);
-            }
-            if (row[5] != null) {
-                nbVmNonMaj = toInteger(row[5]);
-                lettreVm = conversionService.convertNbVmNonMiseAJour(nbVmNonMaj);
-            }
-            if (row[6] != null) {
-                delaiMaj = toInteger(row[6]);
-            }
-
-            IndicateurSecuriteView view =
-                    IndicateurSecuriteView.builder()
-                            .applicationId(idApp)
-                            .moduleId(null)
-                            .nbCveCritical(toString(row[1]))
-                            .nbCveHigh(toString(row[2]))
-                            .nbCveMedium(toString(row[3]))
-                            .nbCveLow(toString(row[4]))
-                            .nbVmNonMaj(toString(row[5]))
-                            .lettreCve(lettreCve)
-                            .nbVmNonMaj(nbVmNonMaj != null ? String.valueOf(nbVmNonMaj) : "")
-                            .delaiVmNonMiseAjour(delaiMaj != null ? String.valueOf(delaiMaj) : "")
-                            .lettreMajVm(lettreVm)
-                            .build();
-            view.calculerLettreGlobaleSecurite();
-
-            result.add(view);
-        }
-
-        return result;
+        return current.stream()
+                .map(projection -> buildApplicationView(projection, past.get(projection.getId())))
+                .collect(Collectors.toList());
     }
 
-    public List<IndicateurSecuriteView> getIndicateursModuleView() {
-        List<Object[]> rawData = indicateurSecuriteRepository.findValueBruteModule();
-        List<Module> modules = oscarService.getModules();
-        Map<Integer, Module> moduleMap =
-                modules.stream().collect(Collectors.toMap(Module::getId, m -> m));
+    public List<IndicateurSecuriteView> getIndicateursModuleView(
+            Date dateReference, Date datePassee) {
+        List<SecuriteProjection> current =
+                indicateurSecuriteRepository.findValueBruteModule(dateReference);
+        Map<Integer, SecuriteProjection> past =
+                indexById(indicateurSecuriteRepository.findValueBruteModule(datePassee));
+        Map<Integer, Module> moduleMap = indexById(oscarService.getModules(), Module::getId);
 
-        List<IndicateurSecuriteView> result = new ArrayList<>();
-
-        for (Object[] row : rawData) {
-            Integer moduleId = toInteger(row[0]);
-            Module mod = moduleMap.get(moduleId);
-
-            boolean hasCveData =
-                    row[1] != null && row[2] != null && row[3] != null && row[4] != null;
-
-            String lettre = null;
-            if (hasCveData) {
-                double niveau =
-                        getCalculIndicateurCve(
-                                toInteger(row[1]),
-                                toInteger(row[2]),
-                                toInteger(row[3]),
-                                toInteger(row[4]));
-                lettre = conversionService.convertNiveauCveEnLettre(niveau);
-            }
-            IndicateurSecuriteView view =
-                    IndicateurSecuriteView.builder()
-                            .moduleId(moduleId)
-                            .applicationId(mod != null ? mod.getIdApplication() : null)
-                            .nbCveCritical(toString(row[1]))
-                            .nbCveHigh(toString(row[2]))
-                            .nbCveMedium(toString(row[3]))
-                            .nbCveLow(toString(row[4]))
-                            .lettreCve(lettre)
-                            .lettreMajVm("NR")
-                            .build();
-            view.calculerLettreGlobaleSecurite();
-            result.add(view);
-        }
-
-        return result;
+        return current.stream()
+                .map(
+                        projection ->
+                                buildModuleView(
+                                        projection,
+                                        past.get(projection.getId()),
+                                        moduleMap.get(projection.getId())))
+                .collect(Collectors.toList());
     }
 
-    private Integer toInteger(Object obj) {
-        return obj != null ? ((Number) obj).intValue() : null;
+    private IndicateurSecuriteView buildApplicationView(
+            SecuriteProjection current, SecuriteProjection past) {
+        return buildAndFinalize(
+                buildCommonCveFields(current, past)
+                        .applicationId(current.getId())
+                        .moduleId(null)
+                        .nbVmNonMaj(returnStringOfAnInteger(current.getNbVmNonMaj()))
+                        .vmCountPast(
+                                past != null ? returnStringOfAnInteger(past.getNbVmNonMaj()) : null)
+                        .delaiVmNonMiseAjour(returnStringOfAnInteger(current.getDelaiMaj()))
+                        .delaiVmNonMiseAJourPast(
+                                past != null ? returnStringOfAnInteger(past.getDelaiMaj()) : null)
+                        .lettreCve(resolveLettreCve(current))
+                        .lettreMajVm(resolveLettreVm(current)));
     }
 
-    private String toString(Object obj) {
-        return obj != null ? obj.toString() : null;
+    private IndicateurSecuriteView buildModuleView(
+            SecuriteProjection current, SecuriteProjection past, Module module) {
+        return buildAndFinalize(
+                buildCommonCveFields(current, past)
+                        .moduleId(current.getId())
+                        .applicationId(module != null ? module.getIdApplication() : null)
+                        .lettreCve(resolveLettreCve(current))
+                        .lettreMajVm("NR")
+                        .vmCountPast(null));
     }
 
-    public double getCalculIndicateurCve(Integer c, Integer e, Integer m, Integer f) {
-        int somme = c * 1000 + e * 100 + m * 10 + f + 1;
-        return Math.log10(somme);
+    private IndicateurSecuriteView.IndicateurSecuriteViewBuilder buildCommonCveFields(
+            SecuriteProjection current, SecuriteProjection past) {
+        return IndicateurSecuriteView.builder()
+                .nbCveCritical(returnStringOfAnInteger(current.getNbCveCritical()))
+                .nbCveHigh(returnStringOfAnInteger(current.getNbCveHigh()))
+                .nbCveMedium(returnStringOfAnInteger(current.getNbCveMedium()))
+                .nbCveLow(returnStringOfAnInteger(current.getNbCveLow()))
+                .nbCveCriticalPast(
+                        past != null ? returnStringOfAnInteger(past.getNbCveCritical()) : null)
+                .nbCveHighPast(past != null ? returnStringOfAnInteger(past.getNbCveHigh()) : null)
+                .nbCveMediumPast(
+                        past != null ? returnStringOfAnInteger(past.getNbCveMedium()) : null)
+                .nbCveLowPast(past != null ? returnStringOfAnInteger(past.getNbCveLow()) : null);
+    }
+
+    @SuppressWarnings("java:S1854")
+    private IndicateurSecuriteView buildAndFinalize(IndicateurSecuriteView.IndicateurSecuriteViewBuilder builder) {
+        IndicateurSecuriteView view = builder.build();
+        view.calculerLettreGlobaleSecurite();
+        return view;
+    }
+
+    private String resolveLettreCve(SecuriteProjection projection) {
+        if (!hasCveOnProjection(projection)) return "NR";
+        double score =
+                getCalculIndicateurCve(
+                        projection.getNbCveCritical(),
+                        projection.getNbCveHigh(),
+                        projection.getNbCveMedium(),
+                        projection.getNbCveLow());
+        return conversionService.convertNiveauCveEnLettre(score);
+    }
+
+    private String resolveLettreVm(SecuriteProjection projection) {
+        return projection.getNbVmNonMaj() != null
+                ? conversionService.convertNbVmNonMiseAJour(projection.getNbVmNonMaj())
+                : "NR";
+    }
+
+    private static Map<Integer, SecuriteProjection> indexById(
+            List<SecuriteProjection> projections) {
+        return projections.stream()
+                .collect(Collectors.toMap(SecuriteProjection::getId, Function.identity()));
+    }
+
+    private static <T> Map<Integer, T> indexById(List<T> items, Function<T, Integer> idExtractor) {
+        return items.stream().collect(Collectors.toMap(idExtractor, Function.identity()));
     }
 }

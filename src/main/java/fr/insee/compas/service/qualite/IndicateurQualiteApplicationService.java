@@ -10,8 +10,6 @@ import org.springframework.stereotype.Service;
 import fr.insee.compas.model.oscar.Application;
 import fr.insee.compas.service.OscarService;
 import fr.insee.compas.service.TableFaitsService;
-import fr.insee.compas.service.UtilsService;
-import fr.insee.compas.service.conversion.ConversionService;
 import fr.insee.compas.view.IndicateurQualiteView;
 
 import lombok.extern.slf4j.Slf4j;
@@ -28,26 +26,17 @@ public class IndicateurQualiteApplicationService {
     private final FiabiliteCalculateurService fiabiliteCalculateurService;
     private final DetteTechniqueCalculateurService detteTechniqueCalculateurService;
 
-    private final UtilsService utilsService;
-
-    private final ConversionService conversionService;
-
     public IndicateurQualiteApplicationService(
             OscarService oscarService,
             TableFaitsService tableFaitsService,
             CouvertureCalculateurService couvertureCalculateurService,
             FiabiliteCalculateurService fiabiliteCalculateurService,
-            DetteTechniqueCalculateurService detteTechniqueCalculateurService,
-            UtilsService utilsService,
-            ConversionService conversionService) {
+            DetteTechniqueCalculateurService detteTechniqueCalculateurService) {
         this.oscarService = oscarService;
         this.tableFaitsService = tableFaitsService;
         this.couvertureCalculateurService = couvertureCalculateurService;
         this.fiabiliteCalculateurService = fiabiliteCalculateurService;
         this.detteTechniqueCalculateurService = detteTechniqueCalculateurService;
-
-        this.utilsService = utilsService;
-        this.conversionService = conversionService;
     }
 
     public List<IndicateurQualiteView> getIndicateurNiveauApplication(

@@ -1,14 +1,15 @@
 package fr.insee.compas.controller;
 
+import static fr.insee.compas.util.TendanceUtils.buildPeriode;
+
+import java.text.ParseException;
 import java.util.List;
 
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
-import fr.insee.compas.service.securite.CveCriticalMonthlyService;
-import fr.insee.compas.service.securite.IndicateurSecuriteService;
-import fr.insee.compas.service.securite.RecupCveSecuriteService;
-import fr.insee.compas.service.securite.RecupHyperxSecuriteService;
+import fr.insee.compas.model.compas.Periode;
+import fr.insee.compas.service.securite.*;
 import fr.insee.compas.view.IndicateurApplicationSecuriteMonthly;
 import fr.insee.compas.view.IndicateurSecuriteView;
 
@@ -22,12 +23,12 @@ public class SecuriteController {
 
     private final RecupCveSecuriteService cveSecuriteService;
     private final CveCriticalMonthlyService cveCriticalMonthlyService;
-    private final IndicateurSecuriteService indicateurSecuriteService;
+    private final IIndicateurSecuriteService indicateurSecuriteService;
     private final RecupHyperxSecuriteService recupHyperxSecuriteService;
 
     public SecuriteController(
             RecupCveSecuriteService cveSecuriteService,
-            IndicateurSecuriteService indicateurSecuriteService,
+            IIndicateurSecuriteService indicateurSecuriteService,
             CveCriticalMonthlyService cveCriticalMonthlyService,
             RecupHyperxSecuriteService recupHyperxSecuriteService) {
         this.cveSecuriteService = cveSecuriteService;
@@ -45,18 +46,29 @@ public class SecuriteController {
     }
 
     @GetMapping(value = "/modules", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<IndicateurSecuriteView> getIndicateurSecuriteByModule() {
+    public List<IndicateurSecuriteView> getIndicateurSecuriteByModule(
+            @RequestParam(required = false) String dateReference,
+            @RequestParam(required = false) String datePassee)
+            throws ParseException {
         log.info("Début du endpoint  récupération indicateur Securite par module");
-        List<IndicateurSecuriteView> result = indicateurSecuriteService.getIndicateursModuleView();
+        Periode periode = buildPeriode(dateReference, datePassee);
+        List<IndicateurSecuriteView> result =
+                indicateurSecuriteService.getIndicateursModuleView(
+                        periode.origine(), periode.passee());
         log.info("Fin du endpoint récupération indicateur Securite par module");
         return result;
     }
 
     @GetMapping(value = "/applications", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<IndicateurSecuriteView> getIndicateurSecuriteByApplication() {
+    public List<IndicateurSecuriteView> getIndicateurSecuriteByApplication(
+            @RequestParam(required = false) String dateReference,
+            @RequestParam(required = false) String datePassee)
+            throws ParseException {
         log.info("Début du endpoint récupération indicateur Securite par application ");
+        Periode periode = buildPeriode(dateReference, datePassee);
         List<IndicateurSecuriteView> result =
-                indicateurSecuriteService.getIndicateursApplicationView();
+                indicateurSecuriteService.getIndicateursApplicationView(
+                        periode.origine(), periode.passee());
 
         log.info("Fin du endpoint récupération indicateur Securite par application");
         return result;

@@ -1,11 +1,13 @@
 package fr.insee.compas.repository;
 
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import fr.insee.compas.model.compas.TableFaits;
+import fr.insee.compas.repository.projection.SecuriteProjection;
 
 public interface IndicateurSecuriteRepository extends JpaRepository<TableFaits, Long> {
 
@@ -21,9 +23,10 @@ public interface IndicateurSecuriteRepository extends JpaRepository<TableFaits, 
                             ROW_NUMBER() OVER (PARTITION BY id_module, id_indicateur ORDER BY date DESC) AS rn
                         FROM
                             table_faits
+                        Where date <= :dateReference
                     )
                     SELECT
-                        id_module AS moduleId,
+                        id_module AS id,
                         MAX(CASE WHEN id_indicateur = 3 THEN valeur END) AS nbCveCritical,
                         MAX(CASE WHEN id_indicateur = 4 THEN valeur END) AS nbCveHigh,
                         MAX(CASE WHEN id_indicateur = 5 THEN valeur END) AS nbCveMedium,
@@ -36,7 +39,7 @@ public interface IndicateurSecuriteRepository extends JpaRepository<TableFaits, 
                         id_module
                     """,
             nativeQuery = true)
-    List<Object[]> findValueBruteModule();
+    List<SecuriteProjection> findValueBruteModule(Date dateReference);
 
     @Query(
             value =
@@ -51,15 +54,16 @@ public interface IndicateurSecuriteRepository extends JpaRepository<TableFaits, 
                                 ROW_NUMBER() OVER (PARTITION BY id_application, id_indicateur ORDER BY date DESC) AS rn
                             FROM
                                 table_faits
+                            Where date <= :dateReference
                         )
                         SELECT
-                            id_application AS applicationId,
+                            id_application AS id,
                             MAX(CASE WHEN id_indicateur = 7 THEN valeur END) AS nbCveCritical,
                             MAX(CASE WHEN id_indicateur = 8 THEN valeur END) AS nbCveHigh,
                             MAX(CASE WHEN id_indicateur = 9 THEN valeur END) AS nbCveMedium,
                             MAX(CASE WHEN id_indicateur = 10 THEN valeur END) AS nbCveLow,
-                            MAX(CASE WHEN id_indicateur = 102 THEN valeur END) AS nbCveLow,
-                            MAX(CASE WHEN id_indicateur = 101 THEN valeur END) AS delai
+                            MAX(CASE WHEN id_indicateur = 102 THEN valeur END) AS nbVmNonMaj,
+                            MAX(CASE WHEN id_indicateur = 101 THEN valeur END) AS delaiMaj
                         FROM
                             latest_data
                         WHERE
@@ -68,7 +72,7 @@ public interface IndicateurSecuriteRepository extends JpaRepository<TableFaits, 
                             id_application
                     """,
             nativeQuery = true)
-    List<Object[]> findValueBruteApplication();
+    List<SecuriteProjection> findValueBruteApplication(Date dateReference);
 
     @Query(
             value =
