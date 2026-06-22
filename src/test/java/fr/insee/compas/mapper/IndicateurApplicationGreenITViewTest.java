@@ -76,7 +76,7 @@ class IndicateurApplicationGreenITViewTest {
         softAssertions.assertThat(view.getConso()).isEqualTo("150");
         softAssertions.assertThat(view.getNbVm()).isEqualTo("10");
         softAssertions.assertThat(view.getConsoScore()).isEqualTo("12.346");
-        softAssertions.assertThat(view.getImpactScore()).isEqualTo("20.111");
+        softAssertions.assertThat(view.getImpactScore()).isEqualTo("20.112");
         softAssertions.assertThat(view.getGaspillageScore()).isEqualTo("2.000");
         softAssertions.assertThat(view.getRamAllocatedProd()).isEqualTo("2");
         softAssertions.assertThat(view.getRamMaxiProd()).isEqualTo("2");

@@ -1,5 +1,6 @@
 package fr.insee.compas.mapper;
 
+import java.math.RoundingMode;
 import java.util.Optional;
 
 import org.springframework.stereotype.Component;
@@ -8,7 +9,6 @@ import fr.insee.compas.model.greenit.GreenItScore;
 import fr.insee.compas.model.greenit.IndicateurApplicationGreenIT;
 import fr.insee.compas.service.greenit.score.GreenItComputeScore;
 import fr.insee.compas.util.greenit.GreenITutils;
-import fr.insee.compas.util.greenit.ScoreUtils;
 import fr.insee.compas.view.IndicateurApplicationGreenITView;
 
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +40,8 @@ public class IndicateurApplicationGreenITViewMapper {
                 .cpuAllocated(GreenITutils.normalizeString(indicateur.getCpuAllocated()))
                 .cpuMaxi(GreenITutils.normalizeString(indicateur.getCpuMaxi()))
                 .conso(GreenITutils.normalizeString(indicateur.getConso()))
+                .asUsed(GreenITutils.normalizeString(indicateur.getAsUsed()))
+                .asAllocated(GreenITutils.normalizeString(indicateur.getAsAllocated()))
                 .cpuUsed(GreenITutils.normalizeString(indicateur.getCpuUsed()))
                 .ramUsed(GreenITutils.normalizeStringAroundGo(indicateur.getRamUsed()))
                 .s3Used(GreenITutils.normalizeStringAroundGo(indicateur.getS3Used()))
@@ -53,16 +55,19 @@ public class IndicateurApplicationGreenITViewMapper {
                 .cpuAllocatedProd(GreenITutils.normalizeString(indicateur.getCpuAllocatedProd()))
                 .cpuMaxiProd(GreenITutils.normalizeString(indicateur.getCpuMaxiProd()))
                 .consoProd(GreenITutils.normalizeString(indicateur.getConsoProd()))
+                .asUsedProd(GreenITutils.normalizeString(indicateur.getAsUsedProd()))
+                .asAllocatedProd(GreenITutils.normalizeString(indicateur.getAsAllocatedProd()))
                 .cpuUsedProd(GreenITutils.normalizeString(indicateur.getCpuUsedProd()))
                 .ramUsedProd(GreenITutils.normalizeStringAroundGo(indicateur.getRamUsedProd()))
                 .s3UsedProd(GreenITutils.normalizeStringAroundGo(indicateur.getS3UsedProd()))
                 .pvcUsedProd(GreenITutils.normalizeStringAroundGo(indicateur.getPvcUsedProd()))
                 .nbPodMaxiProd(GreenITutils.normalizeString(indicateur.getNbPodMaxiProd()))
                 .nbVmProd(GreenITutils.normalizeString(indicateur.getNbVmProd()))
-                .consoScore(ScoreUtils.formatScore(greenItScore.getConso()))
-                .impactScore(ScoreUtils.formatScore(greenItScore.getImpact()))
-                .gaspillageScore(ScoreUtils.formatScore(greenItScore.getGaspillage()))
-                .lettreGreen(greenItScore.getGrade())
+                .consoScore(greenItScore.getConso().setScale(3, RoundingMode.UP).toString())
+                .impactScore(greenItScore.getImpact().setScale(3, RoundingMode.UP).toString())
+                .gaspillageScore(
+                        greenItScore.getGaspillage().setScale(3, RoundingMode.UP).toString())
+                .lettreGreen(greenItComputeScore.computeAppScore(indicateur).getGrade())
                 .dateMaj(indicateur.getDateMaj())
                 .build();
     }

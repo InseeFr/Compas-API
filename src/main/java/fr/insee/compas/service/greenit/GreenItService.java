@@ -59,6 +59,10 @@ public class GreenItService {
                     IndicateurType.DISQUE_CONSOMME_PD,
                     IndicateurType.CPU_ALLOUEE_PD,
                     IndicateurType.CONSO_ELEC_PD,
+                    IndicateurType.AS_ALLOUE,
+                    IndicateurType.AS_ALLOUE_PD,
+                    IndicateurType.AS_CONSOMME,
+                    IndicateurType.AS_CONSOMME_PD,
                     IndicateurType.NBR_VM_PD,
                     IndicateurType.RAM_CONSOMMEE,
                     IndicateurType.RAM_CONSOMMEE_PD,
@@ -187,6 +191,10 @@ public class GreenItService {
                 getValue(indicateurs, IndicateurType.CPU_ALLOUEE_PD).intValue());
         greenIt.setConso(getValue(indicateurs, IndicateurType.CONSO_ELEC).intValue());
         greenIt.setConsoProd(getValue(indicateurs, IndicateurType.CONSO_ELEC_PD).intValue());
+        greenIt.setAsUsed(getValue(indicateurs, IndicateurType.AS_CONSOMME).intValue());
+        greenIt.setAsUsedProd(getValue(indicateurs, IndicateurType.AS_CONSOMME_PD).intValue());
+        greenIt.setAsAllocated(getValue(indicateurs, IndicateurType.AS_ALLOUE).intValue());
+        greenIt.setAsAllocatedProd(getValue(indicateurs, IndicateurType.AS_ALLOUE_PD).intValue());
         greenIt.setNbVm(getValue(indicateurs, IndicateurType.NBR_VM).intValue());
         greenIt.setNbVmProd(getValue(indicateurs, IndicateurType.NBR_VM_PD).intValue());
         greenIt.setCpuUsed(getValue(indicateurs, IndicateurType.CPU_CONSOMMEE).intValue());

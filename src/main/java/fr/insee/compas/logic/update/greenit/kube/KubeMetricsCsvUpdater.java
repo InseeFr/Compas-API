@@ -43,7 +43,7 @@ public class KubeMetricsCsvUpdater implements GreenItMetricsUpdater {
     private List<MetriqueKube> metriqueKubes;
     private final OscarClient oscarClient;
     private final TableFaitsRepository tableFaitsRepository;
-    private static final BigDecimal NB_SEMAINES = new BigDecimal(5);
+    private static final BigDecimal NB_SEMAINES = new BigDecimal(4);
 
     public KubeMetricsCsvUpdater(
             OscarClient oscarClient,

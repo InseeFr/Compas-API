@@ -121,5 +121,7 @@ INSERT INTO table_faits (id_module, id_indicateur, id_application, date, valeur,
 VALUES (null, 210, 201, '2024-12-04', 510, 2);
 INSERT INTO table_faits (id_module, id_indicateur, id_application, date, valeur, id_source)
 VALUES (null, 207, 201, '2024-12-04', 510, 2);
+INSERT INTO table_faits (id_module, id_indicateur, id_application, date, valeur, id_source)
+VALUES (null, 227, 201, '2024-12-04', 211, 2);
 
 

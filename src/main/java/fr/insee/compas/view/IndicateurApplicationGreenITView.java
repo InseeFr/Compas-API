@@ -21,6 +21,8 @@ public class IndicateurApplicationGreenITView {
     private String cpuAllocated;
     private String cpuMaxi;
     private String conso;
+    private String asUsed;
+    private String asAllocated;
     private String nbVm;
     private String cpuUsed;
     private String ramUsed;
@@ -34,6 +36,8 @@ public class IndicateurApplicationGreenITView {
     private String cpuAllocatedProd;
     private String cpuMaxiProd;
     private String consoProd;
+    private String asUsedProd;
+    private String asAllocatedProd;
     private String nbVmProd;
     private String cpuUsedProd;
     private String ramUsedProd;

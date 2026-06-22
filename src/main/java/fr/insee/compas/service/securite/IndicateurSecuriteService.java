@@ -98,7 +98,8 @@ public class IndicateurSecuriteService implements IIndicateurSecuriteService {
     }
 
     @SuppressWarnings("java:S1854")
-    private IndicateurSecuriteView buildAndFinalize(IndicateurSecuriteView.IndicateurSecuriteViewBuilder builder) {
+    private IndicateurSecuriteView buildAndFinalize(
+            IndicateurSecuriteView.IndicateurSecuriteViewBuilder builder) {
         IndicateurSecuriteView view = builder.build();
         view.calculerLettreGlobaleSecurite();
         return view;
