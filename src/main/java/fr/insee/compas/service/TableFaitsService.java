@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import fr.insee.compas.dto.AggregatedResultDto;
 import fr.insee.compas.model.compas.TableFaits;
 import fr.insee.compas.repository.TableFaitsRepository;
+import fr.insee.compas.repository.projection.DevopsProjection;
 import fr.insee.compas.view.IndicateurDevopsView;
 import fr.insee.compas.view.IndicateurQualiteView;
 
@@ -124,36 +125,41 @@ public class TableFaitsService {
                                                 .build()));
     }
 
-    public Map<Integer, IndicateurDevopsView> getIndicateurModuleDevops() {
-        final List<Object[]> faits = tableFaitsRepository.findValueIndicateurModuleDevopsBrute();
+    public Map<Integer, IndicateurDevopsView> getIndicateurModuleDevops(Date date) {
+        final List<DevopsProjection> faits =
+                tableFaitsRepository.findValueIndicateurModuleDevopsBrute(date);
 
         return faits.stream()
                 .collect(
                         Collectors.toMap(
-                                obj -> ((Number) obj[0]).intValue(),
+                                DevopsProjection::getIdModule,
                                 obj ->
                                         IndicateurDevopsView.builder()
-                                                .moduleId(((Number) obj[0]).intValue())
-                                                .distanceCount(toIntString(obj[1]))
-                                                .nbDeploymentCount(toIntString(obj[2]))
-                                                .nbContributorCount(toIntString(obj[3]))
+                                                .moduleId(obj.getIdModule())
+                                                .distanceCount(toIntString(obj.getDistanceCount()))
+                                                .nbDeploymentCount(
+                                                        toIntString(obj.getNbDeploymentCount()))
+                                                .nbContributorCount(
+                                                        toIntString(obj.getNbContributorCount()))
                                                 .build()));
     }
 
-    public Map<Integer, IndicateurDevopsView> getIndicateurApplicationDevops() {
-        final List<Object[]> faits =
-                tableFaitsRepository.findValueIndicateurApplicationDevopsBrute();
+    public Map<Integer, IndicateurDevopsView> getIndicateurApplicationDevops(Date date) {
+        List<DevopsProjection> faits =
+                tableFaitsRepository.findValueIndicateurApplicationDevopsBrute(date);
 
         return faits.stream()
                 .collect(
                         Collectors.toMap(
-                                obj -> ((Number) obj[0]).intValue(),
+                                DevopsProjection::getIdApplication,
                                 obj ->
                                         IndicateurDevopsView.builder()
-                                                .applicationId(((Number) obj[0]).intValue())
-                                                .distanceCount(toIntString(obj[1]))
-                                                .nbDeploymentCount(toIntString(obj[2]))
-                                                .nbContributorCount(toIntString(obj[3]))
+                                                .applicationId(obj.getIdApplication())
+                                                .distanceCount(toIntString(obj.getDistanceCount()))
+                                                .nbDeploymentCount(
+                                                        toIntString(obj.getNbDeploymentCount()))
+                                                .nbContributorCount(
+                                                        toIntString(obj.getNbContributorCount()))
                                                 .build()));
     }
 

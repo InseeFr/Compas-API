@@ -12,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 
 import fr.insee.compas.model.compas.TableFaits;
 import fr.insee.compas.model.maturite.MaturiteIndicateurTableProjection;
+import fr.insee.compas.repository.projection.DevopsProjection;
 import fr.insee.compas.repository.projection.MetriqueApplicationProjection;
 import fr.insee.compas.repository.projection.MetriqueModuleProjection;
 import fr.insee.compas.repository.projection.MetriqueSumIndicateurProjection;
@@ -370,9 +371,10 @@ WITH latest_data AS (
                                    ROW_NUMBER() OVER (PARTITION BY id_module, id_indicateur ORDER BY date DESC) AS rn
                                FROM
                                    table_faits
+                                WHERE id_module is not null and date <= :dateReference
                            )
                            SELECT
-                              id_module AS moduleId,
+                              id_module,
                               MAX(CASE WHEN id_indicateur = 301 THEN valeur END) AS distanceCount,
                               MAX(CASE WHEN id_indicateur = 302 THEN valeur END) AS nbDeploymentCount,
                               MAX(CASE WHEN id_indicateur = 303 THEN valeur END) AS nbContributorCount
@@ -384,7 +386,7 @@ WITH latest_data AS (
                                id_module;
 """,
             nativeQuery = true)
-    List<Object[]> findValueIndicateurModuleDevopsBrute();
+    List<DevopsProjection> findValueIndicateurModuleDevopsBrute(Date dateReference);
 
     @Query(
             value =
@@ -399,10 +401,10 @@ WITH latest_data AS (
                                    ROW_NUMBER() OVER (PARTITION BY id_application, id_indicateur ORDER BY date DESC) AS rn
                                FROM
                                    table_faits
-                               WHERE id_module is null and id_application is not null
+                               WHERE id_module is null and id_application is not null and date <= :dateReference
                            )
                            SELECT
-                              id_application AS applicationId,
+                              id_application,
                               MAX(CASE WHEN id_indicateur = 301 THEN valeur END) AS distanceCount,
                               MAX(CASE WHEN id_indicateur = 302 THEN valeur END) AS nbDeploymentCount,
                               MAX(CASE WHEN id_indicateur = 303 THEN valeur END) AS nbContributorCount
@@ -414,7 +416,7 @@ WITH latest_data AS (
                                id_application;
 """,
             nativeQuery = true)
-    List<Object[]> findValueIndicateurApplicationDevopsBrute();
+    List<DevopsProjection> findValueIndicateurApplicationDevopsBrute(Date dateReference);
 
     @Query(
             value =

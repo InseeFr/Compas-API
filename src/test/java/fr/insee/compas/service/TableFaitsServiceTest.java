@@ -1,14 +1,17 @@
 package fr.insee.compas.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -16,6 +19,7 @@ import org.mockito.MockitoAnnotations;
 import fr.insee.compas.dto.AggregatedResultDto;
 import fr.insee.compas.model.compas.TableFaits;
 import fr.insee.compas.repository.TableFaitsRepository;
+import fr.insee.compas.repository.projection.DevopsProjection;
 import fr.insee.compas.view.IndicateurDevopsView;
 
 class TableFaitsServiceTest {
@@ -121,19 +125,89 @@ class TableFaitsServiceTest {
     }
 
     @Test
-    void givenRawData_whenGetIndicateurModuleDevops_thenReturnView() {
-        // given
-        Object[][] raw = {{1, 7, 15, 4}};
-        List<Object[]> faits = Arrays.asList(raw);
-        when(tableFaitsRepository.findValueIndicateurModuleDevopsBrute()).thenReturn(faits);
+    @DisplayName("Doit construire la map des indicateurs DevOps par module")
+    void doitConstruireLaMapDesIndicateursDevopsParModule() {
 
-        // when
-        Map<Integer, IndicateurDevopsView> map = tableFaitsService.getIndicateurModuleDevops();
+        Date date = new Date();
 
-        // then
-        IndicateurDevopsView view = map.get(1);
-        assertEquals("7", view.getDistanceCount());
-        assertEquals("15", view.getNbDeploymentCount());
-        assertEquals("4", view.getNbContributorCount());
+        DevopsProjection projection = mock(DevopsProjection.class);
+
+        when(projection.getIdModule()).thenReturn(10);
+        when(projection.getDistanceCount()).thenReturn((int) 120d);
+        when(projection.getNbDeploymentCount()).thenReturn((int) 45d);
+        when(projection.getNbContributorCount()).thenReturn((int) 8d);
+
+        when(tableFaitsRepository.findValueIndicateurModuleDevopsBrute(date))
+                .thenReturn(List.of(projection));
+
+        Map<Integer, IndicateurDevopsView> result =
+                tableFaitsService.getIndicateurModuleDevops(date);
+
+        assertThat(result).hasSize(1).containsKey(10);
+
+        IndicateurDevopsView view = result.get(10);
+
+        assertThat(view.getModuleId()).isEqualTo(10);
+        assertThat(view.getDistanceCount()).isEqualTo("120");
+        assertThat(view.getNbDeploymentCount()).isEqualTo("45");
+        assertThat(view.getNbContributorCount()).isEqualTo("8");
+    }
+
+    @Test
+    @DisplayName("Doit retourner une map vide lorsqu'aucun indicateur module n'existe")
+    void doitRetournerUneMapVidePourLesModules() {
+
+        Date date = new Date();
+
+        when(tableFaitsRepository.findValueIndicateurModuleDevopsBrute(date)).thenReturn(List.of());
+
+        Map<Integer, IndicateurDevopsView> result =
+                tableFaitsService.getIndicateurModuleDevops(date);
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Doit construire la map des indicateurs DevOps par application")
+    void doitConstruireLaMapDesIndicateursDevopsParApplication() {
+
+        Date date = new Date();
+
+        DevopsProjection projection = mock(DevopsProjection.class);
+
+        when(projection.getIdApplication()).thenReturn(20);
+        when(projection.getDistanceCount()).thenReturn((int) 300d);
+        when(projection.getNbDeploymentCount()).thenReturn((int) 90d);
+        when(projection.getNbContributorCount()).thenReturn((int) 15d);
+
+        when(tableFaitsRepository.findValueIndicateurApplicationDevopsBrute(date))
+                .thenReturn(List.of(projection));
+
+        Map<Integer, IndicateurDevopsView> result =
+                tableFaitsService.getIndicateurApplicationDevops(date);
+
+        assertThat(result).hasSize(1).containsKey(20);
+
+        IndicateurDevopsView view = result.get(20);
+
+        assertThat(view.getApplicationId()).isEqualTo(20);
+        assertThat(view.getDistanceCount()).isEqualTo("300");
+        assertThat(view.getNbDeploymentCount()).isEqualTo("90");
+        assertThat(view.getNbContributorCount()).isEqualTo("15");
+    }
+
+    @Test
+    @DisplayName("Doit retourner une map vide lorsqu'aucun indicateur application n'existe")
+    void doitRetournerUneMapVidePourLesApplications() {
+
+        Date date = new Date();
+
+        when(tableFaitsRepository.findValueIndicateurApplicationDevopsBrute(date))
+                .thenReturn(List.of());
+
+        Map<Integer, IndicateurDevopsView> result =
+                tableFaitsService.getIndicateurApplicationDevops(date);
+
+        assertThat(result).isEmpty();
     }
 }

@@ -6,10 +6,7 @@ import java.util.stream.Stream;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 /**
  * DevOps indicator view.
@@ -17,6 +14,7 @@ import lombok.NoArgsConstructor;
  * <p>The global letter is computed from the individual letters (contributors, deployments,
  * distance) via {@link AbstractIndicateurLettreGlobale}.
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
 @Builder
 @NoArgsConstructor
@@ -38,6 +36,16 @@ public class IndicateurDevopsView extends AbstractIndicateurLettreGlobale {
     private String nbContributorCount;
     private String nbDeploymentCount;
     private String distanceCount;
+
+    // valeurs du past
+    private String pastNbContributorCount;
+    private String pastNbDeploymentCount;
+    private String pastDistanceCount;
+
+    // valeurs diff de la date passée en paramètre
+    private Integer diffNbContributorCount;
+    private Integer diffNbDeploymentCount;
+    private Integer diffDistanceCount;
 
     // Letters for each indicator
     private String lettreContributorCount;

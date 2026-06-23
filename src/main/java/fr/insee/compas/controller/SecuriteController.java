@@ -2,7 +2,6 @@ package fr.insee.compas.controller;
 
 import static fr.insee.compas.util.TendanceUtils.buildPeriode;
 
-import java.text.ParseException;
 import java.util.List;
 
 import org.springframework.http.MediaType;
@@ -48,8 +47,7 @@ public class SecuriteController {
     @GetMapping(value = "/modules", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<IndicateurSecuriteView> getIndicateurSecuriteByModule(
             @RequestParam(required = false) String dateReference,
-            @RequestParam(required = false) String datePassee)
-            throws ParseException {
+            @RequestParam(required = false) String datePassee) {
         log.info("Début du endpoint  récupération indicateur Securite par module");
         Periode periode = buildPeriode(dateReference, datePassee);
         List<IndicateurSecuriteView> result =
@@ -62,8 +60,7 @@ public class SecuriteController {
     @GetMapping(value = "/applications", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<IndicateurSecuriteView> getIndicateurSecuriteByApplication(
             @RequestParam(required = false) String dateReference,
-            @RequestParam(required = false) String datePassee)
-            throws ParseException {
+            @RequestParam(required = false) String datePassee) {
         log.info("Début du endpoint récupération indicateur Securite par application ");
         Periode periode = buildPeriode(dateReference, datePassee);
         List<IndicateurSecuriteView> result =

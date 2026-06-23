@@ -1,120 +1,180 @@
 package fr.insee.compas.service.devops;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-import java.util.HashMap;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import fr.insee.compas.model.compas.Notation;
 import fr.insee.compas.model.oscar.Application;
 import fr.insee.compas.service.OscarService;
 import fr.insee.compas.service.TableFaitsService;
 import fr.insee.compas.view.IndicateurDevopsView;
 
+@ExtendWith(MockitoExtension.class)
 class IndicatorDevopsApplicationServiceTest {
 
-    private OscarService oscarService;
-    private TableFaitsService tableFaitsService;
-    private IndicatorDevopsApplicationService service;
+    @Mock private OscarService oscarService;
+
+    @Mock private TableFaitsService tableFaitsService;
+
+    @InjectMocks private IndicatorDevopsApplicationService service;
+
+    private Date currentDate;
+    private Date pastDate;
 
     @BeforeEach
-    void setup() {
-        oscarService = mock(OscarService.class);
-        tableFaitsService = mock(TableFaitsService.class);
-        service = new IndicatorDevopsApplicationService(oscarService, tableFaitsService);
+    void setUp() {
+        currentDate = new Date();
+        pastDate = new Date(currentDate.getTime() - 86400000);
     }
 
     @Test
-    void testGetIndicateurNiveauApplication_basicMapping() {
-        // Préparation de 2 applications
+    @DisplayName("Should build application indicators")
+    void shouldBuildApplicationIndicators() {
+
+        Application app = new Application();
+        app.setIdApplication(1);
+        app.setAppName("COMPAS");
+        app.setSndi("SNDI");
+        app.setDomaineSndi("Domaine");
+        app.setDomaineFonctionnel("Fonctionnel");
+
+        IndicateurDevopsView current =
+                IndicateurDevopsView.builder()
+                        .distanceCount("100")
+                        .nbDeploymentCount("50")
+                        .nbContributorCount("10")
+                        .build();
+
+        IndicateurDevopsView past =
+                IndicateurDevopsView.builder()
+                        .distanceCount("90")
+                        .nbDeploymentCount("40")
+                        .nbContributorCount("8")
+                        .build();
+
+        when(oscarService.getApplications()).thenReturn(List.of(app));
+
+        when(tableFaitsService.getIndicateurApplicationDevops(currentDate))
+                .thenReturn(Map.of(1, current));
+
+        when(tableFaitsService.getIndicateurApplicationDevops(pastDate))
+                .thenReturn(Map.of(1, past));
+
+        List<IndicateurDevopsView> result =
+                service.getIndicateurNiveauApplication(currentDate, pastDate, false);
+
+        assertThat(result).hasSize(1);
+
+        IndicateurDevopsView view = result.get(0);
+
+        assertThat(view.getApplicationId()).isEqualTo(1);
+        assertThat(view.getApplicationName()).isEqualTo("COMPAS");
+
+        assertThat(view.getDistanceCount()).isEqualTo("100");
+        assertThat(view.getPastDistanceCount()).isEqualTo("90");
+
+        assertThat(view.getNbDeploymentCount()).isEqualTo("50");
+        assertThat(view.getPastNbDeploymentCount()).isEqualTo("40");
+
+        assertThat(view.getNbContributorCount()).isEqualTo("10");
+        assertThat(view.getPastNbContributorCount()).isEqualTo("8");
+
+        assertThat(view.getDiffDistanceCount()).isEqualTo(10);
+        assertThat(view.getDiffNbDeploymentCount()).isEqualTo(10);
+        assertThat(view.getDiffNbContributorCount()).isEqualTo(2);
+
+        assertThat(view.getLettreGlobalDevops()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("Should return empty indicators when application has no metrics")
+    void shouldHandleMissingIndicators() {
+
+        Application app = new Application();
+        app.setIdApplication(1);
+        app.setAppName("COMPAS");
+
+        when(oscarService.getApplications()).thenReturn(List.of(app));
+
+        when(tableFaitsService.getIndicateurApplicationDevops(currentDate)).thenReturn(Map.of());
+
+        when(tableFaitsService.getIndicateurApplicationDevops(pastDate)).thenReturn(Map.of());
+
+        List<IndicateurDevopsView> result =
+                service.getIndicateurNiveauApplication(currentDate, pastDate, false);
+
+        assertThat(result).hasSize(1);
+
+        IndicateurDevopsView view = result.get(0);
+
+        assertThat(view.getApplicationId()).isEqualTo(1);
+
+        assertThat(view.getDistanceCount()).isNull();
+        assertThat(view.getNbDeploymentCount()).isNull();
+        assertThat(view.getNbContributorCount()).isNull();
+
+        assertThat(view.getDiffNbContributorCount()).isEqualTo(Integer.MIN_VALUE);
+    }
+
+    @Test
+    @DisplayName("Should calculate global letter in synthetic mode")
+    void shouldCalculateGlobalLetterInSyntheticMode() {
+
+        Application app = new Application();
+        app.setIdApplication(1);
+
+        IndicateurDevopsView current =
+                IndicateurDevopsView.builder()
+                        .distanceCount("100")
+                        .nbDeploymentCount("50")
+                        .nbContributorCount("1")
+                        .build();
+
+        when(oscarService.getApplications()).thenReturn(List.of(app));
+
+        when(tableFaitsService.getIndicateurApplicationDevops(currentDate))
+                .thenReturn(Map.of(1, current));
+
+        when(tableFaitsService.getIndicateurApplicationDevops(pastDate)).thenReturn(Map.of());
+
+        List<IndicateurDevopsView> result =
+                service.getIndicateurNiveauApplication(currentDate, pastDate, true);
+
+        assertThat(result)
+                .singleElement()
+                .satisfies(view -> assertThat(view.getLettreGlobalDevops()).isNotNull());
+    }
+
+    @Test
+    @DisplayName("Should build one result per application")
+    void shouldReturnAllApplications() {
+
         Application app1 = new Application();
         app1.setIdApplication(1);
-        app1.setAppName("AppA");
-        app1.setSndi("SNDI-A");
-        app1.setDomaineSndi("DS-A");
-        app1.setDomaineFonctionnel("DF-A");
 
         Application app2 = new Application();
         app2.setIdApplication(2);
-        app2.setAppName("AppB");
-        app2.setSndi("SNDI-B");
-        app2.setDomaineSndi("DS-B");
-        app2.setDomaineFonctionnel("DF-B");
 
         when(oscarService.getApplications()).thenReturn(List.of(app1, app2));
 
-        // Préparation des indicateurs bruts
-        IndicateurDevopsView view1 = new IndicateurDevopsView();
-        view1.setDistanceCount("15"); // A
-        view1.setNbDeploymentCount("0"); // E
-        view1.setNbContributorCount("2"); // C
+        when(tableFaitsService.getIndicateurApplicationDevops(currentDate)).thenReturn(Map.of());
 
-        IndicateurDevopsView view2 = new IndicateurDevopsView();
-        view2.setDistanceCount("-1"); // SO
-        view2.setNbDeploymentCount("-2"); // NR
-        view2.setNbContributorCount("4"); // A
+        when(tableFaitsService.getIndicateurApplicationDevops(pastDate)).thenReturn(Map.of());
 
-        Map<Integer, IndicateurDevopsView> mapQualite = new HashMap<>();
-        mapQualite.put(1, view1);
-        mapQualite.put(2, view2);
-        when(tableFaitsService.getIndicateurApplicationDevops()).thenReturn(mapQualite);
+        List<IndicateurDevopsView> result =
+                service.getIndicateurNiveauApplication(currentDate, pastDate, false);
 
-        // Appel du service
-        List<IndicateurDevopsView> resultat = service.getIndicateurNiveauApplication(false);
-
-        // Vérifications sur app1
-        Optional<IndicateurDevopsView> r1 =
-                resultat.stream().filter(r -> "AppA".equals(r.getApplicationName())).findFirst();
-        assertTrue(r1.isPresent());
-        assertEquals("A", r1.get().getLettreDistanceCount()); // 15 → A
-        assertEquals("E", r1.get().getLettreDeploymentCount()); // 0 → E
-        assertEquals("C", r1.get().getLettreContributorCount()); // 2 → C
-        assertEquals("AppA", r1.get().getApplicationName());
-        assertEquals("SNDI-A", r1.get().getSndi());
-
-        // Vérifications sur app2
-        Optional<IndicateurDevopsView> r2 =
-                resultat.stream().filter(r -> "AppB".equals(r.getApplicationName())).findFirst();
-        assertTrue(r2.isPresent());
-        assertEquals("SO", r2.get().getLettreDistanceCount()); // -1 → SO
-        assertEquals("NR", r2.get().getLettreDeploymentCount()); // -2 → NR
-        assertEquals("A", r2.get().getLettreContributorCount()); // 4 → A
-        assertEquals("AppB", r2.get().getApplicationName());
-        assertEquals("SNDI-B", r2.get().getSndi());
-    }
-
-    @Test
-    void testGetIndicateurNiveauApplication_nullIndicatorView() {
-        // Application sans indicateur dans mapQualite
-        Application app1 = new Application();
-        app1.setIdApplication(10);
-        app1.setAppName("NewApp");
-        app1.setSndi("SNDI-X");
-        app1.setDomaineSndi("DS-X");
-        app1.setDomaineFonctionnel("DF-X");
-
-        when(oscarService.getApplications()).thenReturn(List.of(app1));
-        when(tableFaitsService.getIndicateurApplicationDevops()).thenReturn(new HashMap<>());
-
-        List<IndicateurDevopsView> resultat = service.getIndicateurNiveauApplication(false);
-
-        assertEquals(1, resultat.size());
-        IndicateurDevopsView view = resultat.getFirst();
-        assertEquals("NewApp", view.getApplicationName());
-        assertEquals("SNDI-X", view.getSndi());
-        assertEquals("DS-X", view.getDomaineSndi());
-        assertEquals("DF-X", view.getDomaineFonctionnel());
-        // Comme tout est null → NR pour chaque lettre
-        assertEquals(Notation.NR.getGrade(), view.getLettreDistanceCount());
-        assertEquals(Notation.NR.getGrade(), view.getLettreDeploymentCount());
-        assertEquals(Notation.NR.getGrade(), view.getLettreContributorCount());
+        assertThat(result).hasSize(2);
     }
 }

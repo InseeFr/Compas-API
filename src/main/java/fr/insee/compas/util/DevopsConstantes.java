@@ -7,8 +7,10 @@ import java.util.List;
 import fr.insee.compas.model.oscar.ModuleHistorique;
 
 import lombok.Getter;
+import lombok.experimental.UtilityClass;
 
 @Getter
+@UtilityClass
 public class DevopsConstantes {
 
     public static final String SANS_OBJET = "Sans objet";
@@ -92,5 +94,17 @@ public class DevopsConstantes {
         return (int) Math.round(filtered.stream().mapToInt(Integer::intValue).average().orElse(0));
     }
 
-    private DevopsConstantes() {}
+    public static int calculateDiff(String value1, String value2) {
+        try {
+            return Integer.parseInt(value1.trim()) - Integer.parseInt(value2.trim());
+        } catch (Exception e) {
+            return Integer.MIN_VALUE;
+        }
+    }
+
+    public static Integer correctContributorCount(String rawCount) {
+        if (rawCount == null || rawCount.isEmpty()) return null;
+        int count = Integer.parseInt(rawCount);
+        return count >= DUPLICATE_OFFSET ? count - DUPLICATE_OFFSET : count;
+    }
 }

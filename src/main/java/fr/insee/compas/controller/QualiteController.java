@@ -2,7 +2,6 @@ package fr.insee.compas.controller;
 
 import static fr.insee.compas.util.TendanceUtils.buildPeriode;
 
-import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
 
@@ -50,8 +49,7 @@ public class QualiteController {
     @GetMapping(value = "/modules", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<IndicateurQualiteView> getIndicateurQualiteByModuleByDate(
             @RequestParam(required = false) String origine,
-            @RequestParam(required = false) String passee)
-            throws ParseException {
+            @RequestParam(required = false) String passee) {
         log.info("Début du endpoint  récupération indicateur Qualite par module");
         Periode periode = buildPeriode(origine, passee);
 
@@ -64,8 +62,7 @@ public class QualiteController {
     @GetMapping(value = "/applications", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<IndicateurQualiteView> getIndicateurQualiteByApplicationByDate(
             @RequestParam(required = false) String origine,
-            @RequestParam(required = false) String passee)
-            throws ParseException {
+            @RequestParam(required = false) String passee) {
         log.info("Début du endpoint récupération indicateur Qualite par application ");
 
         Periode periode = buildPeriode(origine, passee);

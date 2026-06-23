@@ -1,5 +1,7 @@
 package fr.insee.compas.controller;
 
+import static fr.insee.compas.util.TendanceUtils.buildPeriode;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import fr.insee.compas.model.compas.Periode;
 import fr.insee.compas.service.devops.IndicatorDevopsApplicationService;
 import fr.insee.compas.service.devops.IndicatorDevopsModuleService;
 import fr.insee.compas.service.devops.update.UpdateIndicatorDevopsService;
@@ -46,24 +49,32 @@ public class DevopsController {
 
     @GetMapping(value = "/applications", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<IndicateurDevopsView> getApplications(
+            @RequestParam(required = false) String dateReference,
+            @RequestParam(required = false) String datePassee,
             @RequestParam(name = "isSynthetique", required = false, defaultValue = "false")
                     boolean isSynthetique) {
         log.info(
                 "****** Début du endpoint getApplications (isSynthetique={}) ********",
                 isSynthetique);
+        Periode periode = buildPeriode(dateReference, datePassee);
         List<IndicateurDevopsView> result =
-                indicatorDevopsApplicationService.getIndicateurNiveauApplication(isSynthetique);
+                indicatorDevopsApplicationService.getIndicateurNiveauApplication(
+                        periode.origine(), periode.passee(), isSynthetique);
         log.info("****** fin du endpoint getApplications ********");
         return result;
     }
 
     @GetMapping(value = "/modules", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<IndicateurDevopsView> getModules(
+            @RequestParam(required = false) String dateReference,
+            @RequestParam(required = false) String datePassee,
             @RequestParam(name = "isSynthetique", required = false, defaultValue = "false")
                     boolean isSynthetique) {
         log.info("****** Début du endpoint getModules (isSynthetique={}) ********", isSynthetique);
+        Periode periode = buildPeriode(dateReference, datePassee);
         List<IndicateurDevopsView> result =
-                indicatorDevopsModuleService.getIndicateurNiveauModule(isSynthetique);
+                indicatorDevopsModuleService.getIndicateurNiveauModule(
+                        periode.origine(), periode.passee(), isSynthetique);
         log.info("****** fin du endpoint getModules********");
         return result;
     }

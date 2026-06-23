@@ -1,15 +1,19 @@
 package fr.insee.compas.controller;
 
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.isNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -19,8 +23,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import fr.insee.compas.service.devops.IndicatorDevopsApplicationService;
 import fr.insee.compas.service.devops.IndicatorDevopsModuleService;
 import fr.insee.compas.service.devops.update.UpdateIndicatorDevopsService;
-import fr.insee.compas.service.scheduler.IMailErreurScheduler;
-import fr.insee.compas.util.observer.listener.FileErrorListener;
 import fr.insee.compas.view.IndicateurDevopsView;
 
 @WebMvcTest(DevopsController.class)
@@ -31,55 +33,119 @@ class DevopsControllerTest {
 
     @MockitoBean private UpdateIndicatorDevopsService updateIndicatorDevopsService;
 
-    @MockitoBean private IndicatorDevopsApplicationService indicatorDevopsApplicationService;
-
     @MockitoBean private IndicatorDevopsModuleService indicatorDevopsModuleService;
 
-    @MockitoBean private IMailErreurScheduler scheduler;
-
-    @MockitoBean private FileErrorListener fileErrorListener;
+    @MockitoBean private IndicatorDevopsApplicationService indicatorDevopsApplicationService;
 
     @Test
-    void updateIndicateursDevops_shouldCallServiceWithGivenDates() throws Exception {
-        // Given
-        LocalDateTime start = LocalDateTime.of(2025, 1, 1, 0, 0);
-        LocalDateTime end = LocalDateTime.of(2025, 1, 31, 23, 59);
+    @DisplayName("PUT /indicateurs-devops sans paramètres")
+    void shouldUpdateIndicatorsWithoutDates() throws Exception {
 
-        // When
+        mockMvc.perform(put("/devops/indicateurs-devops")).andExpect(status().isOk());
+
+        verify(updateIndicatorDevopsService)
+                .miseAJourIndicateursDevopsEnBaseDeDonnes(isNull(), isNull());
+    }
+
+    @Test
+    @DisplayName("PUT /indicateurs-devops avec dates")
+    void shouldUpdateIndicatorsWithDates() throws Exception {
+
+        String startDate = "2025-01-01T00:00:00";
+        String endDate = "2025-01-31T23:59:59";
+
         mockMvc.perform(
                         put("/devops/indicateurs-devops")
-                                .param("startDate", start.toString())
-                                .param("endDate", end.toString()))
+                                .param("startDate", startDate)
+                                .param("endDate", endDate))
                 .andExpect(status().isOk());
 
-        // Then
-        verify(updateIndicatorDevopsService).miseAJourIndicateursDevopsEnBaseDeDonnes(start, end);
+        verify(updateIndicatorDevopsService)
+                .miseAJourIndicateursDevopsEnBaseDeDonnes(
+                        eq(LocalDateTime.parse(startDate)), eq(LocalDateTime.parse(endDate)));
     }
 
     @Test
-    void getApplications_shouldReturnListFromService() throws Exception {
-        // Given
-        List<IndicateurDevopsView> expected =
-                List.of(
-                        new IndicateurDevopsView(
-                                1, 100, "MOD1", "APP1", null, null, null, "1", "2", "3", "A", "B",
-                                "C", null, false));
+    @DisplayName("GET /applications")
+    void shouldReturnApplications() throws Exception {
 
-        when(indicatorDevopsApplicationService.getIndicateurNiveauApplication(false))
-                .thenReturn(expected);
+        IndicateurDevopsView view =
+                IndicateurDevopsView.builder()
+                        .applicationId(1)
+                        .applicationName("COMPAS")
+                        .lettreGlobalDevops("A")
+                        .build();
 
-        // When / Then
-        mockMvc.perform(get("/devops/applications").param("archive", "false"))
-                .andExpect(status().isOk());
+        when(indicatorDevopsApplicationService.getIndicateurNiveauApplication(
+                        ArgumentMatchers.any(), ArgumentMatchers.any(), eq(false)))
+                .thenReturn(List.of(view));
+
+        mockMvc.perform(get("/devops/applications"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].applicationId").value(1))
+                .andExpect(jsonPath("$[0].applicationName").value("COMPAS"))
+                .andExpect(jsonPath("$[0].lettreGlobalDevops").value("A"));
+
+        verify(indicatorDevopsApplicationService)
+                .getIndicateurNiveauApplication(
+                        ArgumentMatchers.any(), ArgumentMatchers.any(), eq(false));
     }
 
     @Test
-    void getModules_shouldReturnListFromService() throws Exception {
-        // Given
-        when(indicatorDevopsModuleService.getIndicateurNiveauModule(false)).thenReturn(List.of());
+    @DisplayName("GET /applications en mode synthétique")
+    void shouldReturnApplicationsInSyntheticMode() throws Exception {
 
-        // When / Then
-        mockMvc.perform(get("/devops/modules").param("archive", "false"))
+        when(indicatorDevopsApplicationService.getIndicateurNiveauApplication(
+                        ArgumentMatchers.any(), ArgumentMatchers.any(), eq(true)))
+                .thenReturn(List.of());
+
+        mockMvc.perform(get("/devops/applications").param("isSynthetique", "true"))
                 .andExpect(status().isOk());
+
+        verify(indicatorDevopsApplicationService)
+                .getIndicateurNiveauApplication(
+                        ArgumentMatchers.any(), ArgumentMatchers.any(), eq(true));
+    }
+
+    @Test
+    @DisplayName("GET /modules")
+    void shouldReturnModules() throws Exception {
+
+        IndicateurDevopsView view =
+                IndicateurDevopsView.builder()
+                        .moduleId(10)
+                        .moduleName("Module A")
+                        .lettreGlobalDevops("B")
+                        .build();
+
+        when(indicatorDevopsModuleService.getIndicateurNiveauModule(
+                        ArgumentMatchers.any(), ArgumentMatchers.any(), eq(false)))
+                .thenReturn(List.of(view));
+
+        mockMvc.perform(get("/devops/modules"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].moduleId").value(10))
+                .andExpect(jsonPath("$[0].moduleName").value("Module A"))
+                .andExpect(jsonPath("$[0].lettreGlobalDevops").value("B"));
+
+        verify(indicatorDevopsModuleService)
+                .getIndicateurNiveauModule(
+                        ArgumentMatchers.any(), ArgumentMatchers.any(), eq(false));
+    }
+
+    @Test
+    @DisplayName("GET /modules en mode synthétique")
+    void shouldReturnModulesInSyntheticMode() throws Exception {
+
+        when(indicatorDevopsModuleService.getIndicateurNiveauModule(
+                        ArgumentMatchers.any(), ArgumentMatchers.any(), eq(true)))
+                .thenReturn(List.of());
+
+        mockMvc.perform(get("/devops/modules").param("isSynthetique", "true"))
+                .andExpect(status().isOk());
+
+        verify(indicatorDevopsModuleService)
+                .getIndicateurNiveauModule(
+                        ArgumentMatchers.any(), ArgumentMatchers.any(), eq(true));
     }
 }
