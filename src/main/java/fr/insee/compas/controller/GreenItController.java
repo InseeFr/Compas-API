@@ -113,4 +113,10 @@ public class GreenItController {
         greenItService.miseAJourKubeMetricsGreenItFromFile(file, fileDate);
         return ResponseEntity.ok("Fichier CSV importé avec succès !");
     }
+
+    @PostMapping(value = "/applications/applishare")
+    public ResponseEntity<String> uploadApplishare() {
+        greenItService.miseAJourApplishareMetricsGreenItFromApi();
+        return ResponseEntity.ok("Chargement via Hyperx effectué avec succès !");
+    }
 }

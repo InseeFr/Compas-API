@@ -3,9 +3,9 @@ package fr.insee.compas.controller;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.time.LocalDate;
@@ -257,5 +257,16 @@ class GreenItControllerTest {
                         .andReturn();
         final String json = mvcResult.getResponse().getContentAsString();
         assertThat(json).isEqualTo("[]");
+    }
+
+    @Test
+    void uploadApplishare_shouldReturnHttp200AndSuccessMessage() throws Exception {
+        mockMvc.perform(post("/kpi-green/applications/applishare"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Chargement via Hyperx effectué avec succès !"));
+
+        verify(greenItService, times(1)).miseAJourApplishareMetricsGreenItFromApi();
+
+        verifyNoMoreInteractions(greenItService);
     }
 }

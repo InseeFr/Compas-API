@@ -30,6 +30,9 @@ public interface OscarClient {
     @GetMapping("/modules")
     ResponseEntity<List<ModuleOscarView>> getAllModuleOscar();
 
+    @GetMapping("/applications?rechercheExacteSurNom=true")
+    ResponseEntity<List<ApplicationOscarView>> getAllApplicationOscar();
+
     @GetMapping("/modules-historiques")
     ResponseEntity<String> getModuleHistoriqueOscar();
 

@@ -4,7 +4,7 @@ import java.time.LocalDate;
 
 import org.springframework.web.multipart.MultipartFile;
 
-public interface GreenItMetricsUpdater {
+public interface GreenItMetricsFileUpdater {
 
     void miseAJourIndicateursGreenItFromFile(MultipartFile file, LocalDate fileDate);
 }

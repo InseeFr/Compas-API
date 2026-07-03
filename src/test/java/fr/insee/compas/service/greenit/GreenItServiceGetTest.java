@@ -1,8 +1,7 @@
 package fr.insee.compas.service.greenit;
 
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -19,12 +18,14 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.multipart.MultipartFile;
 
 import fr.insee.compas.client.OscarClient;
 import fr.insee.compas.client.view.ApplicationOscarView;
 import fr.insee.compas.client.view.ModuleOscarView;
 import fr.insee.compas.client.view.VmOscarView;
 import fr.insee.compas.logic.update.greenit.kube.KubeMetricsCsvUpdater;
+import fr.insee.compas.logic.update.greenit.vm.ApplishareMetricsApiUpdater;
 import fr.insee.compas.logic.update.greenit.vm.VmMetricsCsvUpdater;
 import fr.insee.compas.mapper.MetriqueVmMapper;
 import fr.insee.compas.model.compas.IndicateurType;
@@ -52,6 +53,49 @@ class GreenItServiceGetTest {
     @Mock private KubeMetricsCsvUpdater kubeMetricsCsvUpdater;
 
     @Mock private VmMetricsCsvUpdater vmMetricsCsvUpdater;
+
+    @Mock private ApplishareMetricsApiUpdater applishareMetricsApiUpdater;
+
+    @Test
+    void miseAJourVmMetricsGreenItFromFile_shouldDelegateToVmMetricsCsvUpdater() {
+        // Given
+        MultipartFile file = mock(MultipartFile.class);
+        LocalDate fileDate = LocalDate.of(2026, 6, 22);
+
+        // When
+        greenItService.miseAJourVmMetricsGreenItFromFile(file, fileDate);
+
+        // Then
+        verify(vmMetricsCsvUpdater).miseAJourIndicateursGreenItFromFile(file, fileDate);
+        verifyNoInteractions(kubeMetricsCsvUpdater, applishareMetricsApiUpdater);
+        verifyNoMoreInteractions(vmMetricsCsvUpdater);
+    }
+
+    @Test
+    void miseAJourKubeMetricsGreenItFromFile_shouldDelegateToKubeMetricsCsvUpdater() {
+        // Given
+        MultipartFile file = mock(MultipartFile.class);
+        LocalDate fileDate = LocalDate.of(2026, 6, 22);
+
+        // When
+        greenItService.miseAJourKubeMetricsGreenItFromFile(file, fileDate);
+
+        // Then
+        verify(kubeMetricsCsvUpdater).miseAJourIndicateursGreenItFromFile(file, fileDate);
+        verifyNoInteractions(vmMetricsCsvUpdater, applishareMetricsApiUpdater);
+        verifyNoMoreInteractions(kubeMetricsCsvUpdater);
+    }
+
+    @Test
+    void miseAJourApplishareMetricsGreenItFromApi_shouldDelegateToApplishareMetricsApiUpdater() {
+        // When
+        greenItService.miseAJourApplishareMetricsGreenItFromApi();
+
+        // Then
+        verify(applishareMetricsApiUpdater).miseAJourIndicateursGreenItFromApi();
+        verifyNoInteractions(vmMetricsCsvUpdater, kubeMetricsCsvUpdater);
+        verifyNoMoreInteractions(applishareMetricsApiUpdater);
+    }
 
     @Test
     void testGetIndicateursApplicationGreenIT() {

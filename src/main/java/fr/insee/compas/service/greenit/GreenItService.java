@@ -18,6 +18,7 @@ import fr.insee.compas.client.OscarClient;
 import fr.insee.compas.client.view.ApplicationOscarView;
 import fr.insee.compas.client.view.ModuleOscarView;
 import fr.insee.compas.logic.update.greenit.kube.KubeMetricsCsvUpdater;
+import fr.insee.compas.logic.update.greenit.vm.ApplishareMetricsApiUpdater;
 import fr.insee.compas.logic.update.greenit.vm.VmMetricsCsvUpdater;
 import fr.insee.compas.mapper.MetriqueVmMapper;
 import fr.insee.compas.model.compas.IndicateurType;
@@ -41,6 +42,8 @@ public class GreenItService {
     protected final MetriqueVmMapper metriqueVmMapper;
 
     protected final TableFaitsRepository tableFaitsRepository;
+
+    private final ApplishareMetricsApiUpdater applishareMetricsApiUpdater;
 
     private final KubeMetricsCsvUpdater kubeMetricsCsvUpdater;
 
@@ -81,12 +84,14 @@ public class GreenItService {
             OscarClient oscarClient,
             MetriqueVmMapper metriqueVmMapper,
             TableFaitsRepository tableFaitsRepository,
+            ApplishareMetricsApiUpdater applishareMetricsApiUpdater,
             KubeMetricsCsvUpdater kubeMetricsCsvUpdater,
             VmMetricsCsvUpdater vmMetricsCsvUpdater) {
         super();
         this.oscarClient = oscarClient;
         this.metriqueVmMapper = metriqueVmMapper;
         this.tableFaitsRepository = tableFaitsRepository;
+        this.applishareMetricsApiUpdater = applishareMetricsApiUpdater;
         this.vmMetricsCsvUpdater = vmMetricsCsvUpdater;
         this.kubeMetricsCsvUpdater = kubeMetricsCsvUpdater;
     }
@@ -261,6 +266,10 @@ public class GreenItService {
 
     public void miseAJourKubeMetricsGreenItFromFile(MultipartFile file, LocalDate fileDate) {
         kubeMetricsCsvUpdater.miseAJourIndicateursGreenItFromFile(file, fileDate);
+    }
+
+    public void miseAJourApplishareMetricsGreenItFromApi() {
+        applishareMetricsApiUpdater.miseAJourIndicateursGreenItFromApi();
     }
 
     public List<MetriqueApplicationDTO> getApplicationMetriques() {

@@ -22,7 +22,7 @@ import fr.insee.compas.exception.CompasClientException;
 import fr.insee.compas.exception.CompasException;
 import fr.insee.compas.exception.CompasUploadException;
 import fr.insee.compas.exception.ErrorVM;
-import fr.insee.compas.logic.update.greenit.GreenItMetricsUpdater;
+import fr.insee.compas.logic.update.greenit.GreenItMetricsFileUpdater;
 import fr.insee.compas.mapper.MetriqueVmMapper;
 import fr.insee.compas.model.compas.IndicateurType;
 import fr.insee.compas.model.compas.SourceType;
@@ -36,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Component
 @Slf4j
-public class VmMetricsCsvUpdater implements GreenItMetricsUpdater {
+public class VmMetricsCsvUpdater implements GreenItMetricsFileUpdater {
 
     private final OscarClient oscarClient;
     private final TableFaitsRepository tableFaitsRepository;
