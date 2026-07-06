@@ -2,25 +2,18 @@ package fr.insee.compas.controller;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
+import java.util.Set;
 
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import fr.insee.compas.mapper.IndicateurApplicationGreenITViewMapper;
-import fr.insee.compas.mapper.IndicateurModuleGreenITViewMapper;
-import fr.insee.compas.model.compas.dto.MetriqueApplicationDTO;
-import fr.insee.compas.model.compas.dto.MetriqueModuleDTO;
-import fr.insee.compas.model.greenit.IndicateurApplicationGreenIT;
-import fr.insee.compas.model.greenit.IndicateurModuleGreenIT;
+import fr.insee.compas.model.compas.Periode;
 import fr.insee.compas.service.FichierControlService;
 import fr.insee.compas.service.greenit.GreenItService;
+import fr.insee.compas.util.TendanceUtils;
 import fr.insee.compas.view.IndicateurApplicationGreenITView;
-import fr.insee.compas.view.IndicateurModuleGreenITView;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -34,67 +27,27 @@ import lombok.extern.slf4j.Slf4j;
 public class GreenItController {
 
     private final GreenItService greenItService;
+    private final TendanceUtils.GreenPeriodeBuilder greenPeriodeBuilder;
     private final FichierControlService fichierControlService;
-    private final IndicateurModuleGreenITViewMapper indicateurModuleGreenITViewMapper;
-    private final IndicateurApplicationGreenITViewMapper indicateurApplicationGreenITViewMapper;
 
-    @GetMapping(
-            value = "/applications/{applicationId}",
-            produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<IndicateurApplicationGreenITView> getNombreVirtualMachine(
-            @PathVariable("applicationId") Integer applicationId) {
-        final IndicateurApplicationGreenIT kpiGreen =
-                greenItService.getIndicateursApplicationGreenIT(applicationId);
-        final Optional<IndicateurApplicationGreenITView> view =
-                indicateurApplicationGreenITViewMapper.toView(kpiGreen);
-        return view.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
-    }
-
-    @GetMapping(value = "/modules/{moduleId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<IndicateurModuleGreenITView> getIndicateursGreenIT(
-            @PathVariable("moduleId") Integer moduleId) {
-        final IndicateurModuleGreenIT kpiGreen =
-                greenItService.getIndicateursModuleGreenIT(moduleId);
-        final Optional<IndicateurModuleGreenITView> view =
-                indicateurModuleGreenITViewMapper.toView(kpiGreen);
-        return view.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    @GetMapping(value = "/valid-dates", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Set<LocalDate>> getValidDates() {
+        log.info("Récupération des dates valides pour les indicateurs GreenIT ...");
+        Set<LocalDate> validDates = greenItService.getValidDates();
+        return ResponseEntity.ok(validDates);
     }
 
     @GetMapping(value = "/applications", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<IndicateurApplicationGreenITView>> getApplications() {
-        final List<MetriqueApplicationDTO> consommationsDTO =
-                greenItService.getApplicationMetriques();
-        log.info("consommationsDTO : {}", consommationsDTO.size());
-        final List<IndicateurApplicationGreenIT> kpisGreen =
-                consommationsDTO.stream()
-                        .map(MetriqueApplicationDTO::getIdApplication)
-                        .distinct()
-                        .map(greenItService::getIndicateursApplicationGreenIT)
-                        .toList();
-        final List<IndicateurApplicationGreenITView> views =
-                kpisGreen.stream()
-                        .map(indicateurApplicationGreenITViewMapper::toView)
-                        .flatMap(Optional::stream)
-                        .toList();
-        return new ResponseEntity<>(views, HttpHeaders.EMPTY, HttpStatus.OK);
-    }
-
-    @GetMapping(value = "/modules", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<IndicateurModuleGreenITView>> getModules() {
-        final List<MetriqueModuleDTO> consommationsDTO = greenItService.getModuleMetriques();
-        final List<IndicateurModuleGreenIT> kpisGreen =
-                consommationsDTO.stream()
-                        .map(
-                                dto ->
-                                        greenItService.getIndicateursModuleGreenIT(
-                                                dto.getIdModule(), dto.getDate()))
-                        .toList();
-        final List<IndicateurModuleGreenITView> views =
-                kpisGreen.stream()
-                        .map(indicateurModuleGreenITViewMapper::toView)
-                        .flatMap(Optional::stream)
-                        .toList();
-        return new ResponseEntity<>(views, HttpHeaders.EMPTY, HttpStatus.OK);
+    public ResponseEntity<List<IndicateurApplicationGreenITView>> getApplications(
+            @RequestParam(required = false) String origine,
+            @RequestParam(required = false) String passee) {
+        log.info("Récupération de l'indicateur applications de GreenIT ...");
+        Periode periode = greenPeriodeBuilder.buildPeriodeGreen(origine, passee);
+        List<IndicateurApplicationGreenITView> greenITViews =
+                greenItService.getIndicateursApplicationGreenIT(
+                        periode.origine(), periode.passee());
+        log.info("Récupération greenIt terminée");
+        return ResponseEntity.ok(greenITViews);
     }
 
     @PostMapping(value = "/modules/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

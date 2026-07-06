@@ -13,8 +13,8 @@ import org.springframework.data.repository.query.Param;
 import fr.insee.compas.model.compas.TableFaits;
 import fr.insee.compas.model.maturite.MaturiteIndicateurTableProjection;
 import fr.insee.compas.repository.projection.DevopsProjection;
+import fr.insee.compas.repository.projection.GreenItAppProjection;
 import fr.insee.compas.repository.projection.MetriqueApplicationProjection;
-import fr.insee.compas.repository.projection.MetriqueModuleProjection;
 import fr.insee.compas.repository.projection.MetriqueSumIndicateurProjection;
 
 public interface TableFaitsRepository extends JpaRepository<TableFaits, Long> {
@@ -61,6 +61,57 @@ public interface TableFaitsRepository extends JpaRepository<TableFaits, Long> {
 
     @Query(
             value =
+"""
+       WITH latest_data AS (
+           SELECT
+               tf.id_application,
+               tf.id_indicateur,
+               SUM(tf.valeur) AS valeur
+           FROM table_faits tf
+           WHERE tf.id_application IS NOT null
+           and tf.date = :dateReference
+           GROUP BY tf.id_application, tf.id_indicateur
+       )
+       SELECT
+           id_application,
+           MAX(CASE WHEN id_indicateur = 201 THEN valeur END) AS ramAlloue,
+           MAX(CASE WHEN id_indicateur = 202 THEN valeur END) AS ramMaxi,
+           MAX(CASE WHEN id_indicateur = 203 THEN valeur END) AS disqueAlloue,
+           MAX(CASE WHEN id_indicateur = 204 THEN valeur END) AS disqueConsomme,
+           MAX(CASE WHEN id_indicateur = 205 THEN valeur END) AS cpuAllouee,
+           MAX(CASE WHEN id_indicateur = 206 THEN valeur END) AS cpuMaxi,
+           MAX(CASE WHEN id_indicateur = 207 THEN valeur END) AS consoElec,
+           MAX(CASE WHEN id_indicateur = 208 THEN valeur END) AS nbrVM,
+           MAX(CASE WHEN id_indicateur = 209 THEN valeur END) AS ramConsommee,
+           MAX(CASE WHEN id_indicateur = 210 THEN valeur END) AS cpuConsomme,
+           MAX(CASE WHEN id_indicateur = 211 THEN valeur END) AS ramAlloueePd,
+           MAX(CASE WHEN id_indicateur = 212 THEN valeur END) AS ramMaxiPd,
+           MAX(CASE WHEN id_indicateur = 213 THEN valeur END) AS disqueAllouePd,
+           MAX(CASE WHEN id_indicateur = 214 THEN valeur END) AS disqueConsommePd,
+           MAX(CASE WHEN id_indicateur = 215 THEN valeur END) AS cpuAlloueePd,
+           MAX(CASE WHEN id_indicateur = 216 THEN valeur END) AS cpuMaxiPd,
+           MAX(CASE WHEN id_indicateur = 217 THEN valeur END) AS consoElecPd,
+           MAX(CASE WHEN id_indicateur = 218 THEN valeur END) AS nbrVmPd,
+           MAX(CASE WHEN id_indicateur = 219 THEN valeur END) AS ramConsommeePd,
+           MAX(CASE WHEN id_indicateur = 220 THEN valeur END) AS cpuConsommeePd,
+           MAX(CASE WHEN id_indicateur = 221 THEN valeur END) AS s3Consomme,
+           MAX(CASE WHEN id_indicateur = 222 THEN valeur END) AS pvcConsomme,
+           MAX(CASE WHEN id_indicateur = 223 THEN valeur END) AS nbPodMaxi,
+           MAX(CASE WHEN id_indicateur = 224 THEN valeur END) AS s3ConsommePd,
+           MAX(CASE WHEN id_indicateur = 225 THEN valeur END) AS pvcConsommePd,
+           MAX(CASE WHEN id_indicateur = 226 THEN valeur END) AS nbPodMaxiPd,
+           MAX(CASE WHEN id_indicateur = 227 THEN valeur END) AS asConsomme,
+           MAX(CASE WHEN id_indicateur = 228 THEN valeur END) AS asConsommePd,
+           MAX(CASE WHEN id_indicateur = 229 THEN valeur END) AS asAlloue,
+           MAX(CASE WHEN id_indicateur = 230 THEN valeur END) AS asAllouePd
+       FROM latest_data
+       GROUP BY id_application
+""",
+            nativeQuery = true)
+    List<GreenItAppProjection> getGreenItApp(@Param("dateReference") Date dateReference);
+
+    @Query(
+            value =
                     """
                         SELECT DISTINCT ON (tf.id_application) tf.id_application, tf.valeur
                         FROM table_faits tf
@@ -74,22 +125,8 @@ public interface TableFaitsRepository extends JpaRepository<TableFaits, Long> {
     List<TableFaits> findByDateAndIdIndicateurAndIdModule(
             LocalDate date, Integer idIndicateur, Integer idModule);
 
-    List<TableFaits> findByDateAndIdIndicateurAndIdApplication(
-            LocalDate date, Integer idIndicateur, Integer idApplication);
-
     Optional<List<TableFaits>> findByIdApplicationAndDateAndIdIndicateur(
             Integer idApplication, LocalDate date, Integer idIndicateur);
-
-    @Query(
-            value =
-                    """
-                        SELECT sum(tf.valeur) FROM TableFaits tf WHERE tf.idApplication = :idApplication
-                            AND tf.idIndicateur = :idIndicateur and tf.date = :date
-                    """)
-    BigDecimal findSumByDateAndIdIndicateurAndIdApplication(
-            @Param("date") LocalDate date,
-            @Param("idIndicateur") Integer idIndicateur,
-            @Param("idApplication") Integer idApplication);
 
     @Query(
             value =
@@ -106,11 +143,21 @@ public interface TableFaitsRepository extends JpaRepository<TableFaits, Long> {
     @Query(
             value =
                     """
-                        SELECT MAX(tf.date)
-                            FROM TableFaits tf
-                            WHERE tf.idIndicateur = :idIndicateur
-                    """)
-    LocalDate findLastDateIndicateur(@Param("idIndicateur") Integer idIndicateur);
+                        SELECT DISTINCT date
+                        FROM table_faits
+                        WHERE id_indicateur = 207
+                        UNION
+                        SELECT DISTINCT date
+                        FROM table_faits
+                        WHERE id_indicateur = 223
+                        UNION
+                        SELECT DISTINCT date
+                        FROM table_faits
+                        WHERE id_indicateur = 227
+                        ORDER BY date DESC
+                    """,
+            nativeQuery = true)
+    List<LocalDate> findLastDateIndicateur();
 
     @Query(
             value =
@@ -122,21 +169,6 @@ public interface TableFaitsRepository extends JpaRepository<TableFaits, Long> {
     List<BigDecimal> findLatestValueByIndicateurAndApplication(
             @Param("idIndicateur") Integer idIndicateur,
             @Param("idApplication") Integer idApplication);
-
-    @Query(
-            value =
-                    """
-                        SELECT tf
-                        FROM TableFaits tf
-                        WHERE tf.date = (
-                            SELECT MAX(tf2.date)
-                            FROM TableFaits tf2
-                            WHERE tf2.idIndicateur = tf.idIndicateur
-                            AND tf2.idIndicateur = :idIndicateur
-                        )
-                        AND tf.idIndicateur = :idIndicateur
-                    """)
-    List<TableFaits> findLatestValueByIndicateur(@Param("idIndicateur") Integer idIndicateur);
 
     @Query(
             value =
@@ -181,16 +213,6 @@ public interface TableFaitsRepository extends JpaRepository<TableFaits, Long> {
 """,
             nativeQuery = true)
     List<TableFaits> findLatestValueByIndicateurByApplication(
-            @Param("idIndicateur") Integer idIndicateur);
-
-    @Query(
-            value =
-"""
-    select subquery.id_Module as idModule, subquery.date as date, subquery.totalValeur as totalValeur from (select id_Module , date, sum(tf.valeur) over (partition by tf.id_Module, tf.date order by tf.date desc) as totalValeur,
-     row_number() over (partition by tf.id_Module order by tf.date desc) as row_num FROM Table_Faits tf WHERE tf.id_Indicateur = :idIndicateur and id_Module is not null) as subquery where subquery.row_num = 1 order by totalValeur desc
-""",
-            nativeQuery = true)
-    List<MetriqueModuleProjection> findLatestSummedValuesByIndicateurForAllModules(
             @Param("idIndicateur") Integer idIndicateur);
 
     @Query(
@@ -263,35 +285,6 @@ public interface TableFaitsRepository extends JpaRepository<TableFaits, Long> {
 """,
             nativeQuery = true)
     List<Object[]> findAggregatedAvgResults(Integer idIndicateur);
-
-    @Query(
-            value =
-"""
-    WITH latest_data AS (
-                                       SELECT
-                                           id_module,
-                                           id_indicateur,
-                                           valeur,
-                                           date,
-                                           ROW_NUMBER() OVER (PARTITION BY id_module, id_indicateur ORDER BY date DESC) AS rn
-                                       FROM
-                                           table_faits
-                                   )
-                                   SELECT
-                                      id_module AS moduleId,
-                                      MAX(CASE WHEN id_indicateur = 1 THEN valeur END) AS nbLigneCode,
-                                      MAX(CASE WHEN id_indicateur = 2 THEN valeur END) AS nbLigneCodeNonTeste,
-                                      MAX(CASE WHEN id_indicateur = 11 THEN valeur END) AS detteTechnique,
-                                      MAX(CASE WHEN id_indicateur = 12 THEN valeur END) AS fiabilite
-                                   FROM
-                                       latest_data
-                                   WHERE
-                                       rn = 1 and id_module is not null
-                                   GROUP BY
-                                       id_module;
-""",
-            nativeQuery = true)
-    List<Object[]> findValueIndicateurModuleQualiteBrute();
 
     @Query(
             value =

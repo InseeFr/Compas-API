@@ -16,7 +16,6 @@ import org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration;
 
 import fr.insee.compas.model.compas.TableFaits;
 import fr.insee.compas.repository.projection.MetriqueApplicationProjection;
-import fr.insee.compas.repository.projection.MetriqueModuleProjection;
 
 @DataJpaTest(
         showSql = false,
@@ -77,35 +76,6 @@ class TableFaitsRepositoryTest {
         assertEquals(1, results.size());
         assertEquals(1, ((Number) results.get(0)[0]).intValue()); // id_application attendu
         assertEquals(150, ((Number) results.get(0)[1]).intValue()); // Somme attendue
-    }
-
-    @Test
-    void testFindLatestSummedValuesByIndicateurForAllModules_Indicateur2() {
-        final List<MetriqueModuleProjection> results =
-                tableFaitsRepository.findLatestSummedValuesByIndicateurForAllModules(2);
-        final SoftAssertions softAssertions = new SoftAssertions();
-        softAssertions.assertThat(results).isNotNull();
-        softAssertions.assertThat(results.size()).isEqualTo(2);
-        softAssertions.assertThat(results.get(0).getIdModule()).isEqualTo(2);
-        softAssertions.assertThat(results.get(0).getDate()).isEqualTo(LocalDate.of(2024, 12, 02));
-        softAssertions
-                .assertThat(((Number) results.get(0).getTotalValeur()).intValue())
-                .isEqualTo(395);
-        softAssertions.assertThat(results.get(1).getIdModule()).isEqualTo(1);
-        softAssertions
-                .assertThat(((Number) results.get(1).getTotalValeur()).intValue())
-                .isEqualTo(102);
-        softAssertions.assertAll();
-    }
-
-    @Test
-    void testFindLatestSummedValuesByIndicateurForAllModules_NoResult() {
-        final List<MetriqueModuleProjection> results =
-                tableFaitsRepository.findLatestSummedValuesByIndicateurForAllModules(207);
-        final SoftAssertions softAssertions = new SoftAssertions();
-        softAssertions.assertThat(results).isNotNull();
-        softAssertions.assertThat(results.size()).isEqualTo(0);
-        softAssertions.assertAll();
     }
 
     @Test

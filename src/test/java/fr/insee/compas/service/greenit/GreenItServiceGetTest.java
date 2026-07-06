@@ -1,58 +1,48 @@
 package fr.insee.compas.service.greenit;
 
-import static org.mockito.ArgumentMatchers.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
+import java.time.ZoneId;
+import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
-import org.assertj.core.api.SoftAssertions;
-import org.junit.jupiter.api.DisplayName;
+import fr.insee.compas.logic.update.greenit.kube.KubeMetricsCsvUpdater;
+import fr.insee.compas.logic.update.greenit.vm.ApplishareMetricsApiUpdater;
+import fr.insee.compas.logic.update.greenit.vm.VmMetricsCsvUpdater;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+
+import fr.insee.compas.dto.GreenItAppDto;
+import fr.insee.compas.mapper.green.GreenItMapper;
+import fr.insee.compas.model.oscar.Application;
+import fr.insee.compas.repository.TableFaitsRepository;
+import fr.insee.compas.repository.projection.GreenItAppProjection;
+import fr.insee.compas.service.OscarService;
+import fr.insee.compas.view.IndicateurApplicationGreenITView;
 import org.springframework.web.multipart.MultipartFile;
 
-import fr.insee.compas.client.OscarClient;
-import fr.insee.compas.client.view.ApplicationOscarView;
-import fr.insee.compas.client.view.ModuleOscarView;
-import fr.insee.compas.client.view.VmOscarView;
-import fr.insee.compas.logic.update.greenit.kube.KubeMetricsCsvUpdater;
-import fr.insee.compas.logic.update.greenit.vm.ApplishareMetricsApiUpdater;
-import fr.insee.compas.logic.update.greenit.vm.VmMetricsCsvUpdater;
-import fr.insee.compas.mapper.MetriqueVmMapper;
-import fr.insee.compas.model.compas.IndicateurType;
-import fr.insee.compas.model.compas.TableFaits;
-import fr.insee.compas.model.compas.dto.MetriqueApplicationDTO;
-import fr.insee.compas.model.compas.dto.MetriqueModuleDTO;
-import fr.insee.compas.model.greenit.IndicateurApplicationGreenIT;
-import fr.insee.compas.model.greenit.IndicateurModuleGreenIT;
-import fr.insee.compas.repository.TableFaitsRepository;
-import fr.insee.compas.repository.projection.MetriqueApplicationProjection;
-import fr.insee.compas.repository.projection.MetriqueModuleProjection;
-import fr.insee.compas.repository.projection.MetriqueSumIndicateurProjection;
-
 @ExtendWith(MockitoExtension.class)
-class GreenItServiceGetTest {
+class GreenItServiceTest {
 
-    @InjectMocks @Spy private GreenItService greenItService;
+    @Mock private OscarService oscarService;
 
-    @Mock private OscarClient oscarClient;
+    @Mock private GreenItMapper greenItMapper;
+    @Mock private VmMetricsCsvUpdater vmMetricsCsvUpdater;
+    @Mock private KubeMetricsCsvUpdater kubeMetricsCsvUpdater;
+
 
     @Mock private TableFaitsRepository tableFaitsRepository;
 
-    @Mock private MetriqueVmMapper metriqueVmMapper;
-
-    @Mock private KubeMetricsCsvUpdater kubeMetricsCsvUpdater;
-
-    @Mock private VmMetricsCsvUpdater vmMetricsCsvUpdater;
+    @InjectMocks private GreenItService greenItService;
 
     @Mock private ApplishareMetricsApiUpdater applishareMetricsApiUpdater;
 
@@ -98,232 +88,148 @@ class GreenItServiceGetTest {
     }
 
     @Test
-    void testGetIndicateursApplicationGreenIT() {
-        when(oscarClient.getApplicationOscar(123)).thenReturn(mockAppliSirene4());
-        final TableFaits tableFaits = new TableFaits();
-        tableFaits.setIdApplication(123);
-        tableFaits.setIdIndicateur(IndicateurType.RAM_ALLOUEE.getValue());
-        tableFaits.setValeur(new BigDecimal(8));
-        final List<TableFaits> list = new ArrayList<>();
-        list.add(tableFaits);
-        final List<VmOscarView> listVms = new ArrayList<>();
-        listVms.add(
-                VmOscarView.builder()
-                        .idApplication(123)
-                        .idModule(null)
-                        .nom("pdsir4replm001")
-                        .build());
-        MetriqueSumIndicateurProjection p1 = mock(MetriqueSumIndicateurProjection.class);
-        when(p1.getIdIndicateur()).thenReturn(201);
-        when(p1.getTotalValeur()).thenReturn(BigDecimal.valueOf(12));
+    void getIndicateursApplicationGreenIT_success() {
 
-        MetriqueSumIndicateurProjection p2 = mock(MetriqueSumIndicateurProjection.class);
-        when(p2.getIdIndicateur()).thenReturn(203);
-        when(p2.getTotalValeur()).thenReturn(BigDecimal.valueOf(500.0));
+        when(tableFaitsRepository.findLastDateIndicateur())
+                .thenReturn(List.of(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 2)));
+        // GIVEN
+        Date origine =
+                Date.from(
+                        LocalDate.of(2024, 1, 2).atStartOfDay(ZoneId.systemDefault()).toInstant());
 
-        MetriqueSumIndicateurProjection p3 = mock(MetriqueSumIndicateurProjection.class);
-        when(p3.getIdIndicateur()).thenReturn(205);
-        when(p3.getTotalValeur()).thenReturn(BigDecimal.valueOf(20.0));
+        Date passee =
+                Date.from(
+                        LocalDate.of(2024, 1, 1).atStartOfDay(ZoneId.systemDefault()).toInstant());
 
-        MetriqueSumIndicateurProjection p4 = mock(MetriqueSumIndicateurProjection.class);
-        when(p4.getIdIndicateur()).thenReturn(207);
-        when(p4.getTotalValeur()).thenReturn(BigDecimal.valueOf(200.0));
+        Application app =
+                Application.builder()
+                        .idApplication(1)
+                        .appName("app-test")
+                        .domaineSndi("dev")
+                        .domaineFonctionnel("fonc")
+                        .sndi("service")
+                        .build();
 
-        when(tableFaitsRepository.findSumByDateAndListIndicateurIdsAndIdApplication(
-                        any(), anyList(), eq(123)))
-                .thenReturn(List.of(p1, p2, p3, p4));
-        final IndicateurApplicationGreenIT applicationGreenIT =
-                greenItService.getIndicateursApplicationGreenIT(123);
-        final SoftAssertions softAssertions = new SoftAssertions();
-        softAssertions.assertThat(applicationGreenIT).isNotNull();
-        softAssertions.assertThat(applicationGreenIT.getApplicationId()).isEqualTo(123);
-        softAssertions.assertThat(applicationGreenIT.getApplicationName()).isEqualTo("sirene4");
-        softAssertions.assertThat(applicationGreenIT.getRamAllocated()).isGreaterThan(1);
-        softAssertions.assertThat(applicationGreenIT.getDiskAllocated()).isGreaterThan(1);
-        softAssertions.assertThat(applicationGreenIT.getCpuAllocated()).isGreaterThan(1);
-        softAssertions.assertThat(applicationGreenIT.getConso()).isGreaterThan(1);
-        softAssertions.assertAll();
+        GreenItAppProjection projection = mock(GreenItAppProjection.class);
+        GreenItAppProjection projectionHist = mock(GreenItAppProjection.class);
+
+        when(projection.getRamAlloue()).thenReturn(BigDecimal.TEN);
+        when(projectionHist.getRamAlloue()).thenReturn(BigDecimal.ONE);
+
+        when(projection.getRamMaxi()).thenReturn(BigDecimal.TEN);
+        when(projectionHist.getRamMaxi()).thenReturn(BigDecimal.ONE);
+
+        when(projection.getDisqueAlloue()).thenReturn(BigDecimal.TEN);
+        when(projectionHist.getDisqueAlloue()).thenReturn(BigDecimal.ONE);
+
+        when(projection.getDisqueConsomme()).thenReturn(BigDecimal.TEN);
+        when(projectionHist.getDisqueConsomme()).thenReturn(BigDecimal.ONE);
+
+        when(projection.getCpuAllouee()).thenReturn(BigDecimal.TEN);
+        when(projectionHist.getCpuAllouee()).thenReturn(BigDecimal.ONE);
+
+        when(projection.getCpuMaxi()).thenReturn(BigDecimal.TEN);
+        when(projectionHist.getCpuMaxi()).thenReturn(BigDecimal.ONE);
+
+        when(projection.getConsoElec()).thenReturn(BigDecimal.TEN);
+        when(projectionHist.getConsoElec()).thenReturn(BigDecimal.ONE);
+
+        when(projection.getNbrVM()).thenReturn(BigDecimal.TEN);
+        when(projectionHist.getNbrVM()).thenReturn(BigDecimal.ONE);
+
+        when(projection.getRamConsommee()).thenReturn(10L);
+        when(projectionHist.getRamConsommee()).thenReturn(1L);
+
+        when(projection.getCpuConsomme()).thenReturn(BigDecimal.TEN);
+        when(projectionHist.getCpuConsomme()).thenReturn(BigDecimal.ONE);
+
+        when(tableFaitsRepository.getGreenItApp(origine)).thenReturn(List.of(projection));
+
+        when(tableFaitsRepository.getGreenItApp(passee)).thenReturn(List.of(projectionHist));
+
+        when(oscarService.getApplications()).thenReturn(List.of(app));
+
+        IndicateurApplicationGreenITView view =
+                IndicateurApplicationGreenITView.builder()
+                        .applicationId(1)
+                        .applicationName("app-test")
+                        .build();
+
+        when(greenItMapper.mapToView(any(GreenItAppDto.class))).thenReturn(view);
+
+        // WHEN
+        List<IndicateurApplicationGreenITView> result =
+                greenItService.getIndicateursApplicationGreenIT(origine, passee);
+
+        // THEN
+        assertEquals(1, result.size());
+        verify(oscarService).getApplications();
+        verify(tableFaitsRepository, times(2)).getGreenItApp(any(Date.class));
+        verify(greenItMapper).mapToView(any(GreenItAppDto.class));
     }
 
     @Test
-    void testGetIndicateursModuleGreenIT() {
-        when(oscarClient.getModuleOscar(238)).thenReturn(mockModulesSirene4());
-        final TableFaits tableFaits = new TableFaits();
-        tableFaits.setIdModule(238);
-        tableFaits.setIdIndicateur(IndicateurType.RAM_ALLOUEE.getValue());
-        tableFaits.setValeur(new BigDecimal(8));
-        final List<TableFaits> list = new ArrayList<>();
-        list.add(tableFaits);
-        when(tableFaitsRepository.findByDateAndIdIndicateurAndIdModule(
-                        any(), eq(IndicateurType.RAM_ALLOUEE.getValue()), eq(238)))
-                .thenReturn(list);
-        when(tableFaitsRepository.findByDateAndIdIndicateurAndIdModule(
-                        any(), eq(IndicateurType.RAM_MAXI.getValue()), eq(238)))
-                .thenReturn(list);
-        when(tableFaitsRepository.findByDateAndIdIndicateurAndIdModule(
-                        any(), eq(IndicateurType.DISQUE_ALLOUE.getValue()), eq(238)))
-                .thenReturn(list);
-        when(tableFaitsRepository.findByDateAndIdIndicateurAndIdModule(
-                        any(), eq(IndicateurType.CPU_ALLOUEE.getValue()), eq(238)))
-                .thenReturn(list);
-        when(tableFaitsRepository.findByDateAndIdIndicateurAndIdModule(
-                        any(), eq(IndicateurType.CPU_MAXI.getValue()), eq(238)))
-                .thenReturn(list);
-        when(tableFaitsRepository.findByDateAndIdIndicateurAndIdModule(
-                        any(), eq(IndicateurType.CONSO_ELEC.getValue()), eq(238)))
-                .thenReturn(list);
-        final IndicateurModuleGreenIT moduleGreenIT =
-                greenItService.getIndicateursModuleGreenIT(238);
-        final SoftAssertions softAssertions = new SoftAssertions();
-        softAssertions.assertThat(moduleGreenIT).isNotNull();
-        softAssertions.assertThat(moduleGreenIT.getModuleId()).isEqualTo(238);
-        softAssertions.assertThat(moduleGreenIT.getModuleName()).isEqualTo("sirene4");
-        softAssertions.assertThat(moduleGreenIT.getRamAllocated()).isGreaterThan(1);
-        softAssertions.assertThat(moduleGreenIT.getDiskAllocated()).isGreaterThan(1);
-        softAssertions.assertThat(moduleGreenIT.getCpuAllocated()).isGreaterThan(1);
-        softAssertions.assertThat(moduleGreenIT.getConso()).isGreaterThan(1);
-        softAssertions.assertAll();
-    }
+    void getIndicateursApplicationGreenIT_invalidDates_shouldThrowException() {
 
-    private ResponseEntity<ApplicationOscarView> mockAppliSirene4() {
-        final ApplicationOscarView applicationOscarView = new ApplicationOscarView();
-        applicationOscarView.setId(123);
-        applicationOscarView.setNom("sirene4");
-        applicationOscarView.setNomTechnique("Sirene 4");
-        applicationOscarView.setDescription("le répertoire des entreprises et des établissements");
-        return new ResponseEntity<ApplicationOscarView>(applicationOscarView, HttpStatus.ACCEPTED);
-    }
+        when(tableFaitsRepository.findLastDateIndicateur())
+                .thenReturn(List.of(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 2)));
+        // GIVEN
+        Date origine =
+                Date.from(
+                        LocalDate.of(2024, 1, 2).atStartOfDay(ZoneId.systemDefault()).toInstant());
 
-    private ResponseEntity<ModuleOscarView> mockModulesSirene4() {
-        final ModuleOscarView moduleOscarView = new ModuleOscarView();
-        moduleOscarView.setId(238);
-        moduleOscarView.setNom("sirene4");
-        moduleOscarView.setNomTechnique("Sirene 4");
-        return new ResponseEntity<ModuleOscarView>(moduleOscarView, HttpStatus.ACCEPTED);
+        Date passee =
+                Date.from(
+                        LocalDate.of(2024, 1, 1).atStartOfDay(ZoneId.systemDefault()).toInstant());
+
+        when(tableFaitsRepository.findLastDateIndicateur())
+                .thenReturn(List.of()); // vide => invalid
+
+        Application app = Application.builder().idApplication(1).build();
+        lenient().when(oscarService.getApplications()).thenReturn(List.of(app));
+
+        // WHEN / THEN
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> greenItService.getIndicateursApplicationGreenIT(origine, passee));
     }
 
     @Test
-    @DisplayName("getApplicationMetriques retourne du vide")
-    void testGetApplicationMetriques_Vide() {
-        when(tableFaitsRepository.findLatestSummedValuesByIndicateurForAllApplications(
-                        IndicateurType.CONSO_ELEC.getValue()))
-                .thenReturn(List.of());
-        List<MetriqueApplicationDTO> dtos = greenItService.getApplicationMetriques();
-        final SoftAssertions softAssertions = new SoftAssertions();
-        softAssertions.assertThat(dtos).isNotNull();
-        softAssertions.assertThat(dtos).isEmpty();
-        softAssertions.assertAll();
-    }
+    void getIndicateursApplicationGreenIT_shouldUseAnonymousApplication_whenNull() {
+        when(tableFaitsRepository.findLastDateIndicateur())
+                .thenReturn(List.of(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 2)));
+        // GIVEN
+        Date origine =
+                Date.from(
+                        LocalDate.of(2024, 1, 2).atStartOfDay(ZoneId.systemDefault()).toInstant());
 
-    @Test
-    @DisplayName("getApplicationMetriques retourne 3 lignes")
-    void testGetApplicationMetriques_TroisLignes() {
-        List<MetriqueApplicationProjection> rows =
-                List.of(
-                        new MetriqueApplicationProjectionStub(
-                                3, LocalDate.of(2025, 2, 1), BigDecimal.ONE),
-                        new MetriqueApplicationProjectionStub(
-                                2, LocalDate.of(2025, 2, 2), BigDecimal.TEN),
-                        new MetriqueApplicationProjectionStub(
-                                1, LocalDate.of(2025, 2, 3), BigDecimal.ZERO));
-        when(tableFaitsRepository.findLatestSummedValuesByIndicateurForAllApplications(
-                        IndicateurType.CONSO_ELEC.getValue()))
-                .thenReturn(rows);
-        List<MetriqueApplicationDTO> dtos = greenItService.getApplicationMetriques();
-        final SoftAssertions softAssertions = new SoftAssertions();
-        softAssertions.assertThat(dtos).isNotNull();
-        softAssertions.assertThat(dtos.stream().count()).isEqualTo(3);
-        softAssertions.assertAll();
-    }
+        Date passee =
+                Date.from(
+                        LocalDate.of(2024, 1, 1).atStartOfDay(ZoneId.systemDefault()).toInstant());
 
-    @Test
-    @DisplayName("getModuleMetriques retourne du vide")
-    void testGetModuleMetriques_Vide() {
-        when(tableFaitsRepository.findLatestSummedValuesByIndicateurForAllModules(
-                        IndicateurType.CONSO_ELEC.getValue()))
-                .thenReturn(List.of());
-        List<MetriqueModuleDTO> dtos = greenItService.getModuleMetriques();
-        final SoftAssertions softAssertions = new SoftAssertions();
-        softAssertions.assertThat(dtos).isNotNull();
-        softAssertions.assertThat(dtos).isEmpty();
-        softAssertions.assertAll();
-    }
+        GreenItAppProjection projection = mock(GreenItAppProjection.class);
+        GreenItAppProjection projectionHist = mock(GreenItAppProjection.class);
 
-    @Test
-    @DisplayName("getModuleMetriques retourne 3 lignes")
-    void testGetModuleMetriques_TroisLignes() {
-        List<MetriqueModuleProjection> rows =
-                List.of(
-                        new MetriqueModuleProjectionStub(
-                                3, LocalDate.of(2025, 2, 1), BigDecimal.ONE),
-                        new MetriqueModuleProjectionStub(
-                                2, LocalDate.of(2025, 2, 2), BigDecimal.TEN),
-                        new MetriqueModuleProjectionStub(
-                                1, LocalDate.of(2025, 2, 3), BigDecimal.ZERO));
-        when(tableFaitsRepository.findLatestSummedValuesByIndicateurForAllModules(
-                        IndicateurType.CONSO_ELEC.getValue()))
-                .thenReturn(rows);
-        List<MetriqueModuleDTO> dtos = greenItService.getModuleMetriques();
-        final SoftAssertions softAssertions = new SoftAssertions();
-        softAssertions.assertThat(dtos).isNotNull();
-        softAssertions.assertThat((long) dtos.size()).isEqualTo(3);
-        softAssertions.assertAll();
-    }
+        when(projection.getRamAlloue()).thenReturn(BigDecimal.TEN);
+        when(projectionHist.getRamAlloue()).thenReturn(BigDecimal.ONE);
 
-    class MetriqueApplicationProjectionStub implements MetriqueApplicationProjection {
+        when(tableFaitsRepository.getGreenItApp(origine)).thenReturn(List.of(projection));
 
-        private final Integer idApplication;
-        private final LocalDate date;
-        private final BigDecimal totalValeur;
+        when(tableFaitsRepository.getGreenItApp(passee)).thenReturn(List.of(projectionHist));
 
-        MetriqueApplicationProjectionStub(
-                Integer idApplication, LocalDate date, BigDecimal totalValeur) {
-            this.idApplication = idApplication;
-            this.date = date;
-            this.totalValeur = totalValeur;
-        }
+        when(oscarService.getApplications()).thenReturn(Collections.emptyList());
 
-        @Override
-        public Integer getIdApplication() {
-            return idApplication;
-        }
+        when(greenItMapper.mapToView(any()))
+                .thenReturn(
+                        IndicateurApplicationGreenITView.builder()
+                                .applicationName("anonyme")
+                                .build());
 
-        @Override
-        public LocalDate getDate() {
-            return date;
-        }
+        // WHEN
+        List<IndicateurApplicationGreenITView> result =
+                greenItService.getIndicateursApplicationGreenIT(origine, passee);
 
-        @Override
-        public BigDecimal getTotalValeur() {
-            return totalValeur;
-        }
-    }
-
-    class MetriqueModuleProjectionStub implements MetriqueModuleProjection {
-
-        private final Integer idModule;
-        private final LocalDate date;
-        private final BigDecimal totalValeur;
-
-        MetriqueModuleProjectionStub(Integer idModule, LocalDate date, BigDecimal totalValeur) {
-            this.idModule = idModule;
-            this.date = date;
-            this.totalValeur = totalValeur;
-        }
-
-        @Override
-        public Integer getIdModule() {
-            return idModule;
-        }
-
-        @Override
-        public LocalDate getDate() {
-            return date;
-        }
-
-        @Override
-        public BigDecimal getTotalValeur() {
-            return totalValeur;
-        }
+        // THEN
+        assertEquals(1, result.size());
     }
 }

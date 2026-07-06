@@ -1,71 +1,67 @@
 package fr.insee.compas.mapper;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Optional;
 
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import fr.insee.compas.dto.GreenItAppDto;
+import fr.insee.compas.mapper.green.GreenItMapper;
 import fr.insee.compas.model.greenit.GreenItScore;
-import fr.insee.compas.model.greenit.IndicateurApplicationGreenIT;
 import fr.insee.compas.service.greenit.score.GreenItComputeScore;
 import fr.insee.compas.view.IndicateurApplicationGreenITView;
 
 class IndicateurApplicationGreenITViewTest {
 
-    private IndicateurApplicationGreenITViewMapper mapper;
+    private GreenItMapper mapper;
     private GreenItComputeScore greenItComputeScore;
 
     @BeforeEach
     void setUp() {
         greenItComputeScore = Mockito.mock(GreenItComputeScore.class);
-        mapper = new IndicateurApplicationGreenITViewMapper(greenItComputeScore);
+        mapper = new GreenItMapper(greenItComputeScore);
     }
 
     @Test
     void toView_shouldMapCorrectly_whenIndicateurIsValid() {
         // Given
-        final IndicateurApplicationGreenIT indicateur =
-                IndicateurApplicationGreenIT.builder()
+        final GreenItAppDto indicateur =
+                GreenItAppDto.builder()
                         .applicationId(42)
                         .applicationName("TestApp")
-                        .ramAllocated(4)
+                        .ramAllocated(BigDecimal.valueOf(4))
                         .ramMaxi(new BigDecimal("80"))
-                        .diskAllocated(100)
-                        .diskUsed(60)
-                        .cpuAllocated(2000)
+                        .diskAllocated(BigDecimal.valueOf(100))
+                        .diskUsed(BigDecimal.valueOf(60))
+                        .cpuAllocated(BigDecimal.valueOf(2000))
                         .cpuMaxi(new BigDecimal(90))
-                        .conso(150)
-                        .nbVm(10)
-                        .ramAllocatedProd(2)
+                        .conso(BigDecimal.valueOf(150))
+                        .nbVm(BigDecimal.valueOf(10))
+                        .ramAllocatedProd(BigDecimal.valueOf(2))
                         .ramMaxiProd(new BigDecimal(2))
-                        .diskAllocatedProd(80)
-                        .diskUsedProd(20)
-                        .cpuAllocatedProd(800)
+                        .diskAllocatedProd(BigDecimal.valueOf(80))
+                        .diskUsedProd(BigDecimal.valueOf(20))
+                        .cpuAllocatedProd(BigDecimal.valueOf(800))
                         .cpuMaxiProd(new BigDecimal(60))
-                        .consoProd(100)
-                        .nbVmProd(5)
+                        .consoProd(BigDecimal.valueOf(100))
+                        .nbVmProd(BigDecimal.valueOf(5))
                         .dateMaj(LocalDate.of(2025, 11, 24))
                         .build();
 
         final GreenItScore score = new GreenItScore();
-        score.setConso(BigDecimal.valueOf(12.3456));
+        score.setScore(BigDecimal.valueOf(12.3456));
         score.setImpact(BigDecimal.valueOf(20.1111));
         score.setGaspillage(BigDecimal.valueOf(2.0));
         score.setGrade("B");
 
         Mockito.when(greenItComputeScore.computeAppScore(indicateur)).thenReturn(score);
 
-        final Optional<IndicateurApplicationGreenITView> optView = mapper.toView(indicateur);
-        final IndicateurApplicationGreenITView view = optView.get();
+        final IndicateurApplicationGreenITView view = mapper.mapToView(indicateur);
 
         final SoftAssertions softAssertions = new SoftAssertions();
-        softAssertions.assertThat(optView).isPresent();
         softAssertions.assertThat(view.getApplicationName()).isEqualTo("TestApp");
         softAssertions.assertThat(view.getRamAllocated()).isEqualTo("4");
         softAssertions.assertThat(view.getRamMaxi()).isEqualTo("80");
@@ -90,11 +86,5 @@ class IndicateurApplicationGreenITViewTest {
         softAssertions.assertThat(view.getLettreGreen()).isEqualTo("B");
 
         softAssertions.assertAll();
-    }
-
-    @Test
-    void toView_shouldReturnEmpty_whenInputIsNull() {
-        final Optional<IndicateurApplicationGreenITView> result = mapper.toView(null);
-        assertTrue(result.isEmpty());
     }
 }

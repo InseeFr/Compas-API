@@ -2,49 +2,78 @@ package fr.insee.compas.view;
 
 import java.time.LocalDate;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-@Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
+@Getter
 public class IndicateurApplicationGreenITView {
     private Integer applicationId;
     private String applicationName;
+    private String domaineDev;
+    private String serviceDev;
+    private String domaineFonc;
     private String ramAllocated;
+    private String ramAllocatedHist;
     private String ramMaxi;
+    private String ramMaxiHist;
     private String diskAllocated;
+    private String diskAllocatedHist;
     private String diskUsed;
+    private String diskUsedHist;
     private String cpuAllocated;
+    private String cpuAllocatedHist;
     private String cpuMaxi;
+    private String cpuMaxiHist;
     private String conso;
+    private String consoHist;
     private String asUsed;
+    private String asUsedHist;
     private String asAllocated;
+    private String asAllocatedHist;
     private String nbVm;
+    private String nbVmHist;
     private String cpuUsed;
+    private String cpuUsedHist;
     private String ramUsed;
+    private String ramUsedHist;
     private String s3Used;
+    private String s3UsedHist;
     private String pvcUsed;
+    private String pvcUsedHist;
     private String nbPodMaxi;
+    private String nbPodMaxiHist;
     private String ramAllocatedProd;
+    private String ramAllocatedHistProd;
     private String ramMaxiProd;
+    private String ramMaxiHistProd;
     private String diskAllocatedProd;
+    private String diskAllocatedHistProd;
     private String diskUsedProd;
+    private String diskUsedHistProd;
     private String cpuAllocatedProd;
+    private String cpuAllocatedHistProd;
     private String cpuMaxiProd;
+    private String cpuMaxiHistProd;
     private String consoProd;
+    private String consoHistProd;
     private String asUsedProd;
+    private String asUsedHistProd;
     private String asAllocatedProd;
+    private String asAllocatedHistProd;
     private String nbVmProd;
+    private String nbVmHistProd;
     private String cpuUsedProd;
+    private String cpuUsedHistProd;
     private String ramUsedProd;
+    private String ramUsedHistProd;
     private String s3UsedProd;
+    private String s3UsedHistProd;
     private String pvcUsedProd;
+    private String pvcUsedHistProd;
     private String nbPodMaxiProd;
+    private String nbPodMaxiHistProd;
     private String consoScore;
+    private String consoHistScore;
     private String impactScore;
     private String gaspillageScore;
     private String lettreGreen;

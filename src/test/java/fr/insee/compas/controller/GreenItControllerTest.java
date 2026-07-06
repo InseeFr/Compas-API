@@ -6,11 +6,14 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.sql.Date;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
+import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,22 +25,16 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 import fr.insee.compas.exception.CompasUploadException;
-import fr.insee.compas.mapper.IndicateurApplicationGreenITViewMapper;
-import fr.insee.compas.mapper.IndicateurModuleGreenITViewMapper;
-import fr.insee.compas.model.compas.dto.MetriqueApplicationDTO;
-import fr.insee.compas.model.compas.dto.MetriqueModuleDTO;
-import fr.insee.compas.model.greenit.IndicateurApplicationGreenIT;
-import fr.insee.compas.model.greenit.IndicateurModuleGreenIT;
+import fr.insee.compas.model.compas.Periode;
 import fr.insee.compas.service.FichierControlService;
 import fr.insee.compas.service.greenit.GreenItService;
+import fr.insee.compas.util.TendanceUtils;
 import fr.insee.compas.view.IndicateurApplicationGreenITView;
-import fr.insee.compas.view.IndicateurModuleGreenITView;
 
 import tools.jackson.databind.ObjectMapper;
 
@@ -51,21 +48,79 @@ class GreenItControllerTest {
 
     @MockitoBean private GreenItService greenItService;
 
-    @MockitoBean private IndicateurModuleGreenITViewMapper indicateurModuleGreenITViewMapper;
-
-    @MockitoBean
-    private IndicateurApplicationGreenITViewMapper indicateurApplicationGreenITViewMapper;
-
     @Autowired private WebApplicationContext wac;
+
+    @MockitoBean private TendanceUtils.GreenPeriodeBuilder greenPeriodeBuilder;
 
     @Autowired private ObjectMapper objectMapper;
 
     @BeforeEach
     void printRoutes() {
-        final RequestMappingHandlerMapping mappings =
-                wac.getBean(RequestMappingHandlerMapping.class);
+        RequestMappingHandlerMapping mappings = wac.getBean(RequestMappingHandlerMapping.class);
         mappings.getHandlerMethods()
                 .forEach((key, value) -> System.out.println(key + " => " + value));
+    }
+
+    @Test
+    void testGetValidDates_ReturnsOk() throws Exception {
+        // Given
+        Set<LocalDate> dates = Set.of(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 2, 1));
+
+        when(greenItService.getValidDates()).thenReturn(dates);
+
+        // When / Then
+        mockMvc.perform(get("/kpi-green/valid-dates")).andExpect(status().isOk());
+
+        verify(greenItService).getValidDates();
+    }
+
+    @Test
+    void testGetApplications_ReturnsOk() throws Exception {
+        // Given
+        Periode periode =
+                new Periode(
+                        Date.valueOf(LocalDate.of(2024, 2, 1)),
+                        Date.valueOf(LocalDate.of(2024, 1, 1)));
+
+        when(greenPeriodeBuilder.buildPeriodeGreen("2024-02-01", "2024-01-01")).thenReturn(periode);
+
+        when(greenItService.getIndicateursApplicationGreenIT(periode.origine(), periode.passee()))
+                .thenReturn(List.<IndicateurApplicationGreenITView>of());
+
+        // When / Then
+        mockMvc.perform(
+                        get("/kpi-green/applications")
+                                .param("origine", "2024-02-01")
+                                .param("passee", "2024-01-01"))
+                .andExpect(status().isOk());
+
+        verify(greenPeriodeBuilder).buildPeriodeGreen("2024-02-01", "2024-01-01");
+
+        verify(greenItService)
+                .getIndicateursApplicationGreenIT(periode.origine(), periode.passee());
+    }
+
+    @Test
+    void testUploadCSV_ReturnsOk() throws Exception {
+        // Given
+        MockMultipartFile mockFile =
+                new MockMultipartFile("file", "vm_20240101.csv", "text/csv", "data".getBytes());
+
+        LocalDate date = LocalDate.of(2024, 1, 1);
+
+        when(fichierControlService.controlVmFileName("vm_20240101.csv")).thenReturn(date);
+
+        doNothing().when(greenItService).miseAJourVmMetricsGreenItFromFile(mockFile, date);
+
+        // When / Then
+        mockMvc.perform(
+                        multipart("/kpi-green/modules/upload")
+                                .file(mockFile)
+                                .contentType(MediaType.MULTIPART_FORM_DATA))
+                .andExpect(status().isOk());
+
+        verify(fichierControlService).controlVmFileName("vm_20240101.csv");
+        verify(greenItService).miseAJourVmMetricsGreenItFromFile(mockFile, date);
     }
 
     @Test
@@ -88,9 +143,32 @@ class GreenItControllerTest {
     }
 
     @Test
+    void testUploadKubeCSV_ReturnsOk() throws Exception {
+        // Given
+        MockMultipartFile mockFile =
+                new MockMultipartFile("file", "kube_20240101.csv", "text/csv", "data".getBytes());
+
+        LocalDate date = LocalDate.of(2024, 1, 1);
+
+        when(fichierControlService.controlKubeFileName("kube_20240101.csv")).thenReturn(date);
+
+        doNothing().when(greenItService).miseAJourKubeMetricsGreenItFromFile(mockFile, date);
+
+        // When / Then
+        mockMvc.perform(
+                        multipart("/kpi-green/modules/upload/kube")
+                                .file(mockFile)
+                                .contentType(MediaType.MULTIPART_FORM_DATA))
+                .andExpect(status().isOk());
+
+        verify(fichierControlService).controlKubeFileName("kube_20240101.csv");
+        verify(greenItService).miseAJourKubeMetricsGreenItFromFile(mockFile, date);
+    }
+
+    @Test
     void testUploadKubeCSV_WithInvalidFileName_ReturnsBadRequest() throws Exception {
         // Given
-        final MultipartFile mockFile =
+        MultipartFile mockFile =
                 new MockMultipartFile("file", "badname.csv", "text/csv", "data".getBytes());
 
         when(fichierControlService.controlKubeFileName("badname.csv"))
@@ -105,160 +183,6 @@ class GreenItControllerTest {
 
         verify(greenItService, never()).miseAJourKubeMetricsGreenItFromFile(any(), any());
     }
-
-    @Test
-    void getIndicateursApplicationGreenIT_shouldReturnOk_whenViewIsPresent() throws Exception {
-        final Integer appId = 1;
-
-        final IndicateurApplicationGreenIT kpi = new IndicateurApplicationGreenIT();
-        kpi.setApplicationId(appId);
-        final IndicateurApplicationGreenITView view = new IndicateurApplicationGreenITView();
-
-        when(greenItService.getIndicateursApplicationGreenIT(appId)).thenReturn(kpi);
-        when(indicateurApplicationGreenITViewMapper.toView(kpi)).thenReturn(Optional.of(view));
-
-        mockMvc.perform(
-                        get("/kpi-green/applications/{applicationId}", appId)
-                                .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-    }
-
-    @Test
-    void getIndicateursApplicationGreenIT_shouldReturnNotFound_whenViewIsEmpty() throws Exception {
-        final Integer appId = 1;
-
-        final IndicateurApplicationGreenIT kpi = new IndicateurApplicationGreenIT();
-
-        when(greenItService.getIndicateursApplicationGreenIT(appId)).thenReturn(kpi);
-        when(indicateurApplicationGreenITViewMapper.toView(kpi)).thenReturn(Optional.empty());
-
-        mockMvc.perform(get("/kpi-green/applications/{applicationId}", appId))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    void getIndicateursGreenIT_shouldReturnOk_whenViewIsPresent() throws Exception {
-        final Integer moduleId = 1;
-
-        final IndicateurModuleGreenIT kpi = new IndicateurModuleGreenIT();
-        kpi.setModuleId(moduleId);
-        final IndicateurModuleGreenITView view = new IndicateurModuleGreenITView();
-
-        when(greenItService.getIndicateursModuleGreenIT(moduleId)).thenReturn(kpi);
-        when(indicateurModuleGreenITViewMapper.toView(kpi)).thenReturn(Optional.of(view));
-
-        mockMvc.perform(
-                        get("/kpi-green/modules/{moduleId}", moduleId)
-                                .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-    }
-
-    @Test
-    void getIndicateursGreenIT_shouldReturnNotFound_whenViewIsEmpty() throws Exception {
-        final Integer moduleId = 1;
-
-        final IndicateurModuleGreenIT kpi = new IndicateurModuleGreenIT();
-
-        when(greenItService.getIndicateursModuleGreenIT(moduleId)).thenReturn(kpi);
-        when(indicateurModuleGreenITViewMapper.toView(kpi)).thenReturn(Optional.empty());
-
-        mockMvc.perform(get("/kpi-green/modules/{moduleId}", moduleId))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    void getModules_shouldReturnListOfViews() throws Exception {
-        // --- Arrange
-        final MetriqueModuleDTO dto1 = new MetriqueModuleDTO();
-        dto1.setIdModule(1);
-        dto1.setDate(LocalDate.of(2024, 1, 1));
-
-        final IndicateurModuleGreenIT kpi = new IndicateurModuleGreenIT();
-        final IndicateurModuleGreenITView view = new IndicateurModuleGreenITView();
-        view.setImpactScore("0,911");
-        // Mocks
-        when(greenItService.getModuleMetriques()).thenReturn(List.of(dto1));
-        when(greenItService.getIndicateursModuleGreenIT(dto1.getIdModule(), dto1.getDate()))
-                .thenReturn(kpi);
-        when(indicateurModuleGreenITViewMapper.toView(kpi)).thenReturn(Optional.of(view));
-
-        final MvcResult mvcResult =
-                mockMvc.perform(get("/kpi-green/modules").accept(MediaType.APPLICATION_JSON))
-                        .andExpect(status().isOk())
-                        .andReturn();
-        final String json = mvcResult.getResponse().getContentAsString();
-        assertThat(json).isEqualTo(objectMapper.writeValueAsString(List.of(view)));
-    }
-
-    @Test
-    void getModules_shouldReturnEmptyList_whenNoViewPresent() throws Exception {
-        final MetriqueModuleDTO dto = new MetriqueModuleDTO();
-        dto.setIdModule(1);
-        dto.setDate(LocalDate.of(2024, 1, 1));
-
-        final IndicateurModuleGreenIT indicateur = new IndicateurModuleGreenIT();
-        when(greenItService.getIndicateursModuleGreenIT(dto.getIdModule(), dto.getDate()))
-                .thenReturn(indicateur);
-        when(indicateurModuleGreenITViewMapper.toView(indicateur)).thenReturn(Optional.empty());
-
-        final MvcResult mvcResult =
-                mockMvc.perform(get("/kpi-green/modules").accept(MediaType.APPLICATION_JSON))
-                        .andDo(print())
-                        .andExpect(status().isOk())
-                        .andReturn();
-        final String json = mvcResult.getResponse().getContentAsString();
-        assertThat(json).isEqualTo("[]");
-    }
-
-    @Test
-    void getApplications_shouldReturnListOfViews() throws Exception {
-        // --- Arrange
-        final MetriqueApplicationDTO dto1 = new MetriqueApplicationDTO();
-        dto1.setIdApplication(1);
-        dto1.setDate(LocalDate.of(2024, 1, 1));
-
-        final IndicateurApplicationGreenIT kpi = new IndicateurApplicationGreenIT();
-        kpi.setApplicationId(1);
-        final IndicateurApplicationGreenITView view = new IndicateurApplicationGreenITView();
-        view.setImpactScore("0,911");
-        when(greenItService.getApplicationMetriques()).thenReturn(List.of(dto1));
-        when(greenItService.getIndicateursApplicationGreenIT(
-                        dto1.getIdApplication(), dto1.getDate()))
-                .thenReturn(kpi);
-        when(greenItService.getIndicateursApplicationGreenIT(dto1.getIdApplication()))
-                .thenReturn(kpi);
-        when(indicateurApplicationGreenITViewMapper.toView(kpi)).thenReturn(Optional.of(view));
-
-        final MvcResult mvcResult =
-                mockMvc.perform(get("/kpi-green/applications").accept(MediaType.APPLICATION_JSON))
-                        .andDo(print())
-                        .andExpect(status().isOk())
-                        .andReturn();
-        System.out.println("mcv" + mvcResult);
-        final String json = mvcResult.getResponse().getContentAsString();
-        assertThat(json).isEqualTo(objectMapper.writeValueAsString(List.of(view)));
-    }
-
-    @Test
-    void getApplications_shouldReturnEmptyList_whenNoViewPresent() throws Exception {
-        final MetriqueApplicationDTO dto = new MetriqueApplicationDTO();
-        dto.setIdApplication(1);
-        dto.setDate(LocalDate.of(2024, 1, 1));
-
-        final IndicateurApplicationGreenIT indicateur = new IndicateurApplicationGreenIT();
-        when(greenItService.getIndicateursApplicationGreenIT(dto.getIdApplication(), dto.getDate()))
-                .thenReturn(indicateur);
-        when(indicateurApplicationGreenITViewMapper.toView(indicateur))
-                .thenReturn(Optional.empty());
-
-        final MvcResult mvcResult =
-                mockMvc.perform(get("/kpi-green/applications").accept(MediaType.APPLICATION_JSON))
-                        .andExpect(status().isOk())
-                        .andReturn();
-        final String json = mvcResult.getResponse().getContentAsString();
-        assertThat(json).isEqualTo("[]");
-    }
-
     @Test
     void uploadApplishare_shouldReturnHttp200AndSuccessMessage() throws Exception {
         mockMvc.perform(post("/kpi-green/applications/applishare"))
