@@ -7,12 +7,12 @@ import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import fr.insee.compas.logic.update.greenit.vm.ApplishareMetricsApiUpdater;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import fr.insee.compas.dto.GreenItAppDto;
 import fr.insee.compas.logic.update.greenit.kube.KubeMetricsCsvUpdater;
+import fr.insee.compas.logic.update.greenit.vm.ApplishareMetricsApiUpdater;
 import fr.insee.compas.logic.update.greenit.vm.VmMetricsCsvUpdater;
 import fr.insee.compas.mapper.green.GreenItMapper;
 import fr.insee.compas.model.oscar.Application;
@@ -199,9 +199,11 @@ public class GreenItService {
     public void miseAJourKubeMetricsGreenItFromFile(MultipartFile file, LocalDate fileDate) {
         kubeMetricsCsvUpdater.miseAJourIndicateursGreenItFromFile(file, fileDate);
     }
+
     public void miseAJourApplishareMetricsGreenItFromApi() {
         applishareMetricsApiUpdater.miseAJourIndicateursGreenItFromApi();
     }
+
     private boolean isValidDate(Date origine, Date passee) {
         Set<LocalDate> validDates = getValidDates();
 

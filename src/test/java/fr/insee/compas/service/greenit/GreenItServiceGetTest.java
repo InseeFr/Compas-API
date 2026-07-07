@@ -12,23 +12,23 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-import fr.insee.compas.logic.update.greenit.kube.KubeMetricsCsvUpdater;
-import fr.insee.compas.logic.update.greenit.vm.ApplishareMetricsApiUpdater;
-import fr.insee.compas.logic.update.greenit.vm.VmMetricsCsvUpdater;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.multipart.MultipartFile;
 
 import fr.insee.compas.dto.GreenItAppDto;
+import fr.insee.compas.logic.update.greenit.kube.KubeMetricsCsvUpdater;
+import fr.insee.compas.logic.update.greenit.vm.ApplishareMetricsApiUpdater;
+import fr.insee.compas.logic.update.greenit.vm.VmMetricsCsvUpdater;
 import fr.insee.compas.mapper.green.GreenItMapper;
 import fr.insee.compas.model.oscar.Application;
 import fr.insee.compas.repository.TableFaitsRepository;
 import fr.insee.compas.repository.projection.GreenItAppProjection;
 import fr.insee.compas.service.OscarService;
 import fr.insee.compas.view.IndicateurApplicationGreenITView;
-import org.springframework.web.multipart.MultipartFile;
 
 @ExtendWith(MockitoExtension.class)
 class GreenItServiceTest {
@@ -38,7 +38,6 @@ class GreenItServiceTest {
     @Mock private GreenItMapper greenItMapper;
     @Mock private VmMetricsCsvUpdater vmMetricsCsvUpdater;
     @Mock private KubeMetricsCsvUpdater kubeMetricsCsvUpdater;
-
 
     @Mock private TableFaitsRepository tableFaitsRepository;
 
