@@ -1,5 +1,5 @@
 include:
-  - component: "${CI_SERVER_FQDN}/sndi-lille/ressources-communes/components/meta-component-java-kube/meta-components@2.0.0"
+  - component: "${CI_SERVER_FQDN}/sndi-lille/ressources-communes/components/meta-component-java-kube/meta-components@3.0.1"
     inputs:
       sonar_token: ${SONAR_KEY}
       sonar_project_key: ${SONAR_PROJECT_KEY}
@@ -43,8 +43,7 @@ stages:
   - versionning-apply
   - calculate-version-and-release
   - tag
-  - prepare-docker
-  - trigger-docker
+  - prepare-and-trigger-docker
   - docker
   - release-gitops
 
