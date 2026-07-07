@@ -27,7 +27,7 @@ include:
         username_personnal_github: "${GITHUB_MIRROR_USERNAME}"
         personnal_token_github: "${GITHUB_TOKEN_MIRRORING}"
         chemin_gitlab_project: "dsi/compas/compas-api"
-  - component: "$CI_SERVER_FQDN/outils-transverses/services-dev/versionning-component/versionning-pipeline@0.0.1"
+  - component: "$CI_SERVER_FQDN/outils-transverses/services-dev/versionning-component/versionning-pipeline@0.0.2"
     inputs:
       projectId: $CI_PROJECT_ID
       ecosystem: 'maven'
