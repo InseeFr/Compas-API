@@ -2,7 +2,7 @@ package fr.insee.compas.service.greenit.score;
 
 import org.springframework.stereotype.Component;
 
-import fr.insee.compas.dto.GreenItAppDto;
+import fr.insee.compas.dto.green.GreenVmDto;
 import fr.insee.compas.model.greenit.GreenItScore;
 import fr.insee.compas.service.greenit.properties.GreenItScoreConfigProperties;
 
@@ -20,7 +20,7 @@ public class GreenItComputeScore extends GreenItAbstractScore {
     }
 
     @Override
-    public GreenItScore computeAppScore(GreenItAppDto indicator) {
+    public GreenItScore computeAppScore(GreenVmDto indicator) {
         return computeScore(
                 indicator,
                 this.config.getApplication().getConsoMax(),

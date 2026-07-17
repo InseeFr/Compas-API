@@ -1,47 +1,53 @@
-package fr.insee.compas.view;
-
-import java.time.LocalDate;
+package fr.insee.compas.view.green;
 
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
-@Builder
+@SuperBuilder
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
 @Getter
-public class IndicateurApplicationGreenITView {
-    private Integer applicationId;
-    private String applicationName;
-    private String domaineDev;
-    private String serviceDev;
-    private String domaineFonc;
+public class IndicateurAppGreenVmView extends IndicateurAppGreenBaseView {
     private String ramAllocated;
     private String ramAllocatedHist;
+    private String ramAllocatedHp;
+    private String ramAllocatedHistHp;
     private String ramMaxi;
     private String ramMaxiHist;
+    private String ramMaxiHp;
+    private String ramMaxiHistHp;
     private String diskAllocated;
     private String diskAllocatedHist;
+    private String diskAllocatedHp;
+    private String diskAllocatedHistHp;
     private String diskUsed;
     private String diskUsedHist;
+    private String diskUsedHp;
+    private String diskUsedHistHp;
     private String cpuAllocated;
     private String cpuAllocatedHist;
+    private String cpuAllocatedHp;
+    private String cpuAllocatedHistHp;
     private String cpuMaxi;
     private String cpuMaxiHist;
+    private String cpuMaxiHp;
+    private String cpuMaxiHistHp;
     private String conso;
     private String consoHist;
+    private String consoHp;
+    private String consoHistHp;
     private String asUsed;
     private String asUsedHist;
+    private String asUsedHistHp;
+    private String asUsedHp;
     private String asAllocated;
     private String asAllocatedHist;
+    private String asAllocatedHp;
+    private String asAllocatedHistHp;
     private String nbVm;
     private String nbVmHist;
-    private String cpuUsed;
-    private String cpuUsedHist;
-    private String ramUsed;
-    private String ramUsedHist;
-    private String s3Used;
-    private String s3UsedHist;
-    private String pvcUsed;
-    private String pvcUsedHist;
-    private String nbPodMaxi;
-    private String nbPodMaxiHist;
+    private String nbVmHp;
+    private String nbVmHistHp;
     private String ramAllocatedProd;
     private String ramAllocatedHistProd;
     private String ramMaxiProd;
@@ -62,20 +68,4 @@ public class IndicateurApplicationGreenITView {
     private String asAllocatedHistProd;
     private String nbVmProd;
     private String nbVmHistProd;
-    private String cpuUsedProd;
-    private String cpuUsedHistProd;
-    private String ramUsedProd;
-    private String ramUsedHistProd;
-    private String s3UsedProd;
-    private String s3UsedHistProd;
-    private String pvcUsedProd;
-    private String pvcUsedHistProd;
-    private String nbPodMaxiProd;
-    private String nbPodMaxiHistProd;
-    private String consoScore;
-    private String consoHistScore;
-    private String impactScore;
-    private String gaspillageScore;
-    private String lettreGreen;
-    private LocalDate dateMaj;
 }

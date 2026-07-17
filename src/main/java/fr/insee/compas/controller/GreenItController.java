@@ -13,7 +13,8 @@ import fr.insee.compas.model.compas.Periode;
 import fr.insee.compas.service.FichierControlService;
 import fr.insee.compas.service.greenit.GreenItService;
 import fr.insee.compas.util.TendanceUtils;
-import fr.insee.compas.view.IndicateurApplicationGreenITView;
+import fr.insee.compas.util.greenit.GreenITutils;
+import fr.insee.compas.view.green.IndicateurAppGreenBaseView;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -37,15 +38,17 @@ public class GreenItController {
         return ResponseEntity.ok(validDates);
     }
 
-    @GetMapping(value = "/applications", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<IndicateurApplicationGreenITView>> getApplications(
+    @GetMapping(value = "/applications/{viewMode}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<IndicateurAppGreenBaseView>> getApplications(
+            @PathVariable GreenITutils.ViewGreen viewMode,
             @RequestParam(required = false) String origine,
-            @RequestParam(required = false) String passee) {
+            @RequestParam(required = false) String passee)
+            throws IllegalAccessException {
         log.info("Récupération de l'indicateur applications de GreenIT ...");
         Periode periode = greenPeriodeBuilder.buildPeriodeGreen(origine, passee);
-        List<IndicateurApplicationGreenITView> greenITViews =
+        List<IndicateurAppGreenBaseView> greenITViews =
                 greenItService.getIndicateursApplicationGreenIT(
-                        periode.origine(), periode.passee());
+                        viewMode, periode.origine(), periode.passee());
         log.info("Récupération greenIt terminée");
         return ResponseEntity.ok(greenITViews);
     }

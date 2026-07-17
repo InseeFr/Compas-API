@@ -32,7 +32,8 @@ import fr.insee.compas.model.compas.Periode;
 import fr.insee.compas.service.FichierControlService;
 import fr.insee.compas.service.greenit.GreenItService;
 import fr.insee.compas.util.TendanceUtils;
-import fr.insee.compas.view.IndicateurApplicationGreenITView;
+import fr.insee.compas.util.greenit.GreenITutils;
+import fr.insee.compas.view.green.IndicateurAppGreenBaseView;
 
 import tools.jackson.databind.ObjectMapper;
 
@@ -81,13 +82,13 @@ class GreenItControllerTest {
                         Date.valueOf(LocalDate.of(2024, 1, 1)));
 
         when(greenPeriodeBuilder.buildPeriodeGreen("2024-02-01", "2024-01-01")).thenReturn(periode);
-
-        when(greenItService.getIndicateursApplicationGreenIT(periode.origine(), periode.passee()))
-                .thenReturn(List.<IndicateurApplicationGreenITView>of());
+        when(greenItService.getIndicateursApplicationGreenIT(
+                        GreenITutils.ViewGreen.KUBE, periode.origine(), periode.passee()))
+                .thenReturn(List.<IndicateurAppGreenBaseView>of());
 
         // When / Then
         mockMvc.perform(
-                        get("/kpi-green/applications")
+                        get("/kpi-green/applications/KUBE")
                                 .param("origine", "2024-02-01")
                                 .param("passee", "2024-01-01"))
                 .andExpect(status().isOk());
@@ -95,7 +96,8 @@ class GreenItControllerTest {
         verify(greenPeriodeBuilder).buildPeriodeGreen("2024-02-01", "2024-01-01");
 
         verify(greenItService)
-                .getIndicateursApplicationGreenIT(periode.origine(), periode.passee());
+                .getIndicateursApplicationGreenIT(
+                        GreenITutils.ViewGreen.KUBE, periode.origine(), periode.passee());
     }
 
     @Test

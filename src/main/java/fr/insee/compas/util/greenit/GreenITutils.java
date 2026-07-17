@@ -1,14 +1,17 @@
 package fr.insee.compas.util.greenit;
 
 import java.math.BigDecimal;
-import java.util.function.ToLongFunction;
-
-import fr.insee.compas.repository.projection.GreenItAppProjection;
+import java.util.function.Function;
 
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class GreenITutils {
+
+    public enum ViewGreen {
+        KUBE,
+        VM
+    }
 
     public static String normalizeString(Number value) {
         return (value != null) ? value.toString() : null;
@@ -23,29 +26,29 @@ public class GreenITutils {
         return String.valueOf(go);
     }
 
-    public static BigDecimal orZeroHistBigDecimal(
-            GreenItAppProjection proj,
-            java.util.function.Function<GreenItAppProjection, BigDecimal> getter) {
-        return proj != null ? orZeroBigDecimal(getter.apply(proj)) : orZeroBigDecimal(null);
-    }
-
-    public static Long orZeroHistLong(
-            GreenItAppProjection proj, ToLongFunction<GreenItAppProjection> getter) {
-        if (proj == null) {
-            return orZero(null);
-        }
-        try {
-            return getter.applyAsLong(proj);
-        } catch (NullPointerException e) {
+    public static String normalizeStringToHourCpu(BigDecimal value) {
+        if (value == null) {
             return null;
         }
+        long h = Math.round(value.doubleValue() / 3600d);
+        return String.valueOf(h);
     }
 
-    public static BigDecimal orZeroBigDecimal(BigDecimal value) {
-        return value;
+    public static <P, T> T safeGet(P projection, Function<P, T> getter) {
+        return projection == null ? null : getter.apply(projection);
     }
 
-    public static Long orZero(Long value) {
-        return value;
+    public static Long subtractExactSafe(Long a, Long b) {
+        if (a == null || b == null) {
+            return null;
+        }
+        return Math.subtractExact(a, b);
+    }
+
+    public static BigDecimal subtractSafe(BigDecimal a, BigDecimal b) {
+        if (a == null || b == null) {
+            return null;
+        }
+        return a.subtract(b);
     }
 }

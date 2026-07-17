@@ -1,11 +1,12 @@
 package fr.insee.compas.service.greenit;
 
+import static fr.insee.compas.util.greenit.GreenITutils.ViewGreen;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Collections;
@@ -19,16 +20,20 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.multipart.MultipartFile;
 
-import fr.insee.compas.dto.GreenItAppDto;
+import fr.insee.compas.dto.green.GreenKubeDto;
+import fr.insee.compas.dto.green.GreenVmDto;
 import fr.insee.compas.logic.update.greenit.kube.KubeMetricsCsvUpdater;
 import fr.insee.compas.logic.update.greenit.vm.ApplishareMetricsApiUpdater;
 import fr.insee.compas.logic.update.greenit.vm.VmMetricsCsvUpdater;
 import fr.insee.compas.mapper.green.GreenItMapper;
 import fr.insee.compas.model.oscar.Application;
 import fr.insee.compas.repository.TableFaitsRepository;
-import fr.insee.compas.repository.projection.GreenItAppProjection;
+import fr.insee.compas.repository.projection.green.GreenItAppKubeProjection;
+import fr.insee.compas.repository.projection.green.GreenItAppVmProjection;
 import fr.insee.compas.service.OscarService;
-import fr.insee.compas.view.IndicateurApplicationGreenITView;
+import fr.insee.compas.view.green.IndicateurAppGreenBaseView;
+import fr.insee.compas.view.green.IndicateurAppGreenKubeView;
+import fr.insee.compas.view.green.IndicateurAppGreenVmView;
 
 @ExtendWith(MockitoExtension.class)
 class GreenItServiceTest {
@@ -47,14 +52,11 @@ class GreenItServiceTest {
 
     @Test
     void miseAJourVmMetricsGreenItFromFile_shouldDelegateToVmMetricsCsvUpdater() {
-        // Given
         MultipartFile file = mock(MultipartFile.class);
         LocalDate fileDate = LocalDate.of(2026, 6, 22);
 
-        // When
         greenItService.miseAJourVmMetricsGreenItFromFile(file, fileDate);
 
-        // Then
         verify(vmMetricsCsvUpdater).miseAJourIndicateursGreenItFromFile(file, fileDate);
         verifyNoInteractions(kubeMetricsCsvUpdater, applishareMetricsApiUpdater);
         verifyNoMoreInteractions(vmMetricsCsvUpdater);
@@ -62,14 +64,11 @@ class GreenItServiceTest {
 
     @Test
     void miseAJourKubeMetricsGreenItFromFile_shouldDelegateToKubeMetricsCsvUpdater() {
-        // Given
         MultipartFile file = mock(MultipartFile.class);
         LocalDate fileDate = LocalDate.of(2026, 6, 22);
 
-        // When
         greenItService.miseAJourKubeMetricsGreenItFromFile(file, fileDate);
 
-        // Then
         verify(kubeMetricsCsvUpdater).miseAJourIndicateursGreenItFromFile(file, fileDate);
         verifyNoInteractions(vmMetricsCsvUpdater, applishareMetricsApiUpdater);
         verifyNoMoreInteractions(kubeMetricsCsvUpdater);
@@ -77,25 +76,21 @@ class GreenItServiceTest {
 
     @Test
     void miseAJourApplishareMetricsGreenItFromApi_shouldDelegateToApplishareMetricsApiUpdater() {
-        // When
         greenItService.miseAJourApplishareMetricsGreenItFromApi();
 
-        // Then
         verify(applishareMetricsApiUpdater).miseAJourIndicateursGreenItFromApi();
         verifyNoInteractions(vmMetricsCsvUpdater, kubeMetricsCsvUpdater);
         verifyNoMoreInteractions(applishareMetricsApiUpdater);
     }
 
     @Test
-    void getIndicateursApplicationGreenIT_success() {
-
+    void getIndicateursApplicationGreenIT_vm_success() {
         when(tableFaitsRepository.findLastDateIndicateur())
                 .thenReturn(List.of(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 2)));
-        // GIVEN
+
         Date origine =
                 Date.from(
                         LocalDate.of(2024, 1, 2).atStartOfDay(ZoneId.systemDefault()).toInstant());
-
         Date passee =
                 Date.from(
                         LocalDate.of(2024, 1, 1).atStartOfDay(ZoneId.systemDefault()).toInstant());
@@ -109,74 +104,95 @@ class GreenItServiceTest {
                         .sndi("service")
                         .build();
 
-        GreenItAppProjection projection = mock(GreenItAppProjection.class);
-        GreenItAppProjection projectionHist = mock(GreenItAppProjection.class);
+        GreenItAppVmProjection projection = mock(GreenItAppVmProjection.class);
+        GreenItAppVmProjection projectionHist = mock(GreenItAppVmProjection.class);
 
-        when(projection.getRamAlloue()).thenReturn(BigDecimal.TEN);
-        when(projectionHist.getRamAlloue()).thenReturn(BigDecimal.ONE);
+        when(projection.getIdApplication()).thenReturn(1);
+        when(projectionHist.getIdApplication()).thenReturn(1);
 
-        when(projection.getRamMaxi()).thenReturn(BigDecimal.TEN);
-        when(projectionHist.getRamMaxi()).thenReturn(BigDecimal.ONE);
-
-        when(projection.getDisqueAlloue()).thenReturn(BigDecimal.TEN);
-        when(projectionHist.getDisqueAlloue()).thenReturn(BigDecimal.ONE);
-
-        when(projection.getDisqueConsomme()).thenReturn(BigDecimal.TEN);
-        when(projectionHist.getDisqueConsomme()).thenReturn(BigDecimal.ONE);
-
-        when(projection.getCpuAllouee()).thenReturn(BigDecimal.TEN);
-        when(projectionHist.getCpuAllouee()).thenReturn(BigDecimal.ONE);
-
-        when(projection.getCpuMaxi()).thenReturn(BigDecimal.TEN);
-        when(projectionHist.getCpuMaxi()).thenReturn(BigDecimal.ONE);
-
-        when(projection.getConsoElec()).thenReturn(BigDecimal.TEN);
-        when(projectionHist.getConsoElec()).thenReturn(BigDecimal.ONE);
-
-        when(projection.getNbrVM()).thenReturn(BigDecimal.TEN);
-        when(projectionHist.getNbrVM()).thenReturn(BigDecimal.ONE);
-
-        when(projection.getRamConsommee()).thenReturn(10L);
-        when(projectionHist.getRamConsommee()).thenReturn(1L);
-
-        when(projection.getCpuConsomme()).thenReturn(BigDecimal.TEN);
-        when(projectionHist.getCpuConsomme()).thenReturn(BigDecimal.ONE);
-
-        when(tableFaitsRepository.getGreenItApp(origine)).thenReturn(List.of(projection));
-
-        when(tableFaitsRepository.getGreenItApp(passee)).thenReturn(List.of(projectionHist));
+        when(tableFaitsRepository.getGreenItAppVm(origine)).thenReturn(List.of(projection));
+        when(tableFaitsRepository.getGreenItAppVm(passee)).thenReturn(List.of(projectionHist));
 
         when(oscarService.getApplications()).thenReturn(List.of(app));
 
-        IndicateurApplicationGreenITView view =
-                IndicateurApplicationGreenITView.builder()
+        GreenVmDto dto = GreenVmDto.builder().applicationId(1).build();
+        when(greenItMapper.buildIndicateurDtoVm(
+                        eq(1), eq(app), eq(projection), eq(projectionHist), any(LocalDate.class)))
+                .thenReturn(dto);
+
+        IndicateurAppGreenVmView view =
+                IndicateurAppGreenVmView.builder()
                         .applicationId(1)
                         .applicationName("app-test")
                         .build();
+        when(greenItMapper.mapToView(dto)).thenReturn(view);
 
-        when(greenItMapper.mapToView(any(GreenItAppDto.class))).thenReturn(view);
+        List<IndicateurAppGreenBaseView> result =
+                greenItService.getIndicateursApplicationGreenIT(ViewGreen.VM, origine, passee);
 
-        // WHEN
-        List<IndicateurApplicationGreenITView> result =
-                greenItService.getIndicateursApplicationGreenIT(origine, passee);
-
-        // THEN
         assertEquals(1, result.size());
         verify(oscarService).getApplications();
-        verify(tableFaitsRepository, times(2)).getGreenItApp(any(Date.class));
-        verify(greenItMapper).mapToView(any(GreenItAppDto.class));
+        verify(tableFaitsRepository).getGreenItAppVm(origine);
+        verify(tableFaitsRepository).getGreenItAppVm(passee);
+        verify(greenItMapper)
+                .buildIndicateurDtoVm(
+                        eq(1), eq(app), eq(projection), eq(projectionHist), any(LocalDate.class));
+        verify(greenItMapper).mapToView(dto);
+        verify(greenItMapper, never()).buildIndicateurKubeDto(any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void getIndicateursApplicationGreenIT_kube_success() {
+        when(tableFaitsRepository.findLastDateIndicateur())
+                .thenReturn(List.of(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 2)));
+
+        Date origine =
+                Date.from(
+                        LocalDate.of(2024, 1, 2).atStartOfDay(ZoneId.systemDefault()).toInstant());
+        Date passee =
+                Date.from(
+                        LocalDate.of(2024, 1, 1).atStartOfDay(ZoneId.systemDefault()).toInstant());
+
+        Application app = Application.builder().idApplication(1).appName("app-test").build();
+
+        GreenItAppKubeProjection projection = mock(GreenItAppKubeProjection.class);
+        GreenItAppKubeProjection projectionHist = mock(GreenItAppKubeProjection.class);
+
+        when(projection.getIdApplication()).thenReturn(1);
+        when(projectionHist.getIdApplication()).thenReturn(1);
+
+        when(tableFaitsRepository.getGreenItAppKube(origine)).thenReturn(List.of(projection));
+        when(tableFaitsRepository.getGreenItAppKube(passee)).thenReturn(List.of(projectionHist));
+
+        when(oscarService.getApplications()).thenReturn(List.of(app));
+
+        GreenKubeDto dto = GreenKubeDto.builder().applicationId(1).build();
+        when(greenItMapper.buildIndicateurKubeDto(
+                        eq(1), eq(app), eq(projection), eq(projectionHist), any(LocalDate.class)))
+                .thenReturn(dto);
+
+        IndicateurAppGreenKubeView view =
+                IndicateurAppGreenKubeView.builder()
+                        .applicationId(1)
+                        .applicationName("app-test")
+                        .build();
+        when(greenItMapper.mapToView(dto)).thenReturn(view);
+
+        List<IndicateurAppGreenBaseView> result =
+                greenItService.getIndicateursApplicationGreenIT(ViewGreen.KUBE, origine, passee);
+
+        assertEquals(1, result.size());
+        verify(greenItMapper)
+                .buildIndicateurKubeDto(
+                        eq(1), eq(app), eq(projection), eq(projectionHist), any(LocalDate.class));
+        verify(greenItMapper, never()).buildIndicateurDtoVm(any(), any(), any(), any(), any());
     }
 
     @Test
     void getIndicateursApplicationGreenIT_invalidDates_shouldThrowException() {
-
-        when(tableFaitsRepository.findLastDateIndicateur())
-                .thenReturn(List.of(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 2)));
-        // GIVEN
         Date origine =
                 Date.from(
                         LocalDate.of(2024, 1, 2).atStartOfDay(ZoneId.systemDefault()).toInstant());
-
         Date passee =
                 Date.from(
                         LocalDate.of(2024, 1, 1).atStartOfDay(ZoneId.systemDefault()).toInstant());
@@ -184,51 +200,51 @@ class GreenItServiceTest {
         when(tableFaitsRepository.findLastDateIndicateur())
                 .thenReturn(List.of()); // vide => invalid
 
-        Application app = Application.builder().idApplication(1).build();
-        lenient().when(oscarService.getApplications()).thenReturn(List.of(app));
-
-        // WHEN / THEN
         assertThrows(
                 IllegalArgumentException.class,
-                () -> greenItService.getIndicateursApplicationGreenIT(origine, passee));
+                () ->
+                        greenItService.getIndicateursApplicationGreenIT(
+                                ViewGreen.VM, origine, passee));
+
+        verifyNoInteractions(oscarService, greenItMapper);
     }
 
     @Test
     void getIndicateursApplicationGreenIT_shouldUseAnonymousApplication_whenNull() {
         when(tableFaitsRepository.findLastDateIndicateur())
                 .thenReturn(List.of(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 2)));
-        // GIVEN
+
         Date origine =
                 Date.from(
                         LocalDate.of(2024, 1, 2).atStartOfDay(ZoneId.systemDefault()).toInstant());
-
         Date passee =
                 Date.from(
                         LocalDate.of(2024, 1, 1).atStartOfDay(ZoneId.systemDefault()).toInstant());
 
-        GreenItAppProjection projection = mock(GreenItAppProjection.class);
-        GreenItAppProjection projectionHist = mock(GreenItAppProjection.class);
+        GreenItAppVmProjection projection = mock(GreenItAppVmProjection.class);
+        GreenItAppVmProjection projectionHist = mock(GreenItAppVmProjection.class);
 
-        when(projection.getRamAlloue()).thenReturn(BigDecimal.TEN);
-        when(projectionHist.getRamAlloue()).thenReturn(BigDecimal.ONE);
+        when(projection.getIdApplication()).thenReturn(1);
+        when(projectionHist.getIdApplication()).thenReturn(1);
 
-        when(tableFaitsRepository.getGreenItApp(origine)).thenReturn(List.of(projection));
-
-        when(tableFaitsRepository.getGreenItApp(passee)).thenReturn(List.of(projectionHist));
+        when(tableFaitsRepository.getGreenItAppVm(origine)).thenReturn(List.of(projection));
+        when(tableFaitsRepository.getGreenItAppVm(passee)).thenReturn(List.of(projectionHist));
 
         when(oscarService.getApplications()).thenReturn(Collections.emptyList());
 
-        when(greenItMapper.mapToView(any()))
-                .thenReturn(
-                        IndicateurApplicationGreenITView.builder()
-                                .applicationName("anonyme")
-                                .build());
+        GreenVmDto dto = GreenVmDto.builder().applicationId(1).applicationName("anonyme").build();
+        when(greenItMapper.buildIndicateurDtoVm(
+                        eq(1), isNull(), eq(projection), eq(projectionHist), any(LocalDate.class)))
+                .thenReturn(dto);
+        when(greenItMapper.mapToView(dto))
+                .thenReturn(IndicateurAppGreenVmView.builder().applicationName("anonyme").build());
 
-        // WHEN
-        List<IndicateurApplicationGreenITView> result =
-                greenItService.getIndicateursApplicationGreenIT(origine, passee);
+        List<IndicateurAppGreenBaseView> result =
+                greenItService.getIndicateursApplicationGreenIT(ViewGreen.VM, origine, passee);
 
-        // THEN
         assertEquals(1, result.size());
+        verify(greenItMapper)
+                .buildIndicateurDtoVm(
+                        eq(1), isNull(), eq(projection), eq(projectionHist), any(LocalDate.class));
     }
 }

@@ -13,9 +13,10 @@ import org.springframework.data.repository.query.Param;
 import fr.insee.compas.model.compas.TableFaits;
 import fr.insee.compas.model.maturite.MaturiteIndicateurTableProjection;
 import fr.insee.compas.repository.projection.DevopsProjection;
-import fr.insee.compas.repository.projection.GreenItAppProjection;
 import fr.insee.compas.repository.projection.MetriqueApplicationProjection;
 import fr.insee.compas.repository.projection.MetriqueSumIndicateurProjection;
+import fr.insee.compas.repository.projection.green.GreenItAppKubeProjection;
+import fr.insee.compas.repository.projection.green.GreenItAppVmProjection;
 
 public interface TableFaitsRepository extends JpaRepository<TableFaits, Long> {
 
@@ -62,7 +63,7 @@ public interface TableFaitsRepository extends JpaRepository<TableFaits, Long> {
     @Query(
             value =
 """
-       WITH latest_data AS (
+WITH latest_data AS (
            SELECT
                tf.id_application,
                tf.id_indicateur,
@@ -82,8 +83,6 @@ public interface TableFaitsRepository extends JpaRepository<TableFaits, Long> {
            MAX(CASE WHEN id_indicateur = 206 THEN valeur END) AS cpuMaxi,
            MAX(CASE WHEN id_indicateur = 207 THEN valeur END) AS consoElec,
            MAX(CASE WHEN id_indicateur = 208 THEN valeur END) AS nbrVM,
-           MAX(CASE WHEN id_indicateur = 209 THEN valeur END) AS ramConsommee,
-           MAX(CASE WHEN id_indicateur = 210 THEN valeur END) AS cpuConsomme,
            MAX(CASE WHEN id_indicateur = 211 THEN valeur END) AS ramAlloueePd,
            MAX(CASE WHEN id_indicateur = 212 THEN valeur END) AS ramMaxiPd,
            MAX(CASE WHEN id_indicateur = 213 THEN valeur END) AS disqueAllouePd,
@@ -92,14 +91,6 @@ public interface TableFaitsRepository extends JpaRepository<TableFaits, Long> {
            MAX(CASE WHEN id_indicateur = 216 THEN valeur END) AS cpuMaxiPd,
            MAX(CASE WHEN id_indicateur = 217 THEN valeur END) AS consoElecPd,
            MAX(CASE WHEN id_indicateur = 218 THEN valeur END) AS nbrVmPd,
-           MAX(CASE WHEN id_indicateur = 219 THEN valeur END) AS ramConsommeePd,
-           MAX(CASE WHEN id_indicateur = 220 THEN valeur END) AS cpuConsommeePd,
-           MAX(CASE WHEN id_indicateur = 221 THEN valeur END) AS s3Consomme,
-           MAX(CASE WHEN id_indicateur = 222 THEN valeur END) AS pvcConsomme,
-           MAX(CASE WHEN id_indicateur = 223 THEN valeur END) AS nbPodMaxi,
-           MAX(CASE WHEN id_indicateur = 224 THEN valeur END) AS s3ConsommePd,
-           MAX(CASE WHEN id_indicateur = 225 THEN valeur END) AS pvcConsommePd,
-           MAX(CASE WHEN id_indicateur = 226 THEN valeur END) AS nbPodMaxiPd,
            MAX(CASE WHEN id_indicateur = 227 THEN valeur END) AS asConsomme,
            MAX(CASE WHEN id_indicateur = 228 THEN valeur END) AS asConsommePd,
            MAX(CASE WHEN id_indicateur = 229 THEN valeur END) AS asAlloue,
@@ -108,7 +99,38 @@ public interface TableFaitsRepository extends JpaRepository<TableFaits, Long> {
        GROUP BY id_application
 """,
             nativeQuery = true)
-    List<GreenItAppProjection> getGreenItApp(@Param("dateReference") Date dateReference);
+    List<GreenItAppVmProjection> getGreenItAppVm(@Param("dateReference") Date dateReference);
+
+    @Query(
+            value =
+"""
+WITH latest_data AS (
+           SELECT
+               tf.id_application,
+               tf.id_indicateur,
+               SUM(tf.valeur) AS valeur
+           FROM table_faits tf
+           WHERE tf.id_application IS NOT null
+           and tf.date = :dateReference
+           GROUP BY tf.id_application, tf.id_indicateur
+       )
+       SELECT
+           id_application,
+           MAX(CASE WHEN id_indicateur = 209 THEN valeur END) AS ramConsommee,
+           MAX(CASE WHEN id_indicateur = 210 THEN valeur END) AS cpuConsomme,
+           MAX(CASE WHEN id_indicateur = 219 THEN valeur END) AS ramConsommeePd,
+           MAX(CASE WHEN id_indicateur = 220 THEN valeur END) AS cpuConsommeePd,
+           MAX(CASE WHEN id_indicateur = 221 THEN valeur END) AS s3Consomme,
+           MAX(CASE WHEN id_indicateur = 222 THEN valeur END) AS pvcConsomme,
+           MAX(CASE WHEN id_indicateur = 223 THEN valeur END) AS nbPodMaxi,
+           MAX(CASE WHEN id_indicateur = 224 THEN valeur END) AS s3ConsommePd,
+           MAX(CASE WHEN id_indicateur = 225 THEN valeur END) AS pvcConsommePd,
+           MAX(CASE WHEN id_indicateur = 226 THEN valeur END) AS nbPodMaxiPd
+       FROM latest_data
+       GROUP BY id_application
+""",
+            nativeQuery = true)
+    List<GreenItAppKubeProjection> getGreenItAppKube(@Param("dateReference") Date dateReference);
 
     @Query(
             value =

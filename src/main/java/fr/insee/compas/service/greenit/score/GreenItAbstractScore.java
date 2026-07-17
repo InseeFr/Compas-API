@@ -3,7 +3,7 @@ package fr.insee.compas.service.greenit.score;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-import fr.insee.compas.dto.GreenItAppDto;
+import fr.insee.compas.dto.green.GreenVmDto;
 import fr.insee.compas.model.greenit.GreenItScore;
 import fr.insee.compas.model.greenit.util.ScoreGreenUtils;
 import fr.insee.compas.util.greenit.ScoreUtils;
@@ -11,8 +11,7 @@ import fr.insee.compas.util.greenit.ScoreUtils;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class GreenItAbstractScore
-        implements ICalculatorScore<GreenItAppDto, GreenItScore> {
+public abstract class GreenItAbstractScore implements ICalculatorScore<GreenVmDto, GreenItScore> {
 
     private static final BigDecimal POIDS_CONSO = new BigDecimal("0.4");
     private static final BigDecimal POIDS_PRESSION = new BigDecimal("0.4");
@@ -24,7 +23,7 @@ public abstract class GreenItAbstractScore
     private static final BigDecimal FACTEUR_GASPILLAGE_INUTILISE = new BigDecimal("0.3");
 
     GreenItScore computeScore(
-            GreenItAppDto kpis, double consoMax, double maxRam, double maxCpu, double maxDisk) {
+            GreenVmDto kpis, double consoMax, double maxRam, double maxCpu, double maxDisk) {
 
         if (isOneDenomCloseToZero(consoMax, maxRam, maxCpu, maxDisk)) {
             log.warn("Un ou plusieurs maximums sont à 0, évitant division par zéro.");

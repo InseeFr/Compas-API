@@ -1,9 +1,8 @@
-package fr.insee.compas.repository.projection;
+package fr.insee.compas.repository.projection.green;
 
 import java.math.BigDecimal;
 
-public interface GreenItAppProjection {
-    Integer getIdApplication();
+public interface GreenItAppVmProjection extends GreenItAppBaseProjection {
 
     BigDecimal getRamAlloue();
 
@@ -18,10 +17,6 @@ public interface GreenItAppProjection {
     BigDecimal getConsoElec();
 
     BigDecimal getNbrVM();
-
-    Long getRamConsommee();
-
-    BigDecimal getCpuConsomme();
 
     BigDecimal getRamAlloueePd();
 
@@ -40,22 +35,6 @@ public interface GreenItAppProjection {
     BigDecimal getConsoElecPd();
 
     BigDecimal getNbrVmPd();
-
-    Long getRamConsommeePd();
-
-    BigDecimal getCpuConsommeePd();
-
-    Long getS3Consomme();
-
-    Long getPvcConsomme();
-
-    BigDecimal getNbPodMaxi();
-
-    Long getS3ConsommePd();
-
-    Long getPvcConsommePd();
-
-    BigDecimal getNbPodMaxiPd();
 
     BigDecimal getAsConsomme();
 
