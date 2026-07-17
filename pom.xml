@@ -10,13 +10,13 @@
 	</parent>
 	<groupId>fr.insee</groupId>
 	<artifactId>compas</artifactId>
-	<version>1.8.6</version>
+	<version>1.8.7</version>
 	<name>compas</name>
 	<description>Application pour le Tableau de Bord DDSI</description>
 
 	<properties>
 		<java.version>25</java.version>
-		<lastUpdate>07/07/2026</lastUpdate>
+		<lastUpdate>17/07/2026</lastUpdate>
 		<spotless-maven-plugin.version>3.8.0</spotless-maven-plugin.version>
 		<googleJavaFormat.version>1.27.0</googleJavaFormat.version>
 		<sonar.exclusions>**/test/**, **/*Test.java, **/*Tests.java</sonar.exclusions>
