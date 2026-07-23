@@ -11,7 +11,7 @@ public class GitLabConstantes {
                     "indicateurs-securite",
                     "indicateurs-qualite",
                     "indicateurs-devops",
-                    "indicateurs-greenIt",
+                    "indicateurs-ecoconception",
                     "indicateurs-meteo",
                     "indicateurs-a11y",
                     "indicateurs-maturite",
