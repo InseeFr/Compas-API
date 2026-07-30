@@ -1,4 +1,4 @@
-package fr.insee.compas.model.maturite;
+package fr.insee.compas.repository.projection.maturite;
 
 public interface MaturiteIndicateurTableProjection {
     Integer getIdModule();

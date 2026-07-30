@@ -16,7 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import fr.insee.compas.dto.maturite.MaturiteIndicateurDto;
-import fr.insee.compas.model.maturite.MaturiteIndicateurTableProjection;
+import fr.insee.compas.repository.projection.maturite.MaturiteIndicateurTableProjection;
 import fr.insee.compas.model.oscar.Module;
 import fr.insee.compas.util.MaturiteConstantes;
 import fr.insee.compas.view.IndicateurMaturiteView;

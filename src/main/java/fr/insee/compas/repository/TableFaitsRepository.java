@@ -6,12 +6,13 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
+import fr.insee.compas.repository.projection.maturite.DerniereMaturiteProjection;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import fr.insee.compas.model.compas.TableFaits;
-import fr.insee.compas.model.maturite.MaturiteIndicateurTableProjection;
+import fr.insee.compas.repository.projection.maturite.MaturiteIndicateurTableProjection;
 import fr.insee.compas.repository.projection.DevopsProjection;
 import fr.insee.compas.repository.projection.MetriqueApplicationProjection;
 import fr.insee.compas.repository.projection.MetriqueSumIndicateurProjection;
@@ -459,4 +460,14 @@ select count(tf) from TableFaits tf where tf.idIndicateur = :idIndicateur and tf
                     """,
             nativeQuery = true)
     List<Object[]> findLast10MeteoPerApp(@Param("startDate") LocalDate startDate);
+
+    @Query(value = """
+        SELECT id_module, commentaire, valeur, id_indicateur
+        FROM table_faits
+        WHERE id_module = :idModule 
+          AND id_indicateur IN (614,613)
+        ORDER BY "date" DESC
+        LIMIT 2
+        """, nativeQuery = true)
+    List<DerniereMaturiteProjection> findDerniereStrategieCloud(@Param("idModule") Integer idModule);
 }

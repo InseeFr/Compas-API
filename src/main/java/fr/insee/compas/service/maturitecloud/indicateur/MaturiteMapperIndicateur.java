@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
 
 import fr.insee.compas.dto.maturite.MaturiteIndicateurDto;
-import fr.insee.compas.model.maturite.MaturiteIndicateurTableProjection;
+import fr.insee.compas.repository.projection.maturite.MaturiteIndicateurTableProjection;
 import fr.insee.compas.model.oscar.Module;
 import fr.insee.compas.util.MaturiteConstantes;
 import fr.insee.compas.view.IndicateurMaturiteView;

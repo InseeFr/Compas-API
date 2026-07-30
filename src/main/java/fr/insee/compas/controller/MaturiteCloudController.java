@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import fr.insee.compas.dto.maturite.DerniereStrategieCloudDto;
+import fr.insee.compas.service.maturitecloud.indicateur.*;
 import jakarta.validation.Valid;
 
 import org.springframework.http.MediaType;
@@ -197,5 +199,24 @@ public class MaturiteCloudController {
         List<Long> idsFaits = cloudCreationService.creerStrategieCloud(demande);
 
         return ResponseEntity.ok(idsFaits);
+    }
+
+    @GetMapping(value = "/strategie/{idModule}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Récupération de la dernière stratégie cloud par id module ")
+    public ResponseEntity<DerniereStrategieCloudDto> getDerniereStrategie(
+            @PathVariable Integer idModule) {
+        log.info("Récupération de la dernière stratégie cloud pour le module {}", idModule);
+        DerniereStrategieCloudDto dto =
+                maturiteIndicateurService.getDerniereStrategieCloud(idModule);
+
+        if (dto == null) {
+            dto = DerniereStrategieCloudDto.builder()
+                    .idMod(idModule)
+                    .strategieCloud(null)
+                    .envCibleProd(null)
+                    .commentaire(null)
+                    .build();
+        }
+        return ResponseEntity.ok(dto);
     }
 }

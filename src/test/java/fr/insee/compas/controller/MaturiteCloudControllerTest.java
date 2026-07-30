@@ -32,6 +32,7 @@ import fr.insee.compas.service.maturitecloud.MaturiteCloudCsvService;
 import fr.insee.compas.service.maturitecloud.indicateur.CloudCreationService;
 import fr.insee.compas.service.maturitecloud.indicateur.MaturiteIndicateurService;
 import fr.insee.compas.view.IndicateurMaturiteView;
+import fr.insee.compas.dto.maturite.DerniereStrategieCloudDto;
 
 // mock
 @WebMvcTest(MaturiteCloudController.class)
@@ -225,5 +226,43 @@ class MaturiteCloudControllerTest {
                                 .contentType(MediaType.APPLICATION_XML)
                                 .content("<demande></demande>"))
                 .andExpect(status().isUnsupportedMediaType());
+    }
+
+    @Test
+    void getDerniereStrategie_shouldReturn200_whenStrategieFound() throws Exception {
+
+        DerniereStrategieCloudDto dto = DerniereStrategieCloudDto.builder()
+                .idMod(123)
+                .strategieCloud("En cours")
+                .envCibleProd("Kube")
+                .commentaire("Commentaire de test")
+                .build();
+
+        when(maturiteIndicateurService.getDerniereStrategieCloud(123))
+                .thenReturn(dto);
+
+        mockMvc.perform(get("/cloud/strategie/123")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.idMod").value(123))
+                .andExpect(jsonPath("$.strategieCloud").value("En cours"))
+                .andExpect(jsonPath("$.envCibleProd").value("Kube"))
+                .andExpect(jsonPath("$.commentaire").value("Commentaire de test"));
+    }
+
+    @Test
+    void getDerniereStrategie_shouldReturnEmptyDto_whenStrategieNotFound() throws Exception {
+        when(maturiteIndicateurService.getDerniereStrategieCloud(456))
+                .thenReturn(null);
+
+        mockMvc.perform(get("/cloud/strategie/456")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.idMod").value(456))
+                .andExpect(jsonPath("$.strategieCloud").doesNotExist())
+                .andExpect(jsonPath("$.envCibleProd").doesNotExist())
+                .andExpect(jsonPath("$.commentaire").doesNotExist());
     }
 }

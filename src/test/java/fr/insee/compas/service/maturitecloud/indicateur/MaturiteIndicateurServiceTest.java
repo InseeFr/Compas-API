@@ -9,6 +9,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import fr.insee.compas.dto.maturite.DerniereStrategieCloudDto;
+import fr.insee.compas.repository.projection.maturite.DerniereMaturiteProjection;
+import fr.insee.compas.service.conversion.strategie.IConversionStrategie;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -17,7 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import fr.insee.compas.dto.maturite.MaturiteIndicateurDto;
 import fr.insee.compas.exception.MaturiteIndicateurException;
-import fr.insee.compas.model.maturite.MaturiteIndicateurTableProjection;
+import fr.insee.compas.repository.projection.maturite.MaturiteIndicateurTableProjection;
 import fr.insee.compas.model.oscar.Module;
 import fr.insee.compas.repository.TableFaitsRepository;
 import fr.insee.compas.service.OscarService;
@@ -36,6 +39,10 @@ class MaturiteIndicateurServiceTest {
     @Mock private MaturiteCalculatorService maturiteCalculatorService;
 
     @Mock private MaturiteMapperIndicateur maturiteMapperIndicateur;
+
+    @Mock private IConversionStrategie<String, Integer> strategieCloudConversion;
+
+    @Mock private IConversionStrategie<String, Integer> envCibleConversion;
 
     @Test
     void getIndicateurMaturite_shouldReturnViews_whenDataFound() {
@@ -102,5 +109,58 @@ class MaturiteIndicateurServiceTest {
         assertThatThrownBy(() -> maturiteIndicateurService.getIndicateurMaturite())
                 .isInstanceOf(MaturiteIndicateurException.class)
                 .hasMessageContaining("Erreur completion des futures");
+    }
+
+    @Test
+    void getDerniereStrategieCloud_shouldReturnDto_whenDataFound() {
+
+        DerniereMaturiteProjection envProjection = mock(DerniereMaturiteProjection.class);
+        DerniereMaturiteProjection stratProjection = mock(DerniereMaturiteProjection.class);
+
+        when(envProjection.getIdIndicateur()).thenReturn(613);
+        when(envProjection.getValeur()).thenReturn(1);
+
+        when(stratProjection.getIdIndicateur()).thenReturn(614);
+        when(stratProjection.getValeur()).thenReturn(2);
+        when(stratProjection.getCommentaire()).thenReturn("Mon commentaire");
+
+        when(tableFaitsRepository.findDerniereStrategieCloud(10))
+                .thenReturn(List.of(envProjection, stratProjection));
+
+        when(strategieCloudConversion.conversion(2)).thenReturn("En cours");
+        when(envCibleConversion.conversion(1)).thenReturn("Kube");
+
+        DerniereStrategieCloudDto dto =
+                maturiteIndicateurService.getDerniereStrategieCloud(10);
+
+        assertThat(dto).isNotNull();
+        assertThat(dto.getIdMod()).isEqualTo(10);
+        assertThat(dto.getStrategieCloud()).isEqualTo("En cours");
+        assertThat(dto.getEnvCibleProd()).isEqualTo("Kube");
+        assertThat(dto.getCommentaire()).isEqualTo("Mon commentaire");
+    }
+
+    @Test
+    void getDerniereStrategieCloud_shouldReturnNull_whenNoDataFound() {
+
+        when(tableFaitsRepository.findDerniereStrategieCloud(10))
+                .thenReturn(Collections.emptyList());
+
+        DerniereStrategieCloudDto dto =
+                maturiteIndicateurService.getDerniereStrategieCloud(10);
+
+        assertThat(dto).isNull();
+    }
+
+    @Test
+    void getDerniereStrategieCloud_shouldReturnNull_whenRepositoryFails() {
+
+        when(tableFaitsRepository.findDerniereStrategieCloud(10))
+                .thenThrow(new RuntimeException("Erreur BDD"));
+
+        DerniereStrategieCloudDto dto =
+                maturiteIndicateurService.getDerniereStrategieCloud(10);
+
+        assertThat(dto).isNull();
     }
 }
