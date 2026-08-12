@@ -208,7 +208,7 @@ public class RecuperationIndicateurSonarService {
     }
 
     private void saveSansObjetIndicator(Module module, LocalDate now) {
-        log.info(
+        log.debug(
                 "le module {} est SO pour sonar, on met donc -1 pour l'indicateur ligne de code",
                 module.getModName());
 

@@ -332,7 +332,8 @@ WITH latest_data AS (
                                                                          MAX(CASE WHEN id_indicateur = 1 THEN valeur END) AS nbLigneCode,
                                                                          MAX(CASE WHEN id_indicateur = 2 THEN valeur END) AS nbLigneCodeNonTeste,
                                                                          MAX(CASE WHEN id_indicateur = 11 THEN valeur END) AS detteTechnique,
-                                                                         MAX(CASE WHEN id_indicateur = 12 THEN valeur END) AS fiabilite
+                                                                         MAX(CASE WHEN id_indicateur = 12 THEN valeur END) AS fiabilite,
+                                                                         MAX(CASE WHEN id_indicateur = 13 THEN valeur END) AS nbLigneTotal
                                                                      FROM
                                                                          latest_data
                                                                      WHERE
@@ -364,7 +365,8 @@ WITH latest_data AS (
                                                           MAX(CASE WHEN id_indicateur = 1 THEN valeur END) AS nbLigneCode,
                                                           MAX(CASE WHEN id_indicateur = 2 THEN valeur END) AS nbLigneCodeNonTeste,
                                                           MAX(CASE WHEN id_indicateur = 11 THEN valeur END) AS detteTechnique,
-                                                          MAX(CASE WHEN id_indicateur = 12 THEN valeur END) AS fiabilite
+                                                          MAX(CASE WHEN id_indicateur = 12 THEN valeur END) AS fiabilite,
+                                                          MAX(CASE WHEN id_indicateur = 13 THEN valeur END) AS nbLigneTotal
                                                        FROM
                                                            latest_data
                                                        WHERE

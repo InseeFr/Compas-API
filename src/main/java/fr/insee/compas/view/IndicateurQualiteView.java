@@ -20,6 +20,7 @@ public class IndicateurQualiteView extends AbstractIndicateurLettreGlobale {
     private String domaineSndi;
     private String domaineFonctionnel;
     private String nbLigneCode;
+    private String nbLigneCodeTotal;
     private String nbLigneCodeNonTeste;
 
     private String detteTechnique;
@@ -40,6 +41,8 @@ public class IndicateurQualiteView extends AbstractIndicateurLettreGlobale {
     private double evolutionCouvertureTestUnitaire;
     private double evolutionDetteTechnique;
     private double evolutionFiabilite;
+
+
 
     @Override
     protected List<String> getLettresPourCalcul() {

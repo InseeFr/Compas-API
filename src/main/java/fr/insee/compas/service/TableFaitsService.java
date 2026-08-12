@@ -104,6 +104,7 @@ public class TableFaitsService {
                                                 .nbLigneCodeNonTeste(toStringOrEmpty(obj[2]))
                                                 .detteTechnique(toStringOrEmpty(obj[3]))
                                                 .fiabilite(toStringOrEmpty(obj[4]))
+                                                .nbLigneCodeTotal(toStringOrEmpty(obj[5]))
                                                 .build()));
     }
 
@@ -122,6 +123,7 @@ public class TableFaitsService {
                                                 .nbLigneCodeNonTeste(toStringOrEmpty(obj[2]))
                                                 .detteTechnique(toStringOrEmpty(obj[3]))
                                                 .fiabilite(toStringOrEmpty(obj[4]))
+                                                .nbLigneCodeTotal(toStringOrEmpty(obj[5]))
                                                 .build()));
     }
 
