@@ -67,11 +67,11 @@ class A11yAffichageServiceTest {
         assertThat(v1.getModName()).isEqualTo("M1");
         assertThat(v1.getDomaineSndi()).isEqualTo("DomA");
         assertThat(v1.getSndi()).isEqualTo("SNDI-A");
-        assertThat(v1.getNotation()).isEqualTo(Notation.H);
+        assertThat(v1.getNotation()).isEqualTo(Notation.NR);
         // module 2
         IndicateursModuleA11Y v2 = out.get(1);
         assertThat(v2.getIdModule()).isEqualTo(2);
-        assertThat(v2.getNotation()).isEqualTo(Notation.H);
+        assertThat(v2.getNotation()).isEqualTo(Notation.NR);
     }
 
     @Test

@@ -46,7 +46,7 @@ public class A11yAffichageService {
                                             .modName(module.getModName())
                                             .domaineSndi(module.getDomaineSndi())
                                             .sndi(module.getSndi())
-                                            .notation(Notation.H)
+                                            .notation(Notation.NR)
                                             .build();
                             if (mapMetric.containsKey(module.getId())) {
                                 InfosSaisiesA11yEntity infos = mapMetric.get(module.getId());
@@ -107,7 +107,7 @@ public class A11yAffichageService {
         List<IndicateursModuleA11Y> retour = new ArrayList<>();
         Map<Application, Set<Integer>> mapApplicationsWithModules =
                 oscarService.mapApplicationsWithModules();
-        List<IndicateursModuleA11Y> listeDonneesA11y = listerModulesIHMA11y();
+        List<IndicateursModuleA11Y> listeDonneesA11y = listerModulesA11y();
         Map<Integer, IndicateursModuleA11Y> mapMetricA11iy =
                 listeDonneesA11y.stream()
                         .collect(
@@ -130,7 +130,7 @@ public class A11yAffichageService {
                             .filter(
                                     ind -> {
                                         Notation n = ind.getNotation();
-                                        return n != null && n != Notation.NR && n != Notation.SO;
+                                        return n != null && n != Notation.SO;
                                     })
                             .max(
                                     Comparator.comparing(
@@ -144,7 +144,8 @@ public class A11yAffichageService {
                         indicateursModuleA11Y.setNotation(ind.getNotation());
                         indicateursModuleA11Y.setScoreAudit(ind.getScoreAudit());
                     },
-                    () -> log.debug("Aucune lettre trouvée pour l'application {}", entry.getKey()));
+                    () -> log.debug("Aucune lettre trouvée pour l'application {}", entry.getKey()))
+            ;
             retour.add(indicateursModuleA11Y);
         }
 
