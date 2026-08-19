@@ -24,7 +24,7 @@
 		<maven.compiler.source>25</maven.compiler.source>
 		<maven.compiler.target>25</maven.compiler.target>
 		<postgresql.version>42.7.13</postgresql.version>
-		<tomcat-embedded.version>11.0.24</tomcat-embedded.version>
+		<tomcat-embedded.version>11.0.25</tomcat-embedded.version>
 		<pitest.version>1.25.9</pitest.version>
 		<pitest-junit5-plugin.version>1.2.3</pitest-junit5-plugin.version>
 	</properties>
