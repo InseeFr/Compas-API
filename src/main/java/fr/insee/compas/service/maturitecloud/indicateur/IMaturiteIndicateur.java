@@ -7,6 +7,6 @@ import fr.insee.compas.view.IndicateurMaturiteView;
 
 public interface IMaturiteIndicateur {
     List<IndicateurMaturiteView> getIndicateurMaturite();
-    DerniereStrategieCloudDto getDerniereStrategieCloud(Integer idModule);
 
+    DerniereStrategieCloudDto getDerniereStrategieCloud(Integer idModule);
 }

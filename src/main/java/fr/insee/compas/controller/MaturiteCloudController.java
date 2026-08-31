@@ -6,8 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import fr.insee.compas.dto.maturite.DerniereStrategieCloudDto;
-import fr.insee.compas.service.maturitecloud.indicateur.*;
 import jakarta.validation.Valid;
 
 import org.springframework.http.MediaType;
@@ -16,11 +14,14 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import fr.insee.compas.dto.maturite.DemandeCreationStrategieCloud;
+import fr.insee.compas.dto.maturite.DerniereStrategieCloudDto;
 import fr.insee.compas.model.compas.ApplicationTip;
 import fr.insee.compas.repository.ApplicationTipsRepository;
 import fr.insee.compas.repository.MaturiteCloudRepository;
+import fr.insee.compas.repository.projection.maturite.MaturiteCloudProjection;
 import fr.insee.compas.service.maturitecloud.ApplicationTipsService;
 import fr.insee.compas.service.maturitecloud.MaturiteCloudCsvService;
+import fr.insee.compas.service.maturitecloud.indicateur.*;
 import fr.insee.compas.service.maturitecloud.indicateur.CloudCreationService;
 import fr.insee.compas.service.maturitecloud.indicateur.ICloudCreation;
 import fr.insee.compas.service.maturitecloud.indicateur.IMaturiteIndicateur;
@@ -97,53 +98,45 @@ public class MaturiteCloudController {
 
     @GetMapping(value = "/applications", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<IndicateurApplicationMaturiteCloud> getMaturiteCloud() {
-        List<Object[]> rows = repo.findAllLatestMatRobAndScores();
+        List<MaturiteCloudProjection> rows = repo.findAllLatestMatRobAndScores();
         List<IndicateurApplicationMaturiteCloud> out = new ArrayList<>(rows.size());
-        for (Object[] r : rows) {
-            Integer idApp = (Integer) r[0];
-            String maturite = (String) r[1];
-
-            BigDecimal rob = (BigDecimal) r[2];
-            BigDecimal benef = (BigDecimal) r[3];
-            BigDecimal orga = (BigDecimal) r[4];
-            BigDecimal complex = (BigDecimal) r[5];
-            BigDecimal tech = (BigDecimal) r[6];
-
-            BigDecimal progDep = (BigDecimal) r[7];
-            BigDecimal progTechs = (BigDecimal) r[8];
-            BigDecimal progArchi = (BigDecimal) r[9];
-            BigDecimal progMatEq = (BigDecimal) r[10];
-            BigDecimal progDev = (BigDecimal) r[11];
-            BigDecimal progCloud = (BigDecimal) r[12];
-
-            String robustesse = (rob == null) ? null : Integer.toString(rob.intValue()); // "x"
-            String scoreBenefice = to2d(benef);
-            String scoreOrga = to2d(orga);
-            String scoreComplexite = to2d(complex);
-            String scoreTechnique = to2d(tech);
-
-            String progressionDeploy = to2d(progDep);
-            String progressionTechnos = to2d(progTechs);
-            String progressionArchi = to2d(progArchi);
-            String progressionMateqip = to2d(progMatEq);
-            String progressionDevops = to2d(progDev);
-            String progressionCloud = to2d(progCloud);
+        for (MaturiteCloudProjection r : rows) {
+            String robustesse =
+                    (r.getRobustesse() == null)
+                            ? null
+                            : Integer.toString(r.getRobustesse().intValue());
+            String scoreMaturite =
+                    (r.getScoreMaturite() == null)
+                            ? null
+                            : r.getScoreMaturite().setScale(2, RoundingMode.HALF_UP).toPlainString();
+            String deltaMaturite =
+                    (r.getDeltaMaturite() == null)
+                            ? null
+                            : r.getDeltaMaturite().setScale(2, RoundingMode.HALF_UP).toPlainString();
+            String deltaOpportunite =
+                    (r.getDeltaOpportunite() == null)
+                            ? null
+                            : r.getDeltaOpportunite().setScale(2, RoundingMode.HALF_UP).toPlainString();
 
             out.add(
                     IndicateurApplicationMaturiteCloud.builder()
-                            .applicationId(idApp)
-                            .maturite(maturite)
+                            .applicationId(r.getIdApplication())
+                            .maturite(r.getMaturite())
+                            .scoreMaturite(scoreMaturite)
+                            .deltaMaturite(deltaMaturite)
+                            .deltaOpportunite(deltaOpportunite)
                             .robustesse(robustesse)
-                            .scoreBenefice(scoreBenefice)
-                            .scoreOrga(scoreOrga)
-                            .scoreComplexite(scoreComplexite)
-                            .scoreTechnique(scoreTechnique)
-                            .progressionDeploy(progressionDeploy)
-                            .progressionTechnos(progressionTechnos)
-                            .progressionArchi(progressionArchi)
-                            .progressionMateqip(progressionMateqip)
-                            .progressionDevops(progressionDevops)
-                            .progressionCloud(progressionCloud)
+                            .scoreBenefice(to2d(r.getScoreBenefice()))
+                            .scoreOrga(to2d(r.getScoreOrga()))
+                            .scoreComplexite(to2d(r.getScoreComplexite()))
+                            .scoreTechnique(to2d(r.getScoreTechnique()))
+                            .scoreOpportunite(to2d(r.getScoreOpportunite()))
+                            .progressionDeploy(to2d(r.getProgressionDeploy()))
+                            .progressionTechnos(to2d(r.getProgressionTechnos()))
+                            .progressionArchi(to2d(r.getProgressionArchi()))
+                            .progressionMateqip(to2d(r.getProgressionMateqip()))
+                            .progressionDevops(to2d(r.getProgressionDevops()))
+                            .progressionCloud(to2d(r.getProgressionCloud()))
                             .build());
         }
         return out;
@@ -210,12 +203,13 @@ public class MaturiteCloudController {
                 maturiteIndicateurService.getDerniereStrategieCloud(idModule);
 
         if (dto == null) {
-            dto = DerniereStrategieCloudDto.builder()
-                    .idMod(idModule)
-                    .strategieCloud(null)
-                    .envCibleProd(null)
-                    .commentaire(null)
-                    .build();
+            dto =
+                    DerniereStrategieCloudDto.builder()
+                            .idMod(idModule)
+                            .strategieCloud(null)
+                            .envCibleProd(null)
+                            .commentaire(null)
+                            .build();
         }
         return ResponseEntity.ok(dto);
     }

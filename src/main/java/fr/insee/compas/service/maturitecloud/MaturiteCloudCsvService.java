@@ -40,17 +40,28 @@ public class MaturiteCloudCsvService {
     private static final Map<String, Integer> HEADER_TO_INDICATEUR =
             Map.ofEntries(
                     Map.entry("maturite", 601),
+                    Map.entry("score_maturite", 601),
+                    Map.entry("delta_maturite", 616),
+                    Map.entry("delta maturite", 616),
+                    Map.entry("delta_maturite_cloud", 616),
                     Map.entry("robustesse", 602),
                     Map.entry("score_benefice", 603),
+                    Map.entry("score_opportunite_benef", 603),
+                    Map.entry("score_opportunite", 615),
+                    Map.entry("delta_opportunite", 617),
+                    Map.entry("delta opportunite", 617),
                     Map.entry("scoreorga", 604),
                     Map.entry("score_orga", 604),
                     Map.entry("score orga", 604),
+                    Map.entry("score_maturite_orga", 604),
                     Map.entry("scorecomplexite", 605),
                     Map.entry("score_complexite", 605),
                     Map.entry("score complexite", 605),
+                    Map.entry("score_opportunite_complex", 605),
                     Map.entry("scoretechnique", 606),
                     Map.entry("score_technique", 606),
                     Map.entry("score technique", 606),
+                    Map.entry("score_maturite_tech", 606),
                     Map.entry("progressiondeploy", 607),
                     Map.entry("progression_deploy", 607),
                     Map.entry("progression deploy", 607),
@@ -236,7 +247,9 @@ public class MaturiteCloudCsvService {
         String s = v.trim().replace(",", "").replace(" ", "");
         if (s.isEmpty()) return null;
         try {
-            return Integer.valueOf(s);
+            int id = Integer.parseInt(s);
+            // Ignorer les applications avec id < 0
+            return (id >= 0) ? id : null;
         } catch (NumberFormatException e) {
             return null;
         }

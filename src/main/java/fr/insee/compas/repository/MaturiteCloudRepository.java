@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import fr.insee.compas.model.compas.TableFaits;
+import fr.insee.compas.repository.projection.maturite.MaturiteCloudProjection;
 
 public interface MaturiteCloudRepository extends JpaRepository<TableFaits, Long> {
 
@@ -26,38 +27,37 @@ public interface MaturiteCloudRepository extends JpaRepository<TableFaits, Long>
                         FROM table_faits tf
                         WHERE tf.id_application IS NOT NULL
                           AND tf.id_module IS NULL
-                          AND tf.id_indicateur IN (601,602,603,604,605,606,607,608,609,610,611,612)
+                          AND tf.id_indicateur IN (601,602,603,604,605,606,607,608,609,610,611,612,615,616,617)
                     )
                     SELECT
-                        r.id_application AS id_application,
-                        -- 601 maturité -> lettre
-                        CASE CAST(MAX(CASE WHEN r.id_indicateur = 601 THEN r.valeur END) AS INT)
-                                                                       WHEN 5 THEN 'A'
-                                                                       WHEN 4 THEN 'B'
-                                                                       WHEN 3 THEN 'C'
-                                                                       WHEN 2 THEN 'D'
-                                                                       WHEN 1 THEN 'E'
-                                                                       ELSE NULL
+                        r.id_application AS "idApplication",
+                        MAX(CASE WHEN r.id_indicateur = 601 AND r.rn = 1 THEN r.valeur END) AS "scoreMaturite",
+                        CASE 
+                            WHEN MAX(CASE WHEN r.id_indicateur = 601 AND r.rn = 1 THEN r.valeur END) IS NULL THEN NULL
+                            WHEN CAST(MAX(CASE WHEN r.id_indicateur = 601 AND r.rn = 1 THEN r.valeur END) AS DECIMAL) < 0.2 THEN 'D'
+                            WHEN CAST(MAX(CASE WHEN r.id_indicateur = 601 AND r.rn = 1 THEN r.valeur END) AS DECIMAL) < 0.46 THEN 'C'
+                            WHEN CAST(MAX(CASE WHEN r.id_indicateur = 601 AND r.rn = 1 THEN r.valeur END) AS DECIMAL) < 0.7 THEN 'B'
+                            ELSE 'A'
                         END AS maturite,
-                        -- 602 robustesse (numérique)
-                        MAX(CASE WHEN r.id_indicateur = 602 THEN r.valeur END) AS robustesse,
-                        -- 603..606 scores
-                        MAX(CASE WHEN r.id_indicateur = 603 THEN r.valeur END) AS score_benefice,
-                        MAX(CASE WHEN r.id_indicateur = 604 THEN r.valeur END) AS score_orga,
-                        MAX(CASE WHEN r.id_indicateur = 605 THEN r.valeur END) AS score_complexite,
-                        MAX(CASE WHEN r.id_indicateur = 606 THEN r.valeur END) AS score_technique,
-                        -- 607..612 progressions
-                        MAX(CASE WHEN r.id_indicateur = 607 THEN r.valeur END) AS progression_deploy,
-                        MAX(CASE WHEN r.id_indicateur = 608 THEN r.valeur END) AS progression_technos,
-                        MAX(CASE WHEN r.id_indicateur = 609 THEN r.valeur END) AS progression_archi,
-                        MAX(CASE WHEN r.id_indicateur = 610 THEN r.valeur END) AS progression_mateqip,
-                        MAX(CASE WHEN r.id_indicateur = 611 THEN r.valeur END) AS progression_devops,
-                        MAX(CASE WHEN r.id_indicateur = 612 THEN r.valeur END) AS progression_cloud
+                        MAX(CASE WHEN r.id_indicateur = 602 AND r.rn = 1 THEN r.valeur END) AS robustesse,
+                        MAX(CASE WHEN r.id_indicateur = 603 AND r.rn = 1 THEN r.valeur END) AS "scoreBenefice",
+                        MAX(CASE WHEN r.id_indicateur = 604 AND r.rn = 1 THEN r.valeur END) AS "scoreOrga",
+                        MAX(CASE WHEN r.id_indicateur = 605 AND r.rn = 1 THEN r.valeur END) AS "scoreComplexite",
+                        MAX(CASE WHEN r.id_indicateur = 606 AND r.rn = 1 THEN r.valeur END) AS "scoreTechnique",
+                        MAX(CASE WHEN r.id_indicateur = 615 AND r.rn = 1 THEN r.valeur END) AS "scoreOpportunite",
+                        MAX(CASE WHEN r.id_indicateur = 616 AND r.rn = 1 THEN r.valeur END) AS "deltaMaturite",
+                        MAX(CASE WHEN r.id_indicateur = 617 AND r.rn = 1 THEN r.valeur END) AS "deltaOpportunite",
+                        MAX(CASE WHEN r.id_indicateur = 607 AND r.rn = 1 THEN r.valeur END) AS "progressionDeploy",
+                        MAX(CASE WHEN r.id_indicateur = 608 AND r.rn = 1 THEN r.valeur END) AS "progressionTechnos",
+                        MAX(CASE WHEN r.id_indicateur = 609 AND r.rn = 1 THEN r.valeur END) AS "progressionArchi",
+                        MAX(CASE WHEN r.id_indicateur = 610 AND r.rn = 1 THEN r.valeur END) AS "progressionMateqip",
+                        MAX(CASE WHEN r.id_indicateur = 611 AND r.rn = 1 THEN r.valeur END) AS "progressionDevops",
+                        MAX(CASE WHEN r.id_indicateur = 612 AND r.rn = 1 THEN r.valeur END) AS "progressionCloud"
                     FROM ranked r
                     WHERE r.rn = 1
                     GROUP BY r.id_application
                     ORDER BY r.id_application
                     """,
             nativeQuery = true)
-    List<Object[]> findAllLatestMatRobAndScores();
+    List<MaturiteCloudProjection> findAllLatestMatRobAndScores();
 }

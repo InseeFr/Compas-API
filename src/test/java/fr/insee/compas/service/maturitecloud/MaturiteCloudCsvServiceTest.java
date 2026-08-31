@@ -115,6 +115,15 @@ class MaturiteCloudCsvServiceTest {
                         invalid;5
                         100;4
                         """,
+                        1),
+
+                // 1 ligne avec id=0 valide × 1 indicateur = 1 insertion
+                Arguments.of(
+                        "id zero accepted",
+                        """
+                        id;maturite
+                        0;5
+                        """,
                         1));
     }
 }

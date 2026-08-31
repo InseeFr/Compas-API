@@ -9,21 +9,21 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import fr.insee.compas.dto.maturite.DerniereStrategieCloudDto;
-import fr.insee.compas.repository.projection.maturite.DerniereMaturiteProjection;
-import fr.insee.compas.service.conversion.strategie.IConversionStrategie;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import fr.insee.compas.dto.maturite.DerniereStrategieCloudDto;
 import fr.insee.compas.dto.maturite.MaturiteIndicateurDto;
 import fr.insee.compas.exception.MaturiteIndicateurException;
-import fr.insee.compas.repository.projection.maturite.MaturiteIndicateurTableProjection;
 import fr.insee.compas.model.oscar.Module;
 import fr.insee.compas.repository.TableFaitsRepository;
+import fr.insee.compas.repository.projection.maturite.DerniereMaturiteProjection;
+import fr.insee.compas.repository.projection.maturite.MaturiteIndicateurTableProjection;
 import fr.insee.compas.service.OscarService;
+import fr.insee.compas.service.conversion.strategie.IConversionStrategie;
 import fr.insee.compas.util.MaturiteConstantes;
 import fr.insee.compas.view.IndicateurMaturiteView;
 
@@ -130,8 +130,7 @@ class MaturiteIndicateurServiceTest {
         when(strategieCloudConversion.conversion(2)).thenReturn("En cours");
         when(envCibleConversion.conversion(1)).thenReturn("Kube");
 
-        DerniereStrategieCloudDto dto =
-                maturiteIndicateurService.getDerniereStrategieCloud(10);
+        DerniereStrategieCloudDto dto = maturiteIndicateurService.getDerniereStrategieCloud(10);
 
         assertThat(dto).isNotNull();
         assertThat(dto.getIdMod()).isEqualTo(10);
@@ -146,8 +145,7 @@ class MaturiteIndicateurServiceTest {
         when(tableFaitsRepository.findDerniereStrategieCloud(10))
                 .thenReturn(Collections.emptyList());
 
-        DerniereStrategieCloudDto dto =
-                maturiteIndicateurService.getDerniereStrategieCloud(10);
+        DerniereStrategieCloudDto dto = maturiteIndicateurService.getDerniereStrategieCloud(10);
 
         assertThat(dto).isNull();
     }
@@ -158,8 +156,7 @@ class MaturiteIndicateurServiceTest {
         when(tableFaitsRepository.findDerniereStrategieCloud(10))
                 .thenThrow(new RuntimeException("Erreur BDD"));
 
-        DerniereStrategieCloudDto dto =
-                maturiteIndicateurService.getDerniereStrategieCloud(10);
+        DerniereStrategieCloudDto dto = maturiteIndicateurService.getDerniereStrategieCloud(10);
 
         assertThat(dto).isNull();
     }

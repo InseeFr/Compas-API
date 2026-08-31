@@ -12,11 +12,15 @@ import lombok.NoArgsConstructor;
 public class IndicateurApplicationMaturiteCloud {
     private Integer applicationId;
     private String maturite;
+    private String scoreMaturite;
+    private String deltaMaturite;
+    private String deltaOpportunite;
     private String robustesse;
     private String scoreBenefice;
     private String scoreOrga;
     private String scoreComplexite;
     private String scoreTechnique;
+    private String scoreOpportunite;
     private String progressionDeploy;
     private String progressionTechnos;
     private String progressionArchi;
