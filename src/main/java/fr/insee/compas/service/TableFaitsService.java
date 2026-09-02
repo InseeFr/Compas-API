@@ -59,7 +59,7 @@ public class TableFaitsService {
                                 obj -> ((Number) obj[0]).intValue(), // Clé : ID Application
                                 obj ->
                                         new AggregatedResultDto(
-                                                new BigDecimal(((Number) obj[1]).toString()),
+                                                new BigDecimal((obj[1]).toString()),
                                                 ((Number) obj[0]).intValue())));
     }
 
@@ -72,7 +72,7 @@ public class TableFaitsService {
                                 obj -> ((Number) obj[0]).intValue(), // Clé : ID Application
                                 obj ->
                                         new AggregatedResultDto(
-                                                new BigDecimal(((Number) obj[1]).toString()),
+                                                new BigDecimal((obj[1]).toString()),
                                                 ((Number) obj[0]).intValue())));
     }
 
@@ -85,7 +85,7 @@ public class TableFaitsService {
                                 obj -> ((Number) obj[0]).intValue(), // Clé : ID Application
                                 obj ->
                                         new AggregatedResultDto(
-                                                new BigDecimal(((Number) obj[1]).toString()),
+                                                new BigDecimal((obj[1]).toString()),
                                                 ((Number) obj[0]).intValue())));
     }
 
