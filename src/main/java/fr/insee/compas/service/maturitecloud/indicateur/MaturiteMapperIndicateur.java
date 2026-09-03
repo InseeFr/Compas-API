@@ -258,7 +258,8 @@ public class MaturiteMapperIndicateur {
             MaturiteConstantes.ModuleInfo informationsModule) {
 
         if (ID_INDICATEUR_ENV_CIBLE.equals(value.getIdIndicateur())) {
-            String envCible = maturiteCalculatorService.calculateEnvCible(value.getValeur());
+            String envCible = maturiteCalculatorService.calculateEnvCible(
+                    value.getValeur() != null ? value.getValeur().intValue() : null);
             moduleDto.setEnvCibleProd(envCible);
             moduleDto.setEcartCible(
                     envCible.equals(
@@ -271,7 +272,8 @@ public class MaturiteMapperIndicateur {
 
         if (ID_INDICATEUR_STRAT_CLOUD.equals(value.getIdIndicateur())) {
             moduleDto.setStrategieCloud(
-                    maturiteCalculatorService.calculateStrategieCLoud(value.getValeur()));
+                    maturiteCalculatorService.calculateStrategieCLoud(
+                            value.getValeur() != null ? value.getValeur().intValue() : null));
             moduleDto.setCommentaire(value.getCommentaire());
         }
     }

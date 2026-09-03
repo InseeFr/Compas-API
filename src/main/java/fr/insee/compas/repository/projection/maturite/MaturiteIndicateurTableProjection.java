@@ -1,5 +1,7 @@
 package fr.insee.compas.repository.projection.maturite;
 
+import java.math.BigDecimal;
+
 public interface MaturiteIndicateurTableProjection {
     Integer getIdModule();
 
@@ -9,5 +11,5 @@ public interface MaturiteIndicateurTableProjection {
 
     String getCommentaire();
 
-    Integer getValeur();
+    BigDecimal getValeur();
 }

@@ -2,6 +2,7 @@ package fr.insee.compas.service.maturitecloud.indicateur;
 
 import static fr.insee.compas.util.MaturiteConstantes.SANS_OBJET;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -73,8 +74,19 @@ public class MaturiteCalculatorService {
         return envActuel.equals("Kube") || envActuel.equals("Cloud Externe") ? "100%" : "0%";
     }
 
-    protected String calculateMaturiteCloud(Integer valeur) {
-        return conversionService.convertMaturiteCloud(valeur);
+    protected String calculateMaturiteCloud(BigDecimal valeur) {
+        if (valeur == null) {
+            return null;
+        }
+        if (valeur.compareTo(new BigDecimal("0.2")) < 0) {
+            return "D";
+        } else if (valeur.compareTo(new BigDecimal("0.46")) < 0) {
+            return "C";
+        } else if (valeur.compareTo(new BigDecimal("0.7")) < 0) {
+            return "B";
+        } else {
+            return "A";
+        }
     }
 
     public String calculateEnvCible(Integer valeur) {

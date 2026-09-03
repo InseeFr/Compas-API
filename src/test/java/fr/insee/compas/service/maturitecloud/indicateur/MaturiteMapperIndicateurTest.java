@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.math.BigDecimal;
 import java.util.*;
 
 import org.junit.jupiter.api.Test;
@@ -82,7 +83,7 @@ class MaturiteMapperIndicateurTest {
         when(projection.getIdModule()).thenReturn(10);
         when(projection.getIdIndicateur()).thenReturn(ID_INDICATEUR_STRAT_CLOUD);
         when(projection.getCommentaire()).thenReturn("commentaire test");
-        when(projection.getValeur()).thenReturn(1);
+        when(projection.getValeur()).thenReturn(new BigDecimal("1"));
 
         MaturiteConstantes.ModuleInfo moduleInfo =
                 new MaturiteConstantes.ModuleInfo(
@@ -133,7 +134,7 @@ class MaturiteMapperIndicateurTest {
         when(projection.getIdApplication()).thenReturn(1);
         when(projection.getIdModule()).thenReturn(10);
         when(projection.getIdIndicateur()).thenReturn(ID_INDICATEUR_ENV_CIBLE);
-        when(projection.getValeur()).thenReturn(2);
+        when(projection.getValeur()).thenReturn(new BigDecimal("2"));
 
         MaturiteConstantes.ModuleInfo moduleInfo =
                 new MaturiteConstantes.ModuleInfo(
@@ -165,7 +166,7 @@ class MaturiteMapperIndicateurTest {
         when(projection.getIdApplication()).thenReturn(1);
         when(projection.getIdModule()).thenReturn(10);
         when(projection.getIdIndicateur()).thenReturn(ID_INDICATEUR_ENV_CIBLE);
-        when(projection.getValeur()).thenReturn(1);
+        when(projection.getValeur()).thenReturn(new BigDecimal("1"));
 
         MaturiteConstantes.ModuleInfo moduleInfo =
                 new MaturiteConstantes.ModuleInfo(
