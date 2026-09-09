@@ -13,6 +13,7 @@ public class Application {
 
     Integer idApplication;
     String appName;
+    String appNameLong;
     String domaineSndi;
     String domaineFonctionnel;
     String sndi;

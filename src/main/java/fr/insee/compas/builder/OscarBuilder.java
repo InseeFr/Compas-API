@@ -95,6 +95,7 @@ public class OscarBuilder {
         Application application = new Application();
         application.setIdApplication(applicationNoeud.path("id").asInt());
         application.setAppName(applicationNoeud.path("nom").asString(null));
+        application.setAppNameLong(applicationNoeud.path("nomLong").asString(null));
         application.setSndi(applicationNoeud.path("sndi").path("nom").asString(null));
         application.setDomaineFonctionnel(
                 applicationNoeud.path("domaineFonctionnel").path("nom").asString(null));
