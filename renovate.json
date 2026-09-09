@@ -6,11 +6,12 @@
   "stabilityDays": 1,
   "packageRules": [
     {
+      "groupSlug": "patch",
+      "branchName": "renovate/patch",
       "matchUpdateTypes": ["patch"],
-      "excludePackagePatterns": [
-        "^0\\."
-      ],
-      "automerge": true
+      "prTitle": "Renovate : all  patch updates",
+      "automerge": true,
+      "minimumReleaseAge": "1 day"
     }
   ]
 }
