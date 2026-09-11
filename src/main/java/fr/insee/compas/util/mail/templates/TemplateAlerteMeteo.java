@@ -14,6 +14,7 @@ import fr.insee.compas.util.MeteoAlerteUtils.AlerteType;
 @Component
 public class TemplateAlerteMeteo {
 
+    // Zone Paris
     private static final ZoneId TZ_PARIS = ZoneId.of("Europe/Paris");
     private static final String BR = "<br/>";
 
