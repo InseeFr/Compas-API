@@ -1,20 +1,13 @@
 package fr.insee.compas.service;
 
 import java.math.BigDecimal;
-import java.util.Map;
-import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import fr.insee.compas.model.compas.IndicateurSonar;
-import fr.insee.compas.model.sonar.Measure;
 import fr.insee.compas.model.sonar.RecuperationMeasures;
 
 @Service
 public class UtilsService {
-
 
     public double calculPourcentageCouvertureTest(Integer ligneCode, Integer ligneCodeNonTeste) {
         return ligneCode > 0
@@ -36,8 +29,7 @@ public class UtilsService {
     public static RecuperationMeasures concatenationMeasures(
             RecuperationMeasures measures1, RecuperationMeasures measures2) {
 
-
-        return RecuperationMeasures.concatenationMeasures(measures1,measures2);
+        return RecuperationMeasures.concatenationMeasures(measures1, measures2);
     }
 
     public String extractRepoPath(String sourceUrl) {

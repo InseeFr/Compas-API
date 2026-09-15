@@ -42,8 +42,6 @@ public class IndicateurQualiteView extends AbstractIndicateurLettreGlobale {
     private double evolutionDetteTechnique;
     private double evolutionFiabilite;
 
-
-
     @Override
     protected List<String> getLettresPourCalcul() {
         return Stream.of(lettreCouvertureTestUnitaire, lettreFiabilite, lettreDetteTechnique)

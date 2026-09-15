@@ -32,7 +32,7 @@ public interface MaturiteCloudRepository extends JpaRepository<TableFaits, Long>
                     SELECT
                         r.id_application AS "idApplication",
                         MAX(CASE WHEN r.id_indicateur = 601 AND r.rn = 1 THEN r.valeur END) AS "scoreMaturite",
-                        CASE 
+                        CASE
                             WHEN MAX(CASE WHEN r.id_indicateur = 601 AND r.rn = 1 THEN r.valeur END) IS NULL THEN NULL
                             WHEN CAST(MAX(CASE WHEN r.id_indicateur = 601 AND r.rn = 1 THEN r.valeur END) AS DECIMAL) < 0.2 THEN 'D'
                             WHEN CAST(MAX(CASE WHEN r.id_indicateur = 601 AND r.rn = 1 THEN r.valeur END) AS DECIMAL) < 0.46 THEN 'C'

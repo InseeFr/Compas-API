@@ -258,8 +258,9 @@ public class MaturiteMapperIndicateur {
             MaturiteConstantes.ModuleInfo informationsModule) {
 
         if (ID_INDICATEUR_ENV_CIBLE.equals(value.getIdIndicateur())) {
-            String envCible = maturiteCalculatorService.calculateEnvCible(
-                    value.getValeur() != null ? value.getValeur().intValue() : null);
+            String envCible =
+                    maturiteCalculatorService.calculateEnvCible(
+                            value.getValeur() != null ? value.getValeur().intValue() : null);
             moduleDto.setEnvCibleProd(envCible);
             moduleDto.setEcartCible(
                     envCible.equals(

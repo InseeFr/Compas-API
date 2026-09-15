@@ -144,8 +144,7 @@ public class A11yAffichageService {
                         indicateursModuleA11Y.setNotation(ind.getNotation());
                         indicateursModuleA11Y.setScoreAudit(ind.getScoreAudit());
                     },
-                    () -> log.debug("Aucune lettre trouvée pour l'application {}", entry.getKey()))
-            ;
+                    () -> log.debug("Aucune lettre trouvée pour l'application {}", entry.getKey()));
             retour.add(indicateursModuleA11Y);
         }
 

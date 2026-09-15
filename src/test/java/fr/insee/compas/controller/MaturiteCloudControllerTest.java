@@ -73,23 +73,73 @@ class MaturiteCloudControllerTest {
             BigDecimal progressionDevops,
             BigDecimal progressionCloud) {
         return new MaturiteCloudProjection() {
-            public Integer getIdApplication() { return idApplication; }
-            public String getMaturite() { return maturite; }
-            public BigDecimal getScoreMaturite() { return scoreMaturite; }
-            public BigDecimal getDeltaMaturite() { return deltaMaturite; }
-            public BigDecimal getDeltaOpportunite() { return deltaOpportunite; }
-            public BigDecimal getRobustesse() { return robustesse; }
-            public BigDecimal getScoreBenefice() { return scoreBenefice; }
-            public BigDecimal getScoreOrga() { return scoreOrga; }
-            public BigDecimal getScoreComplexite() { return scoreComplexite; }
-            public BigDecimal getScoreTechnique() { return scoreTechnique; }
-            public BigDecimal getScoreOpportunite() { return scoreOpportunite; }
-            public BigDecimal getProgressionDeploy() { return progressionDeploy; }
-            public BigDecimal getProgressionTechnos() { return progressionTechnos; }
-            public BigDecimal getProgressionArchi() { return progressionArchi; }
-            public BigDecimal getProgressionMateqip() { return progressionMateqip; }
-            public BigDecimal getProgressionDevops() { return progressionDevops; }
-            public BigDecimal getProgressionCloud() { return progressionCloud; }
+            public Integer getIdApplication() {
+                return idApplication;
+            }
+
+            public String getMaturite() {
+                return maturite;
+            }
+
+            public BigDecimal getScoreMaturite() {
+                return scoreMaturite;
+            }
+
+            public BigDecimal getDeltaMaturite() {
+                return deltaMaturite;
+            }
+
+            public BigDecimal getDeltaOpportunite() {
+                return deltaOpportunite;
+            }
+
+            public BigDecimal getRobustesse() {
+                return robustesse;
+            }
+
+            public BigDecimal getScoreBenefice() {
+                return scoreBenefice;
+            }
+
+            public BigDecimal getScoreOrga() {
+                return scoreOrga;
+            }
+
+            public BigDecimal getScoreComplexite() {
+                return scoreComplexite;
+            }
+
+            public BigDecimal getScoreTechnique() {
+                return scoreTechnique;
+            }
+
+            public BigDecimal getScoreOpportunite() {
+                return scoreOpportunite;
+            }
+
+            public BigDecimal getProgressionDeploy() {
+                return progressionDeploy;
+            }
+
+            public BigDecimal getProgressionTechnos() {
+                return progressionTechnos;
+            }
+
+            public BigDecimal getProgressionArchi() {
+                return progressionArchi;
+            }
+
+            public BigDecimal getProgressionMateqip() {
+                return progressionMateqip;
+            }
+
+            public BigDecimal getProgressionDevops() {
+                return progressionDevops;
+            }
+
+            public BigDecimal getProgressionCloud() {
+                return progressionCloud;
+            }
         };
     }
 
@@ -97,41 +147,48 @@ class MaturiteCloudControllerTest {
     @DisplayName(
             "GET /cloud/applications maps DB rows -> view objects with rounding and null handling")
     void getMaturiteCloud_ok() throws Exception {
-        List<MaturiteCloudProjection> rows = List.of(
-                // Row 1: toutes valeurs présentes, dont arrondi HALF_UP (1.235 -> 1.24)
-                proj(
-                        42, "A",
-                        new BigDecimal("0.8"),    // scoreMaturite -> 0.80
-                        new BigDecimal("0.5"),    // deltaMaturite
-                        new BigDecimal("0.3"),    // deltaOpportunite
-                        new BigDecimal("5.0"),    // rob
-                        new BigDecimal("1.235"),  // benef  -> 1.24
-                        new BigDecimal("2.2"),    // orga   -> 2.20
-                        new BigDecimal("3.999"),  // complex-> 4.00
-                        new BigDecimal("4.5"),    // tech   -> 4.50
-                        new BigDecimal("7.5"),    // opport -> 7.50
-                        new BigDecimal("10.0"),   // progDep   -> 10.00
-                        new BigDecimal("20.1"),   // progTechs -> 20.10
-                        new BigDecimal("30.345"), // progArchi -> 30.35
-                        new BigDecimal("40.0"),   // progMatEq -> 40.00
-                        new BigDecimal("50.555"), // progDev   -> 50.56
-                        new BigDecimal("60.666")  // progCloud -> 60.67
-                ),
-                // Row 2: rob null + quelques scores null pour exercer les chemins null
-                proj(
-                        7, "C",
-                        new BigDecimal("0.3"),   // scoreMaturite -> 0.30
-                        null,                  // deltaMaturite
-                        null,                  // deltaOpportunite
-                        null,                  // rob -> null
-                        null,                  // benef -> null
-                        new BigDecimal("0"),   // orga -> 0.00
-                        null,                  // complex -> null
-                        new BigDecimal("4"),   // tech -> 4.00
-                        null,                  // opport -> null
-                        null, null, null, null, null, null // progressions -> null
-                )
-        );
+        List<MaturiteCloudProjection> rows =
+                List.of(
+                        // Row 1: toutes valeurs présentes, dont arrondi HALF_UP (1.235 -> 1.24)
+                        proj(
+                                42,
+                                "A",
+                                new BigDecimal("0.8"), // scoreMaturite -> 0.80
+                                new BigDecimal("0.5"), // deltaMaturite
+                                new BigDecimal("0.3"), // deltaOpportunite
+                                new BigDecimal("5.0"), // rob
+                                new BigDecimal("1.235"), // benef  -> 1.24
+                                new BigDecimal("2.2"), // orga   -> 2.20
+                                new BigDecimal("3.999"), // complex-> 4.00
+                                new BigDecimal("4.5"), // tech   -> 4.50
+                                new BigDecimal("7.5"), // opport -> 7.50
+                                new BigDecimal("10.0"), // progDep   -> 10.00
+                                new BigDecimal("20.1"), // progTechs -> 20.10
+                                new BigDecimal("30.345"), // progArchi -> 30.35
+                                new BigDecimal("40.0"), // progMatEq -> 40.00
+                                new BigDecimal("50.555"), // progDev   -> 50.56
+                                new BigDecimal("60.666") // progCloud -> 60.67
+                                ),
+                        // Row 2: rob null + quelques scores null pour exercer les chemins null
+                        proj(
+                                7,
+                                "C",
+                                new BigDecimal("0.3"), // scoreMaturite -> 0.30
+                                null, // deltaMaturite
+                                null, // deltaOpportunite
+                                null, // rob -> null
+                                null, // benef -> null
+                                new BigDecimal("0"), // orga -> 0.00
+                                null, // complex -> null
+                                new BigDecimal("4"), // tech -> 4.00
+                                null, // opport -> null
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null // progressions -> null
+                                ));
 
         given(repo.findAllLatestMatRobAndScores()).willReturn(rows);
 

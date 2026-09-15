@@ -5,6 +5,7 @@ import java.util.*;
 import jakarta.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -49,6 +50,7 @@ public class OscarService {
         this.moduleOscarRepo = moduleOscarRepo;
     }
 
+    @Cacheable(value = "modulesOscarCache")
     public List<Module> getModules() {
         List<Module> modules = new ArrayList<>();
         HttpHeaders headers = new HttpHeaders();
@@ -105,6 +107,7 @@ public class OscarService {
         return modulesHistoriqueMap;
     }
 
+    @Cacheable(value = "applicationsOscarCache")
     public List<Application> getApplications() {
         List<Application> applications = new ArrayList<>();
         HttpHeaders headers = new HttpHeaders();

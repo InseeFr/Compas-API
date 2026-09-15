@@ -23,7 +23,7 @@ public interface IndicateurSecuriteRepository extends JpaRepository<TableFaits, 
                             ROW_NUMBER() OVER (PARTITION BY id_module, id_indicateur ORDER BY date DESC) AS rn
                         FROM
                             table_faits
-                        Where date <= :dateReference
+                        Where date <= :dateReference AND id_module IS NOT NULL
                     )
                     SELECT
                         id_module AS id,
@@ -34,7 +34,7 @@ public interface IndicateurSecuriteRepository extends JpaRepository<TableFaits, 
                     FROM
                         latest_data
                     WHERE
-                        rn = 1 AND id_module IS NOT NULL
+                        rn = 1
                     GROUP BY
                         id_module
                     """,
@@ -54,7 +54,7 @@ public interface IndicateurSecuriteRepository extends JpaRepository<TableFaits, 
                                 ROW_NUMBER() OVER (PARTITION BY id_application, id_indicateur ORDER BY date DESC) AS rn
                             FROM
                                 table_faits
-                            Where date <= :dateReference
+                            Where date <= :dateReference AND id_application IS NOT NULL AND id_module IS NULL
                         )
                         SELECT
                             id_application AS id,
@@ -67,7 +67,7 @@ public interface IndicateurSecuriteRepository extends JpaRepository<TableFaits, 
                         FROM
                             latest_data
                         WHERE
-                            rn = 1 AND id_module IS NULL
+                            rn = 1
                         GROUP BY
                             id_application
                     """,

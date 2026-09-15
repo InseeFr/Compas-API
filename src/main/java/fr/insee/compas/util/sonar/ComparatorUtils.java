@@ -2,8 +2,7 @@ package fr.insee.compas.util.sonar;
 
 public class ComparatorUtils {
 
-    private ComparatorUtils() {
-    }
+    private ComparatorUtils() {}
 
     public static double getMaxNumber(String value1, String value2) throws NumberFormatException {
         return Double.parseDouble(value1) + Double.parseDouble(value2);

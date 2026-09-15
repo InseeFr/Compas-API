@@ -108,15 +108,21 @@ public class MaturiteCloudController {
             String scoreMaturite =
                     (r.getScoreMaturite() == null)
                             ? null
-                            : r.getScoreMaturite().setScale(2, RoundingMode.HALF_UP).toPlainString();
+                            : r.getScoreMaturite()
+                                    .setScale(2, RoundingMode.HALF_UP)
+                                    .toPlainString();
             String deltaMaturite =
                     (r.getDeltaMaturite() == null)
                             ? null
-                            : r.getDeltaMaturite().setScale(2, RoundingMode.HALF_UP).toPlainString();
+                            : r.getDeltaMaturite()
+                                    .setScale(2, RoundingMode.HALF_UP)
+                                    .toPlainString();
             String deltaOpportunite =
                     (r.getDeltaOpportunite() == null)
                             ? null
-                            : r.getDeltaOpportunite().setScale(2, RoundingMode.HALF_UP).toPlainString();
+                            : r.getDeltaOpportunite()
+                                    .setScale(2, RoundingMode.HALF_UP)
+                                    .toPlainString();
 
             out.add(
                     IndicateurApplicationMaturiteCloud.builder()

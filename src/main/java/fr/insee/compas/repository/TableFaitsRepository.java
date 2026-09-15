@@ -70,7 +70,7 @@ WITH latest_data AS (
                tf.id_indicateur,
                SUM(tf.valeur) AS valeur
            FROM table_faits tf
-           WHERE tf.id_application IS NOT null
+           WHERE tf.id_application IS NOT NULL AND tf.id_module IS NULL
            and tf.date = :dateReference
            GROUP BY tf.id_application, tf.id_indicateur
        )
@@ -111,7 +111,7 @@ WITH latest_data AS (
                tf.id_indicateur,
                SUM(tf.valeur) AS valeur
            FROM table_faits tf
-           WHERE tf.id_application IS NOT null
+           WHERE tf.id_application IS NOT null AND tf.id_module IS NULL
            and tf.date = :dateReference
            GROUP BY tf.id_application, tf.id_indicateur
        )
@@ -399,7 +399,7 @@ WITH latest_data AS (
                            FROM
                                latest_data
                            WHERE
-                               rn = 1 and id_module is not null
+                               rn = 1
                            GROUP BY
                                id_module;
 """,
