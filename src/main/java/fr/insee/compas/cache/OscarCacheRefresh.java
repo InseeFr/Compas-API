@@ -9,9 +9,11 @@ import org.springframework.stereotype.Component;
 import fr.insee.compas.service.OscarService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 @Profile("!test")
 public class OscarCacheRefresh {
 
@@ -23,11 +25,14 @@ public class OscarCacheRefresh {
 
     @Scheduled(cron = "0 0 6 * * *")
     public void refreshOscarCaches() {
+        log.info("Cache oscar en cours de rafraîchissement");
         clearCache(APPLICATIONS_OSCAR);
         clearCache(MODULES_OSCAR);
-
+        log.info("Cache oscar rafraîchi");
+        log.info("Récupération des applications et modules depuis Oscar");
         oscarService.getApplications();
         oscarService.getModules();
+        log.info("Récupération terminée des applications et modules depuis Oscar");
     }
 
     private void clearCache(String cacheName) {
