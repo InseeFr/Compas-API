@@ -7,7 +7,6 @@ import java.util.*;
 import org.springframework.stereotype.Service;
 
 import fr.insee.compas.model.compas.IndicateurSonar;
-import fr.insee.compas.model.compas.IndicateurType;
 import fr.insee.compas.model.compas.TableFaits;
 import fr.insee.compas.model.oscar.Application;
 import fr.insee.compas.model.oscar.Module;
@@ -211,15 +210,16 @@ public class RecuperationIndicateurSonarService {
         log.debug(
                 "le module {} est SO pour sonar, on met donc -1 pour l'indicateur ligne de code",
                 module.getModName());
-
-        tableFaitsRepository.save(
-                TableFaits.builder()
-                        .idModule(module.getId())
-                        .idApplication(module.getIdApplication())
-                        .idIndicateur(IndicateurType.NBR_LIGNE.getValue())
-                        .date(now)
-                        .valeur(BigDecimal.valueOf(-1))
-                        .idSource(0)
-                        .build());
+        for (IndicateurSonar sonarMetric : IndicateurSonar.values()) {
+            tableFaitsRepository.save(
+                    TableFaits.builder()
+                            .idModule(module.getId())
+                            .idApplication(module.getIdApplication())
+                            .idIndicateur(sonarMetric.getIndicateurType().getValue())
+                            .date(now)
+                            .valeur(BigDecimal.valueOf(-1))
+                            .idSource(0)
+                            .build());
+        }
     }
 }

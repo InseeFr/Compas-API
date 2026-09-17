@@ -11,6 +11,8 @@ import fr.insee.compas.view.IndicateurQualiteView;
 @Service
 public class DetteTechniqueCalculateurService {
     private static final String SANS_OBJET = "Sans objet";
+    // Les valeurs seront négatives si SO
+    private static final String DETTE_NEG = "-1.00";
     private final ConversionService conversionService;
 
     public DetteTechniqueCalculateurService(ConversionService conversionService) {
@@ -25,7 +27,7 @@ public class DetteTechniqueCalculateurService {
 
         String dette = current.getDetteTechnique();
 
-        if (StringUtils.isEmpty(dette)) {
+        if (StringUtils.isEmpty(dette) || DETTE_NEG.equals(dette)) {
 
             if (context == Context.MODULE) {
 

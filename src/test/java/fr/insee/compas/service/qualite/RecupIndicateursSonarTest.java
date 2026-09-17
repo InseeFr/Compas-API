@@ -14,6 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import fr.insee.compas.model.compas.IndicateurSonar;
 import fr.insee.compas.model.compas.TableFaits;
 import fr.insee.compas.model.oscar.Application;
 import fr.insee.compas.model.oscar.Module;
@@ -179,7 +180,8 @@ class RecupIndicateursSonarTest {
         recupIndicateursSonarService.putIndicateursSonarModule();
 
         // Doit sauvegarder -1 pour NBR_LIGNE et ne pas appeler sonar
-        verify(tableFaitsRepository, times(1)).save(argThat(tf -> tf.getValeur().intValue() == -1));
+        verify(tableFaitsRepository, times(IndicateurSonar.values().length))
+                .save(argThat(tf -> tf.getValeur().intValue() == -1));
         verify(sonarService, never()).getDataFromSonarAPIMeasures(any(), any(), any());
     }
 
@@ -333,7 +335,8 @@ class RecupIndicateursSonarTest {
 
         recupIndicateursSonarService.putIndicateursSonarModule();
 
-        verify(tableFaitsRepository, times(2)).save(any(TableFaits.class));
+        verify(tableFaitsRepository, times(IndicateurSonar.values().length + 1))
+                .save(any(TableFaits.class));
     }
 
     @Test

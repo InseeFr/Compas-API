@@ -11,6 +11,7 @@ import fr.insee.compas.view.IndicateurQualiteView;
 public class FiabiliteCalculateurService {
 
     private static final String SANS_OBJET = "Sans objet";
+    private static final String FIABILITE_NEG = "-1.00";
 
     public void calculFiabilite(
             IndicateurQualiteView current,
@@ -20,7 +21,7 @@ public class FiabiliteCalculateurService {
 
         String fiabilite = current.getFiabilite();
 
-        if (StringUtils.isEmpty(fiabilite)) {
+        if (StringUtils.isEmpty(fiabilite) || fiabilite.equals(FIABILITE_NEG)) {
 
             if (context == Context.MODULE) {
 
