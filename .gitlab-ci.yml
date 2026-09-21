@@ -40,8 +40,6 @@ include:
 
 
 
-
-
 stages:
   - check-source-branch
   - security-app

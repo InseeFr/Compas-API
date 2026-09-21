@@ -44,7 +44,6 @@ public class A11yAffichageService {
                                             .idModule(module.getId())
                                             .idApplication(module.getIdApplication())
                                             .modName(module.getModName())
-                                            .applicationName(module.getAppName())
                                             .domaineSndi(module.getDomaineSndi())
                                             .sndi(module.getSndi())
                                             .notation(Notation.NR)
@@ -120,7 +119,7 @@ public class A11yAffichageService {
                     IndicateursModuleA11Y.builder()
                             .idModule(null)
                             .idApplication(app.getIdApplication())
-                            .applicationName(app.getAppName())
+                            .nameApplication(app.getAppName())
                             .notation(Notation.SO)
                             .build();
             Set<Integer> moduleIds = entry.getValue();
