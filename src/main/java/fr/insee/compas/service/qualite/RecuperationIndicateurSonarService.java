@@ -136,8 +136,11 @@ public class RecuperationIndicateurSonarService {
                 RecuperationMeasures sommeMesures = new RecuperationMeasures();
                 if (!keysSonar.isEmpty() && keysSonar.stream().allMatch(SANS_OBJET::equals)) {
                     Component component = new Component();
-                    Measure ligneNegative = new Measure("lines_to_cover", "-1");
-                    component.setMeasures(new ArrayList<>(List.of(ligneNegative)));
+                    List<Measure> measures = new ArrayList<>();
+                    for (IndicateurSonar metric : IndicateurSonar.values()) {
+                        measures.add(new Measure(metric.getKey(), "-1"));
+                    }
+                    component.setMeasures(measures);
                     sommeMesures.setComponent(component);
                 }
                 for (String keySonar : entry.getValue()) {

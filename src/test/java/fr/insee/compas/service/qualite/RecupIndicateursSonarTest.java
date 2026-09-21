@@ -272,7 +272,7 @@ class RecupIndicateursSonarTest {
 
         recupIndicateursSonarService.putIndicateursSonarApplication(Map.of());
 
-        verify(tableFaitsRepository, times(1))
+        verify(tableFaitsRepository, times(IndicateurSonar.values().length))
                 .save(argThat(tf -> tf.getValeur().intValue() == -1 && tf.getIdApplication() == 2));
     }
 
