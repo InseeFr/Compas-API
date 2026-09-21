@@ -17,7 +17,7 @@ public class IndicateursModuleA11Y {
     private String modName;
 
     private Integer idApplication;
-    private String nameApplication;
+    private String applicationName;
 
     /** Service dev. */
     private String sndi;
