@@ -8,9 +8,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -88,12 +86,8 @@ class GreenItServiceTest {
         when(tableFaitsRepository.findLastDateIndicateur())
                 .thenReturn(List.of(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 2)));
 
-        Date origine =
-                Date.from(
-                        LocalDate.of(2024, 1, 2).atStartOfDay(ZoneId.systemDefault()).toInstant());
-        Date passee =
-                Date.from(
-                        LocalDate.of(2024, 1, 1).atStartOfDay(ZoneId.systemDefault()).toInstant());
+        LocalDate origine = LocalDate.of(2024, 1, 2);
+        LocalDate passee = LocalDate.of(2024, 1, 1);
 
         Application app =
                 Application.builder()
@@ -146,12 +140,8 @@ class GreenItServiceTest {
         when(tableFaitsRepository.findLastDateIndicateur())
                 .thenReturn(List.of(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 2)));
 
-        Date origine =
-                Date.from(
-                        LocalDate.of(2024, 1, 2).atStartOfDay(ZoneId.systemDefault()).toInstant());
-        Date passee =
-                Date.from(
-                        LocalDate.of(2024, 1, 1).atStartOfDay(ZoneId.systemDefault()).toInstant());
+        LocalDate origine = LocalDate.of(2024, 1, 2);
+        LocalDate passee = LocalDate.of(2024, 1, 1);
 
         Application app = Application.builder().idApplication(1).appName("app-test").build();
 
@@ -190,12 +180,8 @@ class GreenItServiceTest {
 
     @Test
     void getIndicateursApplicationGreenIT_invalidDates_shouldThrowException() {
-        Date origine =
-                Date.from(
-                        LocalDate.of(2024, 1, 2).atStartOfDay(ZoneId.systemDefault()).toInstant());
-        Date passee =
-                Date.from(
-                        LocalDate.of(2024, 1, 1).atStartOfDay(ZoneId.systemDefault()).toInstant());
+        LocalDate origine = LocalDate.of(2024, 1, 2);
+        LocalDate passee = LocalDate.of(2024, 1, 1);
 
         when(tableFaitsRepository.findLastDateIndicateur())
                 .thenReturn(List.of()); // vide => invalid
@@ -214,12 +200,8 @@ class GreenItServiceTest {
         when(tableFaitsRepository.findLastDateIndicateur())
                 .thenReturn(List.of(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 2)));
 
-        Date origine =
-                Date.from(
-                        LocalDate.of(2024, 1, 2).atStartOfDay(ZoneId.systemDefault()).toInstant());
-        Date passee =
-                Date.from(
-                        LocalDate.of(2024, 1, 1).atStartOfDay(ZoneId.systemDefault()).toInstant());
+        LocalDate origine = LocalDate.of(2024, 1, 2);
+        LocalDate passee = LocalDate.of(2024, 1, 1);
 
         GreenItAppVmProjection projection = mock(GreenItAppVmProjection.class);
         GreenItAppVmProjection projectionHist = mock(GreenItAppVmProjection.class);

@@ -8,8 +8,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.sql.Date;
 import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
@@ -78,12 +79,20 @@ class GreenItControllerTest {
         // Given
         Periode periode =
                 new Periode(
-                        Date.valueOf(LocalDate.of(2024, 2, 1)),
-                        Date.valueOf(LocalDate.of(2024, 1, 1)));
+                        Date.from(
+                                LocalDate.of(2024, 2, 1)
+                                        .atStartOfDay(ZoneId.systemDefault())
+                                        .toInstant()),
+                        Date.from(
+                                LocalDate.of(2024, 1, 1)
+                                        .atStartOfDay(ZoneId.systemDefault())
+                                        .toInstant()));
 
         when(greenPeriodeBuilder.buildPeriodeGreen("2024-02-01", "2024-01-01")).thenReturn(periode);
         when(greenItService.getIndicateursApplicationGreenIT(
-                        GreenITutils.ViewGreen.KUBE, periode.origine(), periode.passee()))
+                        GreenITutils.ViewGreen.KUBE,
+                        LocalDate.ofInstant(periode.origine().toInstant(), ZoneId.systemDefault()),
+                        LocalDate.ofInstant(periode.passee().toInstant(), ZoneId.systemDefault())))
                 .thenReturn(List.<IndicateurAppGreenBaseView>of());
 
         // When / Then
@@ -97,7 +106,9 @@ class GreenItControllerTest {
 
         verify(greenItService)
                 .getIndicateursApplicationGreenIT(
-                        GreenITutils.ViewGreen.KUBE, periode.origine(), periode.passee());
+                        GreenITutils.ViewGreen.KUBE,
+                        LocalDate.ofInstant(periode.origine().toInstant(), ZoneId.systemDefault()),
+                        LocalDate.ofInstant(periode.passee().toInstant(), ZoneId.systemDefault()));
     }
 
     @Test

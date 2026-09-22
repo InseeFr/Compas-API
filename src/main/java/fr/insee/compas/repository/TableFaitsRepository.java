@@ -70,7 +70,7 @@ WITH latest_data AS (
                tf.id_indicateur,
                SUM(tf.valeur) AS valeur
            FROM table_faits tf
-           WHERE tf.id_application IS NOT NULL AND tf.id_module IS NULL
+           WHERE tf.id_application IS NOT NULL
            and tf.date = :dateReference
            GROUP BY tf.id_application, tf.id_indicateur
        )
@@ -100,7 +100,7 @@ WITH latest_data AS (
        GROUP BY id_application
 """,
             nativeQuery = true)
-    List<GreenItAppVmProjection> getGreenItAppVm(@Param("dateReference") Date dateReference);
+    List<GreenItAppVmProjection> getGreenItAppVm(@Param("dateReference") LocalDate dateReference);
 
     @Query(
             value =
@@ -111,7 +111,7 @@ WITH latest_data AS (
                tf.id_indicateur,
                SUM(tf.valeur) AS valeur
            FROM table_faits tf
-           WHERE tf.id_application IS NOT null AND tf.id_module IS NULL
+           WHERE tf.id_application IS NOT null
            and tf.date = :dateReference
            GROUP BY tf.id_application, tf.id_indicateur
        )
@@ -131,7 +131,8 @@ WITH latest_data AS (
        GROUP BY id_application
 """,
             nativeQuery = true)
-    List<GreenItAppKubeProjection> getGreenItAppKube(@Param("dateReference") Date dateReference);
+    List<GreenItAppKubeProjection> getGreenItAppKube(
+            @Param("dateReference") LocalDate dateReference);
 
     @Query(
             value =

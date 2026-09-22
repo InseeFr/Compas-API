@@ -122,6 +122,10 @@ VALUES (null, 210, 201, '2024-12-04', 510, 2);
 INSERT INTO table_faits (id_module, id_indicateur, id_application, date, valeur, id_source)
 VALUES (null, 207, 201, '2024-12-04', 510, 2);
 INSERT INTO table_faits (id_module, id_indicateur, id_application, date, valeur, id_source)
-VALUES (null, 227, 201, '2024-12-04', 211, 2);
+VALUES (null, 203, 130, '2024-12-05', 50, 101);
+INSERT INTO table_faits (id_module, id_indicateur, id_application, date, valeur, id_source)
+VALUES (244, 203, 130, '2024-12-05', 850, 101);
+INSERT INTO table_faits (id_module, id_indicateur, id_application, date, valeur, id_source)
+VALUES (null, 210, 130, '2024-12-05', 5, 101);
 
 

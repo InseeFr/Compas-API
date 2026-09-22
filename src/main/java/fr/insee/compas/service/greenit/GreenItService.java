@@ -3,7 +3,6 @@ package fr.insee.compas.service.greenit;
 import static fr.insee.compas.util.greenit.GreenITutils.*;
 
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -48,11 +47,11 @@ public class GreenItService {
     }
 
     public List<IndicateurAppGreenBaseView> getIndicateursApplicationGreenIT(
-            ViewGreen viewGreen, Date origine, Date passee) {
+            ViewGreen viewGreen, LocalDate origine, LocalDate passee) {
+
         if (!isValidDate(origine, passee))
             throw new IllegalArgumentException("Les dates fournies ne sont pas valides");
 
-        LocalDate date = origine.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         Map<Integer, GreenItAppBaseProjection> greenItAppProjectionMap =
                 getGreenItAppProjectionMap(viewGreen, origine);
         Map<Integer, GreenItAppBaseProjection> greenItAppProjectionMapHist =
@@ -79,14 +78,14 @@ public class GreenItService {
                                                         applicationFetch,
                                                         (GreenItAppKubeProjection) projection,
                                                         (GreenItAppKubeProjection) projectionHist,
-                                                        date);
+                                                        origine);
                                         case VM ->
                                                 greenItMapper.buildIndicateurDtoVm(
                                                         idApplication,
                                                         applicationFetch,
                                                         (GreenItAppVmProjection) projection,
                                                         (GreenItAppVmProjection) projectionHist,
-                                                        date);
+                                                        origine);
                                     };
                             return greenItMapper.mapToView(greenItBaseDto);
                         })
@@ -94,7 +93,7 @@ public class GreenItService {
     }
 
     private Map<Integer, GreenItAppBaseProjection> getGreenItAppProjectionMap(
-            ViewGreen viewGreen, Date dateReference) {
+            ViewGreen viewGreen, LocalDate dateReference) {
         return switch (viewGreen) {
             case KUBE ->
                     tableFaitsRepository.getGreenItAppKube(dateReference).stream()
@@ -123,13 +122,8 @@ public class GreenItService {
         applishareMetricsApiUpdater.miseAJourIndicateursGreenItFromApi();
     }
 
-    private boolean isValidDate(Date origine, Date passee) {
+    private boolean isValidDate(LocalDate origine, LocalDate passee) {
         Set<LocalDate> validDates = getValidDates();
-
-        LocalDate origineDate = origine.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-
-        LocalDate passeeDate = passee.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-
-        return validDates.contains(origineDate) && validDates.contains(passeeDate);
+        return validDates.contains(origine) && validDates.contains(passee);
     }
 }

@@ -1,6 +1,7 @@
 package fr.insee.compas.controller;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Set;
 
@@ -48,7 +49,9 @@ public class GreenItController {
         Periode periode = greenPeriodeBuilder.buildPeriodeGreen(origine, passee);
         List<IndicateurAppGreenBaseView> greenITViews =
                 greenItService.getIndicateursApplicationGreenIT(
-                        viewMode, periode.origine(), periode.passee());
+                        viewMode,
+                        LocalDate.ofInstant(periode.origine().toInstant(), ZoneId.systemDefault()),
+                        LocalDate.ofInstant(periode.passee().toInstant(), ZoneId.systemDefault()));
         log.info("Récupération greenIt terminée");
         return ResponseEntity.ok(greenITViews);
     }

@@ -16,6 +16,8 @@ import org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration;
 
 import fr.insee.compas.model.compas.TableFaits;
 import fr.insee.compas.repository.projection.MetriqueApplicationProjection;
+import fr.insee.compas.repository.projection.green.GreenItAppKubeProjection;
+import fr.insee.compas.repository.projection.green.GreenItAppVmProjection;
 
 @DataJpaTest(
         showSql = false,
@@ -63,8 +65,8 @@ class TableFaitsRepositoryTest {
         final List<Object[]> results = tableFaitsRepository.findAggregatedSumResults(idIndicateur);
 
         assertEquals(1, results.size());
-        assertEquals(1, ((Number) results.get(0)[0]).intValue()); // id_application attendu
-        assertEquals(300, ((Number) results.get(0)[1]).intValue()); // Somme attendue
+        assertEquals(1, ((Number) results.getFirst()[0]).intValue()); // id_application attendu
+        assertEquals(300, ((Number) results.getFirst()[1]).intValue()); // Somme attendue
     }
 
     @Test
@@ -74,8 +76,8 @@ class TableFaitsRepositoryTest {
         final List<Object[]> results = tableFaitsRepository.findAggregatedAvgResults(idIndicateur);
 
         assertEquals(1, results.size());
-        assertEquals(1, ((Number) results.get(0)[0]).intValue()); // id_application attendu
-        assertEquals(150, ((Number) results.get(0)[1]).intValue()); // Somme attendue
+        assertEquals(1, ((Number) results.getFirst()[0]).intValue()); // id_application attendu
+        assertEquals(150, ((Number) results.getFirst()[1]).intValue()); // Somme attendue
     }
 
     @Test
@@ -85,8 +87,10 @@ class TableFaitsRepositoryTest {
         final SoftAssertions softAssertions = new SoftAssertions();
         softAssertions.assertThat(results).isNotNull();
         softAssertions.assertThat(results.size()).isEqualTo(2);
-        softAssertions.assertThat(results.get(0).getIdApplication()).isEqualTo(130);
-        softAssertions.assertThat(results.get(0).getDate()).isEqualTo(LocalDate.of(2024, 12, 04));
+        softAssertions.assertThat(results.getFirst().getIdApplication()).isEqualTo(130);
+        softAssertions
+                .assertThat(results.getFirst().getDate())
+                .isEqualTo(LocalDate.of(2024, 12, 4));
         softAssertions
                 .assertThat(((Number) results.get(0).getTotalValeur()).intValue())
                 .isEqualTo(16);
@@ -104,6 +108,42 @@ class TableFaitsRepositoryTest {
         final SoftAssertions softAssertions = new SoftAssertions();
         softAssertions.assertThat(results).isNotNull();
         softAssertions.assertThat(results.size()).isEqualTo(0);
+        softAssertions.assertAll();
+    }
+
+    @Test
+    void testGetGreenItAppVm() {
+        List<GreenItAppVmProjection> results =
+                tableFaitsRepository.getGreenItAppVm(LocalDate.of(2024, 12, 5));
+        final SoftAssertions softAssertions = new SoftAssertions();
+        softAssertions.assertThat(results).isNotNull();
+        softAssertions.assertThat(results.size()).isEqualTo(1);
+        softAssertions.assertThat(results.getFirst().getIdApplication()).isEqualTo(130);
+        softAssertions.assertThat(results.getFirst().getDisqueAlloue().intValue()).isEqualTo(900);
+        softAssertions.assertAll();
+    }
+
+    @Test
+    void testGetGreenItAppVm_avec_idmodule_null() {
+        List<GreenItAppVmProjection> results =
+                tableFaitsRepository.getGreenItAppVm(LocalDate.of(2024, 12, 5));
+        final SoftAssertions softAssertions = new SoftAssertions();
+        softAssertions.assertThat(results).isNotNull();
+        softAssertions.assertThat(results.size()).isEqualTo(1);
+        softAssertions.assertThat(results.getFirst().getIdApplication()).isEqualTo(130);
+        softAssertions.assertThat(results.getFirst().getDisqueAlloue().intValue()).isEqualTo(900);
+        softAssertions.assertAll();
+    }
+
+    @Test
+    void testGetGreenItAppKube_ok() {
+        List<GreenItAppKubeProjection> results =
+                tableFaitsRepository.getGreenItAppKube(LocalDate.of(2024, 12, 5));
+        final SoftAssertions softAssertions = new SoftAssertions();
+        softAssertions.assertThat(results).isNotNull();
+        softAssertions.assertThat(results.size()).isEqualTo(1);
+        softAssertions.assertThat(results.getFirst().getIdApplication()).isEqualTo(130);
+        softAssertions.assertThat(results.getFirst().getCpuConsomme().intValue()).isEqualTo(5);
         softAssertions.assertAll();
     }
 }
