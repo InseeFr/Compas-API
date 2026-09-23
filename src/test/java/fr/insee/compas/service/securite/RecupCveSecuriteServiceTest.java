@@ -10,6 +10,7 @@ import static org.mockito.Mockito.*;
 import java.math.BigDecimal;
 import java.util.List;
 
+import fr.insee.compas.model.analyzer.ComptageCve;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,7 +29,6 @@ import org.springframework.web.client.RestTemplate;
 
 import fr.insee.compas.client.configuration.oauth.AnalyzerAuthentification;
 import fr.insee.compas.model.analyzer.ApplicationAnalyzer;
-import fr.insee.compas.model.analyzer.CveActivesAnalyzer;
 import fr.insee.compas.model.analyzer.ModuleAnalyzer;
 import fr.insee.compas.model.compas.TableFaits;
 import fr.insee.compas.repository.TableFaitsRepository;
@@ -119,9 +119,9 @@ class RecupCveSecuriteServiceTest {
         ApplicationAnalyzer app1 = mock(ApplicationAnalyzer.class);
         when(app1.getId()).thenReturn(101);
         when(app1.getNom()).thenReturn("App101");
-        when(app1.getCveActives())
+        when(app1.getComptageCve())
                 .thenReturn(
-                        CveActivesAnalyzer.builder()
+                        ComptageCve.builder()
                                 .nombreCveCritique(5)
                                 .nombreCveMajeur(4)
                                 .nombreCveMoyenne(3)
@@ -131,9 +131,9 @@ class RecupCveSecuriteServiceTest {
         ModuleAnalyzer m1 = mock(ModuleAnalyzer.class);
         when(m1.getId()).thenReturn(1001);
         when(m1.getDateMajAnalyseTrivyCodeSource()).thenReturn(new java.util.Date()); // scanné
-        when(m1.getCveActives())
+        when(m1.getComptageCve())
                 .thenReturn(
-                        CveActivesAnalyzer.builder()
+                        ComptageCve.builder()
                                 .nombreCveCritique(9)
                                 .nombreCveMajeur(8)
                                 .nombreCveMoyenne(7)
@@ -156,9 +156,9 @@ class RecupCveSecuriteServiceTest {
         ApplicationAnalyzer app3 = mock(ApplicationAnalyzer.class);
         when(app3.getId()).thenReturn(303);
         when(app3.getNom()).thenReturn("App303");
-        when(app3.getCveActives())
+        when(app3.getComptageCve())
                 .thenReturn(
-                        CveActivesAnalyzer.builder()
+                        ComptageCve.builder()
                                 .nombreCveCritique(1)
                                 .nombreCveMajeur(1)
                                 .nombreCveMoyenne(1)
@@ -168,9 +168,9 @@ class RecupCveSecuriteServiceTest {
         ModuleAnalyzer m3 = mock(ModuleAnalyzer.class);
         when(m3.getId()).thenReturn(3001);
         when(m3.getDateMajAnalyseTrivyCodeSource()).thenReturn(new java.util.Date());
-        when(m3.getCveActives())
+        when(m3.getComptageCve())
                 .thenReturn(
-                        CveActivesAnalyzer.builder()
+                        ComptageCve.builder()
                                 .nombreCveCritique(3)
                                 .nombreCveMajeur(2)
                                 .nombreCveMoyenne(1)

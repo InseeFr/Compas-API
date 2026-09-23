@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CveActivesAnalyzer {
+public class ComptageCve {
     private Integer nombreCveCritique;
     private Integer nombreCveMajeur;
     private Integer nombreCveMoyenne;

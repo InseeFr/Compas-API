@@ -18,5 +18,5 @@ public class ApplicationAnalyzer {
     private String sndi;
     private String domaine;
     private List<ModuleAnalyzer> modules;
-    private CveActivesAnalyzer cveActives;
+    private ComptageCve comptageCve;
 }

@@ -129,7 +129,6 @@ public class RecupCveSecuriteService {
         }
     }
 
-    /** Sauvegarde les CVE */
     private void saveCve(
             Map<String, Integer> cveData,
             Integer applicationId,
@@ -174,11 +173,11 @@ public class RecupCveSecuriteService {
     private Map<String, Integer> extractCveDataFromApplication(ApplicationAnalyzer application) {
         Map<String, Integer> cveData = new HashMap<>();
 
-        if (application.getCveActives() != null) {
-            cveData.put("CRITICAL", application.getCveActives().getNombreCveCritique());
-            cveData.put("HIGH", application.getCveActives().getNombreCveMajeur());
-            cveData.put("MEDIUM", application.getCveActives().getNombreCveMoyenne());
-            cveData.put("LOW", application.getCveActives().getNombreCveFaible());
+        if (application.getComptageCve() != null) {
+            cveData.put("CRITICAL", application.getComptageCve().getNombreCveCritique());
+            cveData.put("HIGH", application.getComptageCve().getNombreCveMajeur());
+            cveData.put("MEDIUM", application.getComptageCve().getNombreCveMoyenne());
+            cveData.put("LOW", application.getComptageCve().getNombreCveFaible());
         }
 
         return cveData;
@@ -188,11 +187,11 @@ public class RecupCveSecuriteService {
     private Map<String, Integer> extractCveDataFromModule(ModuleAnalyzer module) {
         Map<String, Integer> cveData = new HashMap<>();
 
-        if (module.getCveActives() != null) {
-            cveData.put("CRITICAL", module.getCveActives().getNombreCveCritique());
-            cveData.put("HIGH", module.getCveActives().getNombreCveMajeur());
-            cveData.put("MEDIUM", module.getCveActives().getNombreCveMoyenne());
-            cveData.put("LOW", module.getCveActives().getNombreCveFaible());
+        if (module.getComptageCve() != null) {
+            cveData.put("CRITICAL", module.getComptageCve().getNombreCveCritique());
+            cveData.put("HIGH", module.getComptageCve().getNombreCveMajeur());
+            cveData.put("MEDIUM", module.getComptageCve().getNombreCveMoyenne());
+            cveData.put("LOW", module.getComptageCve().getNombreCveFaible());
         }
 
         return cveData;
