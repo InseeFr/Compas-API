@@ -137,8 +137,8 @@ public class SonarService {
 
     private String getUrlNbIssue(String source) {
         return GITLAB_INTERNE.equals(source)
-                ? "https://sonar.insee.fr/api/issues/search?componentKeys=%s&tags=%s"
-                : "https://sonarcloud.io/api/issues/search?componentKeys=%s&tags=%s";
+                ? "https://sonar.insee.fr/api/issues/search?componentKeys=%s&tags=%s&statuses=OPEN"
+                : "https://sonarcloud.io/api/issues/search?componentKeys=%s&tags=%s&statuses=OPEN";
     }
 
     private String getUrlApiMeasures(String source) {

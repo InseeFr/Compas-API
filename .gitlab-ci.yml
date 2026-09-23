@@ -34,8 +34,8 @@ include:
       token: $GITHUB_MR_TOKEN
   - component: "$CI_SERVER_FQDN/platform-engineering/components/commitlint/commitlint@1.1.0"
     inputs:
-        on_merge_request: false      # défaut
-        on_default_branch: true    # défaut
+        on_merge_request: false
+        on_default_branch: true
         stage: .pre
 
 
