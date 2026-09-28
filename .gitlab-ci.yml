@@ -118,3 +118,15 @@ release-gitops-prod:
   rules:
     - if: '$CI_COMMIT_TAG'
       when: manual
+
+pitest-analysis:
+  stage: quality
+  image: gitlab-registry.insee.fr:443/kubernetes/images/build/maven-jdk-toolbox:25
+  script:
+    - mvn test-compile org.pitest:pitest-maven:mutationCoverage
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+  artifacts:
+    when: always
+    paths:
+      - target/pit-reports/*

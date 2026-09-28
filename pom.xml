@@ -291,12 +291,6 @@
 				<groupId>org.pitest</groupId>
 				<artifactId>pitest-maven</artifactId>
 				<version>${pitest.version}</version>
-				<configuration>
-					<targetClasses>
-						<param>fr.insee.compas.service.greenit.*</param>
-					</targetClasses>
-
-				</configuration>
 				<dependencies>
 					<dependency>
 						<groupId>org.pitest</groupId>
