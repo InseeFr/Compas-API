@@ -181,6 +181,9 @@ public class GreenItMapper {
             LocalDate date) {
 
         AppInfo appInfo = resolveAppInfo(applicationFetch);
+        if (appInfo == null) {
+            return null;
+        }
         return GreenKubeDto.builder()
                 .applicationId(idApplication)
                 .applicationName(appInfo.applicationName())
@@ -224,6 +227,9 @@ public class GreenItMapper {
             LocalDate date) {
 
         AppInfo appInfo = resolveAppInfo(applicationFetch);
+        if (appInfo == null) {
+            return null;
+        }
         return GreenVmDto.builder()
                 .applicationId(idApplication)
                 .applicationName(appInfo.applicationName())
@@ -280,7 +286,7 @@ public class GreenItMapper {
 
     private AppInfo resolveAppInfo(Application applicationFetch) {
         if (applicationFetch == null) {
-            return new AppInfo("anonyme", null, null, null);
+            return null;
         }
         return new AppInfo(
                 applicationFetch.getAppName(),

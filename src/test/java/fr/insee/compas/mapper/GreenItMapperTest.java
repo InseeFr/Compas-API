@@ -216,15 +216,12 @@ class GreenItMapperTest {
         }
 
         @Test
-        void should_use_anonyme_when_application_is_null() {
+        void should_return_null_when_application_is_null() {
             GreenKubeDto dto =
                     greenItMapper.buildIndicateurKubeDto(
                             42, null, projection, projectionHist, DATE);
 
-            assertThat(dto.getApplicationName()).isEqualTo("anonyme");
-            assertThat(dto.getServiceDev()).isNull();
-            assertThat(dto.getDomaineDev()).isNull();
-            assertThat(dto.getDomaineFonc()).isNull();
+            assertThat(dto).isNull();
         }
     }
 

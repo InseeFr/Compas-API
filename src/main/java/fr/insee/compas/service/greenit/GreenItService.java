@@ -87,8 +87,12 @@ public class GreenItService {
                                                         (GreenItAppVmProjection) projectionHist,
                                                         origine);
                                     };
+                            if (greenItBaseDto == null) {
+                                return null;
+                            }
                             return greenItMapper.mapToView(greenItBaseDto);
                         })
+                .filter(Objects::nonNull)
                 .toList();
     }
 
