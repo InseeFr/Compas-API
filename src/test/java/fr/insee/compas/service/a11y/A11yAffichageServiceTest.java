@@ -3,6 +3,7 @@ package fr.insee.compas.service.a11y;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,13 +40,6 @@ class A11yAffichageServiceTest {
         return m;
     }
 
-    private InfosSaisiesA11yEntity infos(boolean declaration, int typeAuditId, float score) {
-        InfosSaisiesA11yEntity i = mock(InfosSaisiesA11yEntity.class);
-        when(i.getIsDeclaration()).thenReturn(declaration);
-        when(i.getIdIndicateurTypeAudit()).thenReturn(typeAuditId);
-        when(i.getScoreAudit()).thenReturn(score);
-        return i;
-    }
 
     @Test
     @DisplayName("listerModulesA11y: sans infos -> modules par défaut avec Notation.NR")
@@ -74,6 +68,20 @@ class A11yAffichageServiceTest {
         assertThat(v2.getNotation()).isEqualTo(Notation.NR);
     }
 
+    private InfosSaisiesA11yEntity infos(
+            boolean declaration,
+            int typeAudit,
+            float score) {
+
+        return InfosSaisiesA11yEntity.builder()
+                .isDeclaration(declaration)
+                .idIndicateurTypeAudit(typeAudit)
+                .scoreAudit(score)
+                .dateDeclaration(LocalDate.now())
+                .dateAudit(LocalDate.now())
+                .build();
+    }
+
     @Test
     @DisplayName(
             "listerModulesA11y: avec infos -> mapping des champs + libellé type d'audit + notation")
@@ -82,16 +90,19 @@ class A11yAffichageServiceTest {
         fr.insee.compas.model.oscar.Module m2 = module(2, "M2", "DomB", "SNDI-B");
         fr.insee.compas.model.oscar.Module m3 = module(3, "M3", "DomC", "SNDI-C");
         fr.insee.compas.model.oscar.Module m4 = module(4, "M4", "DomD", "SNDI-D");
+
         when(oscarService.getModulesIhm()).thenReturn(List.of(m1, m2, m3, m4));
 
-        // Cas 1: pas de déclaration -> H (peu importe type/score), libellé issu de 512
+        // Pas de déclaration -> F
         InfosSaisiesA11yEntity i1 = infos(false, 512, 0f);
-        // Cas 2: déclaration + type 511 (partiel) score<50 -> F / libellé "Audit partiel"
+
+        // Déclaration + audit partiel + score < 50 -> D
         InfosSaisiesA11yEntity i2 = infos(true, 511, 49.9f);
-        // Cas 3: déclaration + type 513 (complet externe) score=92 -> Notation.B (75 <= score <
-        // 100)
+
+        // Déclaration + audit complet externe + score 92 -> B
         InfosSaisiesA11yEntity i3 = infos(true, 513, 92f);
-        // Cas 4: déclaration + type inconnu 999 -> libellé "Inconnu"
+
+        // Type inconnu -> libellé "Inconnu"
         InfosSaisiesA11yEntity i4 = infos(true, 999, 80f);
 
         Map<Integer, InfosSaisiesA11yEntity> map = new HashMap<>();
@@ -109,48 +120,65 @@ class A11yAffichageServiceTest {
 
         // Module 1
         IndicateursModuleA11Y v1 =
-                out.stream().filter(v -> v.getIdModule().equals(1)).findFirst().orElseThrow();
+                out.stream()
+                        .filter(v -> v.getIdModule().equals(1))
+                        .findFirst()
+                        .orElseThrow();
+
         assertThat(v1.getIsDeclaration()).isFalse();
         assertThat(v1.getTypeAuditId()).isEqualTo(512);
         assertThat(v1.getTypeAuditLibelle()).isEqualTo("Audit complet");
-        assertThat(v1.getNotation()).isEqualTo(Notation.H);
+        assertThat(v1.getNotation()).isEqualTo(Notation.F);
 
         // Module 2
         IndicateursModuleA11Y v2 =
-                out.stream().filter(v -> v.getIdModule().equals(2)).findFirst().orElseThrow();
+                out.stream()
+                        .filter(v -> v.getIdModule().equals(2))
+                        .findFirst()
+                        .orElseThrow();
+
         assertThat(v2.getIsDeclaration()).isTrue();
         assertThat(v2.getTypeAuditId()).isEqualTo(511);
         assertThat(v2.getTypeAuditLibelle()).isEqualTo("Audit partiel");
         assertThat(v2.getScoreAudit()).isEqualTo(49.9f);
-        assertThat(v2.getNotation()).isEqualTo(Notation.F);
+        assertThat(v2.getNotation()).isEqualTo(Notation.D);
 
         // Module 3
         IndicateursModuleA11Y v3 =
-                out.stream().filter(v -> v.getIdModule().equals(3)).findFirst().orElseThrow();
+                out.stream()
+                        .filter(v -> v.getIdModule().equals(3))
+                        .findFirst()
+                        .orElseThrow();
+
         assertThat(v3.getTypeAuditId()).isEqualTo(513);
         assertThat(v3.getTypeAuditLibelle()).isEqualTo("Audit complet externe");
         assertThat(v3.getNotation()).isEqualTo(Notation.B);
 
         // Module 4
         IndicateursModuleA11Y v4 =
-                out.stream().filter(v -> v.getIdModule().equals(4)).findFirst().orElseThrow();
+                out.stream()
+                        .filter(v -> v.getIdModule().equals(4))
+                        .findFirst()
+                        .orElseThrow();
+
         assertThat(v4.getTypeAuditId()).isEqualTo(999);
         assertThat(v4.getTypeAuditLibelle()).isEqualTo("Inconnu");
     }
 
-    @Test
-    @DisplayName("listerModulesA11y: déclaration + type 510 -> G")
-    void listerModulesA11y_type510_returnsG() {
-        fr.insee.compas.model.oscar.Module m = module(10, "M10", "DomX", "SNDI-X");
+
+    @Test @DisplayName("listerModulesA11y: déclaration + type 510 -> E")
+    void listerModulesA11y_type510_returnsE() {
+        fr.insee.compas.model.oscar.Module m
+                = module(10, "M10", "DomX", "SNDI-X");
         when(oscarService.getModulesIhm()).thenReturn(List.of(m));
-
         InfosSaisiesA11yEntity info = infos(true, 510, 12.3f);
-        when(a11yMajService.getIndicateutA11y()).thenReturn(Map.of(10, info));
-        when(tableFaitsService.getMapMetricByModule(anyInt())).thenReturn(Map.of());
-
-        List<IndicateursModuleA11Y> out = service.listerModulesIHMA11y();
+        when(a11yMajService.getIndicateutA11y())
+                .thenReturn(Map.of(10, info));
+        when(tableFaitsService.getMapMetricByModule(anyInt()))
+                .thenReturn(Map.of());
+        List<IndicateursModuleA11Y> out =
+                service.listerModulesIHMA11y();
         assertThat(out).hasSize(1);
-        assertThat(out.getFirst().getNotation()).isEqualTo(Notation.G);
-        assertThat(out.getFirst().getTypeAuditLibelle()).isEqualTo("Aucun audit");
-    }
+        assertThat(out.getFirst().getNotation()).isEqualTo(Notation.E);
+        assertThat(out.getFirst().getTypeAuditLibelle()) .isEqualTo("Aucun audit"); }
 }

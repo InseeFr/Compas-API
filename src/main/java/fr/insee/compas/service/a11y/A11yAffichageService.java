@@ -1,5 +1,6 @@
 package fr.insee.compas.service.a11y;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -65,8 +66,7 @@ public class A11yAffichageService {
 
                                 indicateursModuleA11Y.setScoreAudit(infos.getScoreAudit());
                                 indicateursModuleA11Y.setDateAudit(infos.getDateAudit());
-                                indicateursModuleA11Y.setNotation(calculerNotation(infos));
-                            }
+                                indicateursModuleA11Y.setNotation(calculerNotation(infos, module.getZoneProduction()));                            }
                             if (mapIssueSonar.containsKey(module.getId())) {
                                 String nbIssue =
                                         String.valueOf(
@@ -162,35 +162,43 @@ public class A11yAffichageService {
         };
     }
 
-    /** Calcule le Notation en fonction du type d'audit et du score. */
-    private Notation calculerNotation(InfosSaisiesA11yEntity infos) {
+    /** Calcule la Notation en fonction du type d'audit, du score et de son exposition. */
+    private Notation calculerNotation(InfosSaisiesA11yEntity infos, String zoneProduction) {
         boolean hasDeclaration = infos.getIsDeclaration();
         int typeAudit = infos.getIdIndicateurTypeAudit();
         float score = infos.getScoreAudit();
 
-        if (!hasDeclaration) {
-            return Notation.H; // Pas de déclaration
+        LocalDate maintenant = LocalDate.now();
+
+        // Pas de déclaration ou déclaration de plus de 3 ans
+        if (!hasDeclaration
+                || infos.getDateDeclaration() == null
+                || infos.getDateDeclaration().isBefore(maintenant.minusYears(3))) {
+            return Notation.F;
         }
 
-        if (typeAudit == 510) {
-            return Notation.G; // Déclaration mais aucun audit
-        }
-        // Cas par défaut pour audit partiel
-        if (typeAudit == 511) {
-            return (score >= 50) ? Notation.E : Notation.F; // Conforme ou non
-        }
-        if (typeAudit == 512 || typeAudit == 513) { // Audit complet interne ou externe
-            if (score < 50) {
-                return Notation.D; // Audit complet mais < 50%
-            } else if (score < 75) {
-                return Notation.C; // Audit complet mais < 75%
-            } else if (score < 100) {
-                return Notation.B; // Audit complet mais < 100%
-            } else if (score == 100) {
-                return Notation.A; // Audit conforme à 100%
-            }
+        // Pas d'audit ou audit de plus de 3 ans
+        if (typeAudit == 510
+                || infos.getDateAudit() == null
+                || infos.getDateAudit().isBefore(maintenant.minusYears(3))) {
+            return Notation.E;
         }
 
-        return Notation.SO; //  valeur par défaut
+        // Exposition externe : seuls les audits complets sont pris en compte
+        if ("externe".equalsIgnoreCase(zoneProduction)
+                && typeAudit == 511) {
+            return Notation.E;
+        }
+
+        // Exposition interne : audit partiel ou complet
+        if (score < 50) {
+            return Notation.D;
+        } else if (score < 75) {
+            return Notation.C;
+        } else if (score < 100) {
+            return Notation.B;
+        } else {
+            return Notation.A;
+        }
     }
 }

@@ -25,6 +25,6 @@ public class InfosSaisiesA11yEntity {
     private int idIndicateurTypeAudit;
     private float scoreAudit;
     private LocalDate dateAudit;
-    private LocalDate dateDeclaration; // date de déclaration sur compas
+    private LocalDate dateDeclaration;
     private Integer idModule;
 }
